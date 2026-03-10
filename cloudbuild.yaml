@@ -16,6 +16,19 @@
     name: gcr.io/cloud-builders/docker
     args: ["push", "${_BACKEND_IMAGE}:latest"]
 
+  # DEPLOY BACKEND
+  - id: deploy-backend-dev
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - backend-dev
+      - --image=${_BACKEND_IMAGE}:${SHORT_SHA}
+      - --region=europe-southwest1
+      - --platform=managed
+      - --quiet
+
   - id: build-frontend
     name: gcr.io/cloud-builders/docker
     args:
@@ -34,6 +47,19 @@
   - id: push-frontend-latest
     name: gcr.io/cloud-builders/docker
     args: ["push", "${_FRONTEND_IMAGE}:latest"]
+
+  # DEPLOY FRONTEND
+  - id: deploy-frontend-dev
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - frontend-dev
+      - --image=${_FRONTEND_IMAGE}:${SHORT_SHA}
+      - --region=europe-southwest1
+      - --platform=managed
+      - --quiet
 
 substitutions:
   _AR_REPO: europe-southwest1-docker.pkg.dev/onboarding-dev-487716/repo-onboarding-dev
