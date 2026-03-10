@@ -161,13 +161,25 @@ const HomePage = () => {
         }
     };
 
-    const handleMasterSelection = (masterId) => {
+    const handleMasterSelection = async (masterId) => {
         setSelectedMaster(masterId);
         setShowMasterGate(false);
         setAnalysis(null);
         setFile(null);
         setChatId(null);
         setCvUploadedNotice(false);
+
+        try {
+            const chatRes = await api.post('/chat', {
+                title: `Consulta ${getMasterDisplayName(masterId)}`,
+            });
+            if (chatRes.data.success) {
+                setChatId(chatRes.data.data.chat.id);
+            }
+        } catch (err) {
+            console.error('Error creating chat after master selection:', err);
+            setError('No se pudo crear un chat automático para el máster seleccionado.');
+        }
     };
 
     const handleChangeMaster = () => {
@@ -198,8 +210,8 @@ const HomePage = () => {
     };
 
     const currentStep = analysis ? 3 : selectedMaster ? 2 : 1;
-    const chatUnlocked = Boolean(selectedMaster && analysis);
-    const chatEnabled = Boolean(chatUnlocked && chatId);
+    // Allow accessing existing chats even if CV analysis does not exist yet.
+    const chatEnabled = Boolean(chatId);
     const selectedMasterDisplayName = getMasterDisplayName(selectedMaster);
     const cvSummary = buildCvSummary(analysis?.extractedProfile);
 
@@ -229,12 +241,10 @@ const HomePage = () => {
                                 <div key={chat.id} className="group relative">
                                     <button
                                         onClick={() => {
-                                            if (!chatUnlocked) return;
                                             setChatId(chat.id);
                                             window.scrollTo({ top: 0, behavior: 'smooth' });
                                         }}
-                                        disabled={!chatUnlocked}
-                                        className={`w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 border ${chatId === chat.id ? 'bg-orange-accent/10 border-orange-accent/20 text-orange-accent' : 'border-transparent hover:bg-stone-100 dark:hover:bg-white/5 opacity-60 hover:opacity-100'} ${!chatUnlocked ? 'opacity-40 cursor-not-allowed hover:bg-transparent' : ''}`}
+                                        className={`w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 border ${chatId === chat.id ? 'bg-orange-accent/10 border-orange-accent/20 text-orange-accent' : 'border-transparent hover:bg-stone-100 dark:hover:bg-white/5 opacity-60 hover:opacity-100'}`}
                                     >
                                         <MessageSquare size={14} className="flex-shrink-0" />
                                         <p className="font-bold text-[9px] truncate uppercase tracking-tighter">{chat.title}</p>
@@ -346,7 +356,7 @@ const HomePage = () => {
                                     userName={user?.name || user?.email?.split('@')[0]}
                                     selectedMaster={selectedMaster}
                                     sprints={SPRINTS.map((s) => s.title)}
-                                    chatEnabled={chatUnlocked}
+                                    chatEnabled={chatEnabled}
                                     lockedMessage={selectedMaster ? 'Sube y analiza tu CV para habilitar el chat.' : 'Selecciona un mÃ¡ster para continuar.'}
                                 />
                             </div>
