@@ -53,7 +53,7 @@ const ChatComponent = ({
     // Handle automatic greeting when analysis is ready
     useEffect(() => {
         if (cvAnalysisId && cvAnalysisId !== lastHandledAnalysisId.current && chatId) {
-            const welcomeText = `Hola ${userName || 'estudiante'}, es un gusto saludarte. Ya que perteneces al master ${selectedMasterDisplayName}, tu ruta ideal para completar tu camino de excelencia es:\n\n${sprints.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\n¿En qué sprint te gustaría profundizar hoy?`;
+            const welcomeText = `Hola ${userName || 'estudiante'}, es un gusto saludarte. Ya que perteneces al MBA ${selectedMasterDisplayName}, tu ruta ideal para completar tu camino de excelencia es:\n\n${sprints.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\n¿En qué sprint te gustaría profundizar hoy?`;
 
             // Artificial delay to feel natural after analysis
             setTimeout(() => {
@@ -136,7 +136,7 @@ const ChatComponent = ({
     }
 
     return (
-        <div className={`flex flex-col h-full min-h-[600px] border-l-4 border-orange-accent/60 transition-all duration-500 overflow-hidden relative rounded-3xl shadow-2xl ${isDarkMode ? 'bg-[#1C1917]/40 border-[#2E2925]' : 'bg-white border-light-border'}`}>
+        <div className={`chat-container flex flex-col h-full min-h-[600px] transition-all duration-500 overflow-hidden relative rounded-2xl border ${isDarkMode ? 'border-white/10 bg-black/30' : 'border-stone-200 bg-white/70'}`}>
             {/* Header - Compact */}
             <div className={`p-3.5 border-b flex items-center justify-between ${isDarkMode ? 'border-dark-border bg-dark-card/30' : 'border-light-border bg-light-bg/30'} backdrop-blur-xl z-20`}>
                 <div className="flex items-center gap-3">
@@ -154,7 +154,7 @@ const ChatComponent = ({
                 <div className="flex flex-col items-end gap-1.5">
                     {selectedMaster && (
                         <div className={`text-[8px] uppercase tracking-widest font-black px-2.5 py-1 rounded-lg border ${isDarkMode ? 'bg-white/5 border-white/10 text-white/80' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
-                            Máster: {selectedMasterDisplayName}
+                            {selectedMasterDisplayName}
                         </div>
                     )}
                     {chatId && (
@@ -166,7 +166,7 @@ const ChatComponent = ({
             </div>
 
             {/* Messages Area - Compact */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-5 space-y-4 no-scrollbar">
                 {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
                         <div className="relative">
@@ -191,7 +191,7 @@ const ChatComponent = ({
                         </div>
                     </div>
                 ) : (
-                    <>
+                    <div className="max-w-5xl mx-auto w-full space-y-4">
                         {messages.map((msg, index) => (
                             <div
                                 key={index}
@@ -215,10 +215,10 @@ const ChatComponent = ({
                                 </div>
                             </div>
                         ))}
-                    </>
+                    </div>
                 )}
                 {sending && (
-                    <div className="flex justify-start animate-pulse">
+                    <div className="flex justify-start animate-pulse max-w-5xl mx-auto w-full">
                         <div className="flex gap-4 max-w-[80%]">
                             <div className="w-9 h-9 rounded-xl bg-orange-accent/10 border border-orange-accent/20 flex items-center justify-center">
                                 <Loader2 size={18} className="text-orange-accent animate-spin" />
@@ -237,10 +237,10 @@ const ChatComponent = ({
             </div>
 
             {/* Actions & Input - Compact */}
-            <div className={`p-4 border-t ${isDarkMode ? 'border-dark-border bg-dark-card/10' : 'border-light-border bg-light-bg/10'} space-y-3`}>
+            <div className={`chat-bar-wrapper p-4 border-t ${isDarkMode ? 'border-dark-border bg-black/20' : 'border-light-border bg-light-bg/10'} space-y-3`}>
                 {/* Suggestions */}
                 {chatEnabled && chatId && !sending && messages.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 animate-in fade-in duration-300">
+                    <div className="chat-suggestions flex flex-wrap gap-1.5 animate-in fade-in duration-300">
                         {SUGGESTED_QUESTIONS.map((q, i) => (
                             <button
                                 key={i}
@@ -255,7 +255,7 @@ const ChatComponent = ({
                     </div>
                 )}
 
-                <form onSubmit={handleSendMessage} className="relative group">
+                <form onSubmit={handleSendMessage} className="chat-bar relative group">
                     <input
                         type="text"
                         value={input}

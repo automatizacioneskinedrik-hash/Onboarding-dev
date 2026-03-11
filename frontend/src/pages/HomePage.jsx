@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Sparkles, ArrowRight, BookOpen, MessageSquare, Clock, Plus, Trash2 } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Sparkles, ArrowRight, BookOpen, MessageSquare, Clock, Plus, Trash2, Sun, Moon, User, LogOut } from 'lucide-react';
 import api from '../services/api';
 import ChatComponent from '../components/ChatComponent';
 import { useAuth } from '../context/AuthContext';
@@ -36,10 +36,42 @@ const buildCvSummary = (profile = {}) => ({
     topSkills: (profile.skills || []).slice(0, 3),
 });
 
+const buildImprovementTips = (profile = {}, recommendation = {}) => {
+    const skills = Array.isArray(profile.skills) ? profile.skills : [];
+    const subjects = Array.isArray(recommendation?.subjects) ? recommendation.subjects.filter(Boolean) : [];
+    const years = Number(profile?.yearsOfExperience) || 0;
+    const role = profile?.currentRole || 'tu rol actual';
+    const tips = [];
+
+    if (subjects.length > 0) {
+        const focusSubjects = subjects.slice(0, 2).join(' y ');
+        tips.push(`Refuerza ${focusSubjects} con un mini-proyecto aplicado a ${role}.`);
+    }
+
+    if (skills.length > 0) {
+        tips.push(`Profundiza tu skill más fuerte (${skills[0]}) llevándola a nivel avanzado con casos reales y métricas de impacto.`);
+    } else {
+        tips.push('Define 3 habilidades clave para tu siguiente rol objetivo y crea un plan semanal de práctica.');
+    }
+
+    if (years < 3) {
+        tips.push('Prioriza fundamentos técnicos y portafolio: publica 1 proyecto completo por sprint para acelerar tu crecimiento.');
+    } else {
+        tips.push('Potencia liderazgo técnico: documenta decisiones, mentoriza y mide resultados de negocio en cada entrega.');
+    }
+
+    if (typeof recommendation?.reasoning === 'string' && recommendation.reasoning.trim()) {
+        tips.push(`Enfoque recomendado por IA: ${recommendation.reasoning.trim()}`);
+    }
+
+    return tips.slice(0, 4);
+};
+
 const HomePage = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const location = useLocation();
-    const { isDarkMode } = useTheme();
+    const navigate = useNavigate();
+    const { isDarkMode, toggleTheme } = useTheme();
 
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -48,7 +80,9 @@ const HomePage = () => {
     const [history, setHistory] = useState([]);
     const [error, setError] = useState('');
     const [selectedMaster, setSelectedMaster] = useState(null);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(
+        typeof window !== 'undefined' ? window.innerWidth >= 1280 : false
+    );
     const [currentPhrase, setCurrentPhrase] = useState(0);
     const [showMasterGate, setShowMasterGate] = useState(false);
     const [masterReady, setMasterReady] = useState(false);
@@ -178,7 +212,7 @@ const HomePage = () => {
             }
         } catch (err) {
             console.error('Error creating chat after master selection:', err);
-            setError('No se pudo crear un chat automático para el máster seleccionado.');
+            setError('No se pudo crear un chat automático para el MBA seleccionado.');
         }
     };
 
@@ -209,33 +243,69 @@ const HomePage = () => {
         }
     };
 
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
+
     const currentStep = analysis ? 3 : selectedMaster ? 2 : 1;
     // Allow accessing existing chats even if CV analysis does not exist yet.
     const chatEnabled = Boolean(chatId);
     const selectedMasterDisplayName = getMasterDisplayName(selectedMaster);
     const cvSummary = buildCvSummary(analysis?.extractedProfile);
+    const improvementTips = buildImprovementTips(analysis?.extractedProfile, analysis?.recommendation);
 
     return (
         <div
-            className={`flex w-full min-h-[calc(100vh-120px)] relative overflow-hidden transition-colors duration-300 ${
+            className={`flex w-full min-h-screen relative overflow-hidden transition-colors duration-300 ${
                 isDarkMode ? 'bg-transparent' : 'bg-light-bg'
             }`}
         >
-            <aside
+                <aside
                 className={`sidebar-transition flex-shrink-0 relative z-[60] overflow-hidden border-r transition-colors duration-300 ${
                     isDarkMode ? 'bg-[#0A0A0A] border-white/5' : 'bg-white border-stone-200'
-                } ${isSidebarOpen ? 'w-72 opacity-100 p-6' : 'w-0 opacity-0 p-0'}`}
+                } ${isSidebarOpen ? 'w-52 xl:w-48 opacity-100 p-2.5 xl:p-2' : 'w-0 opacity-0 p-0'}`}
                 style={{ marginLeft: 0 }}
             >
                 <div className="h-full flex flex-col space-y-6">
                     <div className="flex items-center justify-between">
                         <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-40">HISTORIAL</h3>
-                        <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-orange-accent/10 rounded-lg text-orange-accent transition-all">
-                            <Plus className="rotate-45" size={18} />
+                        <button onClick={() => setIsSidebarOpen(false)} className="p-1.5 hover:bg-orange-accent/10 rounded-lg text-orange-accent transition-all">
+                            <Plus className="rotate-45" size={16} />
                         </button>
                     </div>
 
-                    <div className="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
+                    <div className={`grid grid-cols-3 gap-1.5 pb-2 border-b ${isDarkMode ? 'border-white/10' : 'border-stone-200'}`}>
+                        <button
+                            onClick={() => navigate('/perfil')}
+                            title="Perfil"
+                            className={`h-8 rounded-lg flex items-center justify-center transition-all ${
+                                isDarkMode ? 'bg-white/5 text-white/80 hover:bg-white/10' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                            }`}
+                        >
+                            <User size={14} />
+                        </button>
+                        <button
+                            onClick={toggleTheme}
+                            title={isDarkMode ? 'Modo claro' : 'Modo oscuro'}
+                            className={`h-8 rounded-lg flex items-center justify-center transition-all ${
+                                isDarkMode ? 'bg-white/5 text-orange-accent hover:bg-white/10' : 'bg-stone-100 text-orange-accent hover:bg-stone-200'
+                            }`}
+                        >
+                            {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
+                        </button>
+                        <button
+                            onClick={handleLogout}
+                            title="Cerrar sesión"
+                            className={`h-8 rounded-lg flex items-center justify-center transition-all ${
+                                isDarkMode ? 'bg-white/5 text-white/80 hover:bg-red-500/10 hover:text-red-400' : 'bg-stone-100 text-stone-700 hover:bg-red-100 hover:text-red-600'
+                            }`}
+                        >
+                            <LogOut size={14} />
+                        </button>
+                    </div>
+
+                    <div className="flex-1 space-y-1.5 overflow-y-auto pr-1 custom-scrollbar">
                         {history.length > 0 ? (
                             history.map((chat) => (
                                 <div key={chat.id} className="group relative">
@@ -244,16 +314,16 @@ const HomePage = () => {
                                             setChatId(chat.id);
                                             window.scrollTo({ top: 0, behavior: 'smooth' });
                                         }}
-                                        className={`w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 border ${chatId === chat.id ? 'bg-orange-accent/10 border-orange-accent/20 text-orange-accent' : 'border-transparent hover:bg-stone-100 dark:hover:bg-white/5 opacity-60 hover:opacity-100'}`}
+                                        className={`w-full text-left px-2.5 py-2 rounded-lg transition-all flex items-center gap-2 border ${chatId === chat.id ? 'bg-orange-accent/10 border-orange-accent/20 text-orange-accent' : 'border-transparent hover:bg-stone-100 dark:hover:bg-white/5 opacity-60 hover:opacity-100'}`}
                                     >
-                                        <MessageSquare size={14} className="flex-shrink-0" />
-                                        <p className="font-bold text-[9px] truncate uppercase tracking-tighter">{chat.title}</p>
+                                        <MessageSquare size={12} className="flex-shrink-0" />
+                                        <p className="font-bold text-[8px] truncate uppercase tracking-tight">{chat.title}</p>
                                     </button>
                                     <button
                                         onClick={(e) => handleDeleteChat(e, chat.id)}
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 transition-all"
+                                        className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 transition-all"
                                     >
-                                        <Trash2 size={12} />
+                                        <Trash2 size={11} />
                                     </button>
                                 </div>
                             ))
@@ -262,7 +332,7 @@ const HomePage = () => {
                         )}
                     </div>
 
-                    <button onClick={handleNewChat} className="w-full py-4 rounded-xl bg-orange-accent text-white font-bold text-[10px] tracking-[0.2em] shadow-xl shadow-orange-accent/20 hover:scale-[1.01] active:scale-[0.99] transition-all">
+                    <button onClick={handleNewChat} className="w-full py-3 rounded-lg bg-orange-accent text-white font-bold text-[9px] tracking-[0.18em] shadow-xl shadow-orange-accent/20 hover:scale-[1.01] active:scale-[0.99] transition-all">
                         NUEVO CHAT
                     </button>
                 </div>
@@ -271,7 +341,7 @@ const HomePage = () => {
             <div className="flex-1 flex flex-col min-w-0 transform-gpu overflow-y-auto overflow-x-hidden">
                 <button
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className={`fixed top-0 left-0 z-[100] w-12 h-12 rounded-br-2xl bg-orange-accent text-white shadow-2xl shadow-orange-accent/40 flex flex-col items-center justify-center transition-all duration-300 ${isSidebarOpen ? 'w-14 h-14' : 'hover:w-14 hover:h-14'} border-none m-0 p-0`}
+                    className={`fixed top-3 sm:top-0 left-0 z-[100] w-12 h-12 rounded-br-2xl bg-orange-accent text-white shadow-2xl shadow-orange-accent/40 flex flex-col items-center justify-center transition-all duration-300 ${isSidebarOpen ? 'w-14 h-14' : 'hover:w-14 hover:h-14'} border-none m-0 p-0`}
                 >
                     <div className="flex flex-col gap-[4px]">
                         <span className="hamburger-line line-1"></span>
@@ -280,8 +350,33 @@ const HomePage = () => {
                     </div>
                 </button>
 
-                <div className="w-full space-y-8 py-6 px-4 sm:px-8 lg:px-12 animate-in fade-in duration-700">
-                    <header className="w-full max-w-xl mx-auto mb-6">
+                <div className="w-full space-y-2 py-2 px-2 sm:px-3 lg:px-4 xl:px-3 2xl:px-4 animate-in fade-in duration-700">
+                    <div className="flex items-center justify-start pl-14 sm:pl-24 lg:pl-12 pt-12 sm:pt-0">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/')}
+                            className="flex items-center gap-2.5 group"
+                            title="Ir al inicio"
+                        >
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-white border border-stone-200'}`}>
+                                <svg viewBox="0 0 100 100" className="w-6 h-6">
+                                    <polygon points="50,20 15,80 85,80" fill="none" stroke="#F05A28" strokeWidth="12" />
+                                    <rect x="42" y="4" width="8" height="8" fill="#F05A28" />
+                                    <rect x="52" y="4" width="8" height="8" fill="#F05A28" />
+                                </svg>
+                            </div>
+                            <div className="leading-none text-left">
+                                <p className={`text-[1rem] font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-[#1A1A1A]'}`}>
+                                    LÄR <span className="text-orange-accent">UNIVERSITY</span>
+                                </p>
+                                <p className="text-[8px] uppercase tracking-[0.22em] text-orange-accent/60 font-black mt-1">
+                                    ÉLITE TECH
+                                </p>
+                            </div>
+                        </button>
+                    </div>
+
+                    <header className="w-full max-w-xl mx-auto mb-1">
                         <div className="flex items-center justify-between relative px-2">
                             <div
                                 className={`absolute top-1/2 left-0 w-full h-[4px] -translate-y-1/2 z-0 rounded-full transition-colors duration-300 ${
@@ -312,16 +407,16 @@ const HomePage = () => {
                                                     : 'opacity-60 text-stone-500'
                                         }`}
                                     >
-                                        {s === 1 ? 'MÁSTER' : s === 2 ? 'CV' : 'RUTA'}
+                                        {s === 1 ? 'MBA' : s === 2 ? 'CV' : 'RUTA'}
                                     </span>
                                 </div>
                             ))}
                         </div>
                     </header>
 
-                    <div className="flex flex-col xl:flex-row gap-8 items-start">
-                        <div className="flex-[1.35] w-full h-[66vh] min-h-[560px] flex flex-col">
-                            <div className="mb-3 pl-1 flex items-center gap-3">
+                    <div className="flex flex-col xl:flex-row gap-2 xl:gap-3 items-start">
+                        <div className="flex-[2.8] w-full h-[calc(100vh-145px)] min-h-[760px] flex flex-col">
+                            <div className="mb-1 pl-1 flex items-center gap-3">
                                 <span
                                     className={`text-[10px] font-bold tracking-[0.45em] uppercase ${
                                         isDarkMode ? 'text-white' : 'text-stone-900'
@@ -345,11 +440,7 @@ const HomePage = () => {
                                 </div>
                             )}
 
-                            <div
-                                className={`flex-1 p-1 rounded-[2rem] border transition-colors duration-300 ${
-                                    isDarkMode ? 'bg-stone-900 border-white/5' : 'bg-white border-stone-200'
-                                }`}
-                            >
+                            <div className="flex-1">
                                 <ChatComponent
                                     chatId={chatEnabled ? chatId : null}
                                     cvAnalysisId={analysis?.id}
@@ -362,7 +453,9 @@ const HomePage = () => {
                             </div>
                         </div>
 
-                        <div className="flex-[0.75] w-full xl:max-w-md space-y-6 xl:pt-6">
+                        <div
+                            className="cv-upload-section flex-[0.42] w-full space-y-6 xl:pt-2 self-stretch xl:self-start xl:pl-3 xl:pr-1"
+                        >
                             {!selectedMaster ? (
                                 <div className="space-y-6 animate-in slide-in-from-right duration-700">
                                     <div className="flex justify-center h-10">
@@ -431,11 +524,7 @@ const HomePage = () => {
                                     </div>
                                 </div>
                             ) : !analysis ? (
-                                <div
-                                    className={`p-6 rounded-[2rem] border shadow-3xl ${
-                                        isDarkMode ? 'bg-[#0D0D0D] border-white/10' : 'bg-white border-stone-200'
-                                    }`}
-                                >
+                                <div className="space-y-5">
                                     <div
                                         className={`flex items-center justify-between border-b pb-4 mb-6 ${
                                             isDarkMode ? 'border-white/10' : 'border-stone-200'
@@ -504,11 +593,7 @@ const HomePage = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <div
-                                    className={`p-6 rounded-[2rem] border shadow-3xl space-y-5 ${
-                                        isDarkMode ? 'bg-[#0D0D0D] border-white/10' : 'bg-white border-stone-200'
-                                    }`}
-                                >
+                                <div className="space-y-5">
                                     <div
                                         className={`flex items-center justify-between border-b pb-4 ${
                                             isDarkMode ? 'border-white/10' : 'border-stone-200'
@@ -554,7 +639,7 @@ const HomePage = () => {
                                         >
                                             <p>
                                                 <span className={isDarkMode ? 'text-white/50' : 'text-stone-500'}>
-                                                    Máster:
+                                                    MBA:
                                                 </span>{' '}
                                                 {selectedMasterDisplayName}
                                             </p>
@@ -572,6 +657,24 @@ const HomePage = () => {
                                                     ? cvSummary.topSkills.join(', ')
                                                     : 'No especificadas'}
                                             </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3 pt-1">
+                                        <p className="text-[10px] uppercase tracking-[0.2em] text-orange-accent font-bold">Sugerencias de mejora</p>
+                                        <div className="space-y-2">
+                                            {improvementTips.map((tip, i) => (
+                                                <div
+                                                    key={i}
+                                                    className={`rounded-xl border px-3 py-2 ${
+                                                        isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'
+                                                    }`}
+                                                >
+                                                    <p className={`text-[10px] leading-relaxed ${isDarkMode ? 'text-white/85' : 'text-stone-700'}`}>
+                                                        {tip}
+                                                    </p>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
@@ -599,7 +702,7 @@ const HomePage = () => {
                         <div className="text-center mb-8">
                             <p className="text-[10px] tracking-[0.35em] uppercase text-orange-accent font-bold mb-3">Primer Paso</p>
                             <h3 className="text-3xl sm:text-4xl font-bold uppercase tracking-tight text-white">
-                                Elige Tu <span className="text-orange-accent italic">MÁSTER</span>
+                                Elige Tu <span className="text-orange-accent italic">MBA</span>
                             </h3>
                             <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-white/50">
                                 El chat se habilita después de subir y analizar tu CV.

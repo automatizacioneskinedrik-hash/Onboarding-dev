@@ -112,6 +112,62 @@
         color: rgb(var(--text-rgb));
         @apply rounded-xl px-4 py-3 focus:border-orange-accent outline-none transition-all w-full placeholder:text-stone-500/50;
     }
+
+    /* Layout refinements for chat and CV upload */
+    .chat-container {
+        border: none;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .chat-bar-wrapper {
+        @apply flex flex-col items-start px-4 sm:px-6;
+    }
+
+    .chat-bar {
+        width: 100%;
+        max-width: 980px;
+        margin-left: 0;
+    }
+
+    .chat-suggestions {
+        width: 100%;
+        max-width: 980px;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .chat-bar-wrapper {
+            @apply px-3;
+        }
+
+        .chat-bar {
+            max-width: 100%;
+        }
+
+        .chat-suggestions {
+            max-width: 100%;
+        }
+    }
+
+    .cv-upload-section {
+        max-width: 100%;
+        margin-left: auto;
+    }
+
+    @media (min-width: 1280px) {
+        .cv-upload-section {
+            max-width: 250px;
+        }
+    }
 }
 
 /* Custom Scrollbar */
