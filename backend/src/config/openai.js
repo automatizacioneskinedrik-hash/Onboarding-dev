@@ -2,9 +2,11 @@
  * OpenAI Client Configuration
  */
 
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const OpenAI = require('openai');
 
-const openaiApiKey = process.env.OPENAI_API_KEY;
+const openaiApiKey = process.env.OPENAI_API_KEY?.trim();
 const openai = openaiApiKey
     ? new OpenAI({ apiKey: openaiApiKey })
     : null;

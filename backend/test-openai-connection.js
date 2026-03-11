@@ -1,7 +1,6 @@
 /**
  * Test script for OpenAI API connection
  */
-require('dotenv').config();
 const { openai, OPENAI_MODEL } = require('./src/config/openai');
 
 async function testConnection() {
@@ -9,6 +8,10 @@ async function testConnection() {
     console.log(`Modelo: ${OPENAI_MODEL}`);
 
     try {
+        if (!openai) {
+            throw new Error('OPENAI_API_KEY no está configurada. Agrega la variable en backend/.env antes de ejecutar este test.');
+        }
+
         const response = await openai.chat.completions.create({
             model: OPENAI_MODEL,
             messages: [
