@@ -167,12 +167,26 @@ const SPECIALIZATIONS = {
     },
 };
 
+const MODULE_TO_SPECIALIZATION_ID = {
+    module_comunicacion: 'comunicacion',
+    module_emprendimiento: 'emprendimiento',
+    module_finanzas: 'finanzas',
+    module_talento: 'talento',
+    module_tecnologia: 'tecnologia',
+    module_ia: 'ia-automatizacion',
+    module_mercado_cliente: 'mercado-cliente',
+    module_operaciones: 'operaciones',
+    module_analitica_datos: 'analitica-datos',
+};
+
 // Helper: Get all specializations as array
 const getAllSpecializations = () => Object.values(SPECIALIZATIONS);
 
 // Helper: Get specialization by ID
 const getSpecializationById = (id) =>
     Object.values(SPECIALIZATIONS).find((s) => s.id === id);
+
+const getSpecializationIdByModuleId = (moduleId) => MODULE_TO_SPECIALIZATION_ID[moduleId] || null;
 
 // Helper: Get specialization names for AI prompt
 const getSpecializationNamesForPrompt = () =>
@@ -182,7 +196,9 @@ const getSpecializationNamesForPrompt = () =>
 
 module.exports = {
     SPECIALIZATIONS,
+    MODULE_TO_SPECIALIZATION_ID,
     getAllSpecializations,
     getSpecializationById,
+    getSpecializationIdByModuleId,
     getSpecializationNamesForPrompt,
 };

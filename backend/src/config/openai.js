@@ -12,5 +12,6 @@ const openai = openaiApiKey
     : null;
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
+const OPENAI_EMBEDDING_MODEL = process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-large';
 
-module.exports = { openai, OPENAI_MODEL, openaiApiKey };
+module.exports = { openai, OPENAI_MODEL, OPENAI_EMBEDDING_MODEL, openaiApiKey };

@@ -36,6 +36,27 @@ const messageSchema = new mongoose.Schema(
                 originalName: String,
                 size: Number,
             },
+            embedding: {
+                status: {
+                    type: String,
+                    enum: ['generated', 'unavailable'],
+                    default: 'unavailable',
+                },
+                model: String,
+                dimensions: Number,
+            },
+            retrieval: {
+                status: String,
+                matches: [
+                    {
+                        id: String,
+                        title: String,
+                        contentType: String,
+                        moduleTitle: String,
+                        distance: Number,
+                    },
+                ],
+            },
         },
         timestamp: {
             type: Date,

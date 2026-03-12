@@ -11,6 +11,7 @@ yarn-error.log*
 firebase-key.json
 fix-key.js
 test-*.js
+services-account.json
 
 # IDE
 .vscode/

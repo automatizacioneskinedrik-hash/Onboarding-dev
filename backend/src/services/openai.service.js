@@ -4,7 +4,13 @@
  */
 
 const { openai, OPENAI_MODEL } = require('../config/openai');
-const { SPECIALIZATIONS, getSpecializationNamesForPrompt } = require('../utils/specializations');
+const {
+    SPECIALIZATIONS,
+    getSpecializationById,
+    getSpecializationIdByModuleId,
+    getSpecializationNamesForPrompt,
+} = require('../utils/specializations');
+const { retrieveRelevantCoursesForProfile } = require('./course-retrieval.service');
 
 const ensureOpenAIConfigured = () => {
     if (!openai) {
@@ -15,15 +21,15 @@ const ensureOpenAIConfigured = () => {
 };
 
 const FALLBACK_SKILL_KEYWORDS = {
-    'analitica-datos': ['data', 'datos', 'sql', 'python', 'power bi', 'tableau', 'analytics', 'analítica'],
-    tecnologia: ['software', 'developer', 'ingeniero', 'tecnologia', 'tecnología', 'digital', 'arquitectura'],
+    'analitica-datos': ['data', 'datos', 'sql', 'python', 'power bi', 'tableau', 'analytics', 'analitica'],
+    tecnologia: ['software', 'developer', 'ingeniero', 'tecnologia', 'digital', 'arquitectura'],
     'ia-automatizacion': ['ia', 'inteligencia artificial', 'machine learning', 'automatizacion', 'automation', 'ml'],
-    finanzas: ['finanzas', 'finance', 'contabilidad', 'tesoreria', 'tesorería', 'inversion', 'inversión'],
-    talento: ['rrhh', 'recursos humanos', 'people', 'talento', 'reclutamiento', 'liderazgo', 'liderazgo'],
+    finanzas: ['finanzas', 'finance', 'contabilidad', 'tesoreria', 'inversion'],
+    talento: ['rrhh', 'recursos humanos', 'people', 'talento', 'reclutamiento', 'liderazgo'],
     emprendimiento: ['startup', 'emprendimiento', 'negocio', 'ventas', 'founder'],
     'mercado-cliente': ['marketing', 'cliente', 'brand', 'growth', 'producto'],
-    operaciones: ['operaciones', 'logistica', 'logística', 'supply chain', 'procesos'],
-    comunicacion: ['comunicacion', 'comunicación', 'comms', 'relaciones publicas', 'presentaciones'],
+    operaciones: ['operaciones', 'logistica', 'supply chain', 'procesos'],
+    comunicacion: ['comunicacion', 'comms', 'relaciones publicas', 'presentaciones'],
 };
 
 const pickFallbackSpecialization = (profile = {}) => {
@@ -41,26 +47,26 @@ const pickFallbackSpecialization = (profile = {}) => {
     let bestScore = -1;
 
     Object.entries(FALLBACK_SKILL_KEYWORDS).forEach(([id, words]) => {
-        const score = words.reduce((acc, w) => acc + (haystack.includes(w) ? 1 : 0), 0);
+        const score = words.reduce((acc, word) => acc + (haystack.includes(word) ? 1 : 0), 0);
         if (score > bestScore) {
             bestScore = score;
             bestId = id;
         }
     });
 
-    return Object.values(SPECIALIZATIONS).find((s) => s.id === bestId) || Object.values(SPECIALIZATIONS)[0];
+    return Object.values(SPECIALIZATIONS).find((item) => item.id === bestId) || Object.values(SPECIALIZATIONS)[0];
 };
 
 const buildFallbackProfile = (cvText = '') => {
     const lines = cvText
         .split(/\n+/)
-        .map((l) => l.trim())
+        .map((line) => line.trim())
         .filter(Boolean);
     const firstLine = lines[0] || '';
     const guessedName = firstLine.length > 2 && firstLine.length < 80 ? firstLine : 'Candidato';
-    const yearsMatch = cvText.match(/(\d{1,2})\s*(años|anos|years)/i);
+    const yearsMatch = cvText.match(/(\d{1,2})\s*(anos|years|a\w+os)/i);
 
-    const skills = ['Comunicación', 'Trabajo en equipo', 'Resolución de problemas'];
+    const skills = ['Comunicacion', 'Trabajo en equipo', 'Resolucion de problemas'];
     const skillHints = ['sql', 'python', 'excel', 'power bi', 'marketing', 'finanzas', 'liderazgo'];
     const lower = cvText.toLowerCase();
     skillHints.forEach((hint) => {
@@ -83,50 +89,111 @@ const buildFallbackProfile = (cvText = '') => {
     };
 };
 
-/**
- * Analyze CV text and extract structured profile data
- * @param {string} cvText - Raw text extracted from CV/PDF
- * @returns {Object} Extracted profile data
- */
+const buildRetrievedCatalogContext = (retrieval) => {
+    if (!retrieval?.matches?.length) {
+        return 'No hubo resultados recuperados del catalogo.';
+    }
+
+    return retrieval.matches
+        .slice(0, 5)
+        .map((match, index) => {
+            const lines = [
+                `Resultado ${index + 1}`,
+                `Tipo: ${match.contentType}`,
+                `Titulo: ${match.title}`,
+                `Modulo: ${match.moduleTitle}`,
+                `Distancia: ${match.distance ?? 'n/a'}`,
+            ];
+
+            if (match.description) {
+                lines.push(`Descripcion: ${match.description}`);
+            }
+
+            if (match.topics?.length) {
+                lines.push(`Topics: ${match.topics.join(', ')}`);
+            }
+
+            return lines.join('\n');
+        })
+        .join('\n\n');
+};
+
+const buildRecommendationFromRetrievalFallback = (profile, retrieval) => {
+    const preferredModule = retrieval?.moduleRanking?.[0];
+    const preferredSpecializationId =
+        getSpecializationIdByModuleId(preferredModule?.moduleId) || pickFallbackSpecialization(profile).id;
+    const specialization = getSpecializationById(preferredSpecializationId) || pickFallbackSpecialization(profile);
+    const secondarySpecializations = (retrieval?.moduleRanking || [])
+        .slice(1, 3)
+        .map((item) => getSpecializationIdByModuleId(item.moduleId))
+        .filter(Boolean)
+        .filter((id, index, array) => id !== preferredSpecializationId && array.indexOf(id) === index);
+
+    const recommendedCourses = (retrieval?.matches || []).slice(0, 3).map((match) => ({
+        id: match.id,
+        title: match.title,
+        contentType: match.contentType,
+        moduleId: match.moduleId,
+        moduleTitle: match.moduleTitle,
+        distance: match.distance,
+    }));
+
+    return {
+        primarySpecialization: specialization.name,
+        primarySpecializationId: specialization.id,
+        secondarySpecializations,
+        matchScore: preferredModule ? 88 : 78,
+        reasoning: preferredModule
+            ? `Se recomienda ${specialization.name} porque tu perfil se alinea con el modulo ${preferredModule.moduleTitle} y con los temas recuperados del catalogo que mejor potencian tu trayectoria actual.`
+            : `Se recomienda ${specialization.name} con base en las senales detectadas en tu perfil.`,
+        keyStrengths: (profile.skills || []).slice(0, 3),
+        growthAreas: ['Profundizacion tecnica', 'Aplicacion estrategica'],
+        specialization,
+        subjects: specialization.subjects,
+        sprintUrl: specialization.sprintUrl,
+        recommendedCourses,
+    };
+};
+
 const extractProfileFromCV = async (cvText) => {
     if (!openai) {
         return buildFallbackProfile(cvText);
     }
     ensureOpenAIConfigured();
 
-    const prompt = `Eres un experto en análisis de CVs y perfiles profesionales. 
-Analiza el siguiente CV y extrae la información estructurada en formato JSON.
+    const prompt = `Eres un experto en analisis de CVs y perfiles profesionales.
+Analiza el siguiente CV y extrae la informacion estructurada en formato JSON.
 
 CV:
 """
 ${cvText}
 """
 
-Responde ÚNICAMENTE con un JSON válido con esta estructura exacta:
+Responde unicamente con un JSON valido con esta estructura exacta:
 {
   "name": "nombre completo del candidato",
-  "currentRole": "cargo o rol actual más reciente",
-  "yearsOfExperience": número estimado de años de experiencia,
+  "currentRole": "cargo o rol actual mas reciente",
+  "yearsOfExperience": numero estimado de anos de experiencia,
   "industry": "industria o sector principal",
-  "skills": ["habilidad1", "habilidad2", ...],
+  "skills": ["habilidad1", "habilidad2"],
   "education": [
     {
-      "degree": "título o grado",
+      "degree": "titulo o grado",
       "field": "campo de estudio",
-      "institution": "institución",
-      "year": año de graduación o null
+      "institution": "institucion",
+      "year": 2024
     }
   ],
   "experience": [
     {
       "title": "cargo",
       "company": "empresa",
-      "duration": "duración",
-      "description": "descripción breve"
+      "duration": "duracion",
+      "description": "descripcion breve"
     }
   ],
   "languages": ["idioma1", "idioma2"],
-  "certifications": ["certificación1", ...],
+  "certifications": ["certificacion1"],
   "summary": "resumen profesional de 2-3 oraciones"
 }`;
 
@@ -140,12 +207,6 @@ Responde ÚNICAMENTE con un JSON válido con esta estructura exacta:
     return JSON.parse(response.choices[0].message.content);
 };
 
-/**
- * Generate specialization recommendation based on profile
- * @param {Object} profile - Extracted profile data
- * @param {string} sourceType - 'pdf' or 'linkedin'
- * @returns {Object} Recommendation with specialization, reasoning, and match score
- */
 const generateRecommendation = async (profile, sourceType = 'pdf') => {
     if (!openai) {
         const specialization = pickFallbackSpecialization(profile);
@@ -154,9 +215,9 @@ const generateRecommendation = async (profile, sourceType = 'pdf') => {
             primarySpecializationId: specialization.id,
             secondarySpecializations: [],
             matchScore: 78,
-            reasoning: `Se recomienda ${specialization.name} con base en las señales detectadas en tu perfil. Esta recomendación fue generada en modo de respaldo.`,
+            reasoning: `Se recomienda ${specialization.name} con base en las senales detectadas en tu perfil. Esta recomendacion fue generada en modo de respaldo.`,
             keyStrengths: (profile.skills || []).slice(0, 3),
-            growthAreas: ['Profundización técnica', 'Liderazgo estratégico'],
+            growthAreas: ['Profundizacion tecnica', 'Liderazgo estrategico'],
             specialization,
             subjects: specialization.subjects,
             sprintUrl: specialization.sprintUrl,
@@ -164,90 +225,114 @@ const generateRecommendation = async (profile, sourceType = 'pdf') => {
     }
     ensureOpenAIConfigured();
 
+    let retrieval = null;
+    try {
+        retrieval = await retrieveRelevantCoursesForProfile(profile, { topK: 6 });
+    } catch (retrievalError) {
+        console.warn('Profile vector retrieval skipped:', retrievalError.message);
+    }
+
+    const retrievalFallback = buildRecommendationFromRetrievalFallback(profile, retrieval);
+    const preferredSpecializationId = retrievalFallback.primarySpecializationId;
+    const retrievedCatalogContext = buildRetrievedCatalogContext(retrieval);
+
     const specializationsList = getSpecializationNamesForPrompt();
 
-    const prompt = `Eres un asesor académico experto de LAR University, una institución de educación ejecutiva de élite.
+    const prompt = `Eres un asesor academico experto de LAR University, una institucion de educacion ejecutiva de elite.
 
-Tu tarea es analizar la Hoja de Vida (CV) de un candidato y recomendar el Sprint de especialización más adecuada de nuestro catálogo.
+Tu tarea es analizar la hoja de vida de un candidato y recomendar el sprint de especializacion mas adecuado de nuestro catalogo.
+Debes usar como senal principal los resultados recuperados desde el catalogo vectorial cuando existan.
 
 PERFIL DEL CANDIDATO:
 - Nombre: ${profile.name || 'No especificado'}
 - Rol actual: ${profile.currentRole || 'No especificado'}
 - Industria: ${profile.industry || 'No especificada'}
-- Años de experiencia: ${profile.yearsOfExperience || 'No especificado'}
+- Anos de experiencia: ${profile.yearsOfExperience || 'No especificado'}
 - Habilidades: ${(profile.skills || []).join(', ') || 'No especificadas'}
 - Resumen: ${profile.summary || 'No disponible'}
+
+CONTEXTO RECUPERADO DESDE EL CATALOGO VECTORIAL:
+${retrievedCatalogContext}
+
+MODULO MAS CONSISTENTE SEGUN VECTOR SEARCH:
+- module_id: ${retrieval?.moduleRanking?.[0]?.moduleId || 'n/a'}
+- modulo: ${retrieval?.moduleRanking?.[0]?.moduleTitle || 'n/a'}
+- specialization_id_preferido: ${preferredSpecializationId}
 
 SPRINTS DISPONIBLES EN LAR UNIVERSITY:
 ${specializationsList}
 
 INSTRUCCIONES:
-1. Analiza el CV y determina qué Sprint complementa mejor su trayectoria.
-2. La recomendación debe ser un Sprint que POTENCIE su perfil actual.
-3. Si el candidato es analista de datos, recomienda el Sprint de ANALÍTICA DE DATOS.
-4. Proporciona un score de compatibilidad del 0 al 100.
-5. Explica el razonamiento de forma motivadora, mencionando siempre el nombre del Sprint.
+1. Analiza el perfil y determina que sprint complementa mejor su trayectoria.
+2. La recomendacion debe potenciar su perfil actual.
+3. Si hay contexto recuperado del catalogo, priorizalo por encima de una respuesta generica.
+4. Si hay un modulo claramente dominante, usa el specialization_id_preferido como referencia principal.
+5. Proporciona un score de compatibilidad del 0 al 100.
+6. Explica el razonamiento en 3-4 oraciones y menciona siempre el nombre del sprint.
+7. No inventes materias ni sprints fuera del catalogo.
 
-Responde ÚNICAMENTE con un JSON válido:
+Responde unicamente con un JSON valido:
 {
   "primarySpecialization": "NOMBRE_DEL_SPRINT",
   "primarySpecializationId": "id-del-sprint",
-  "secondarySpecializations": ["OTRO_SPRINT", "OTRO_SPRINT"],
-  "matchScore": número del 0 al 100,
-  "reasoning": "Explicación personalizada de 3-4 oraciones de por qué este Sprint es perfecto para el candidato",
-  "keyStrengths": ["fortaleza1", "fortaleza2", "fortaleza3"],
-  "growthAreas": ["área de crecimiento1", "área de crecimiento2"]
+  "secondarySpecializations": ["OTRO_SPRINT"],
+  "matchScore": 0,
+  "reasoning": "Explicacion personalizada",
+  "keyStrengths": ["fortaleza1", "fortaleza2"],
+  "growthAreas": ["area de crecimiento1", "area de crecimiento2"]
 }
 
-Los IDs válidos son: comunicacion, emprendimiento, finanzas, talento, tecnologia, ia-automatizacion, mercado-cliente, operaciones, analitica-datos`;
+Los IDs validos son: comunicacion, emprendimiento, finanzas, talento, tecnologia, ia-automatizacion, mercado-cliente, operaciones, analitica-datos`;
 
-    const response = await openai.chat.completions.create({
-        model: OPENAI_MODEL,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.4,
-        response_format: { type: 'json_object' },
-    });
+    try {
+        const response = await openai.chat.completions.create({
+            model: OPENAI_MODEL,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.2,
+            response_format: { type: 'json_object' },
+        });
 
-    const result = JSON.parse(response.choices[0].message.content);
+        const result = JSON.parse(response.choices[0].message.content);
+        const resolvedPrimarySpecializationId =
+            getSpecializationById(result.primarySpecializationId)?.id ||
+            getSpecializationIdByModuleId(retrieval?.moduleRanking?.[0]?.moduleId) ||
+            retrievalFallback.primarySpecializationId;
+        const specialization = getSpecializationById(resolvedPrimarySpecializationId) || retrievalFallback.specialization;
 
-    // Find the matching specialization from our catalog
-    const specializationKey = Object.keys(SPECIALIZATIONS).find(
-        (key) =>
-            SPECIALIZATIONS[key].id === result.primarySpecializationId ||
-            SPECIALIZATIONS[key].name === result.primarySpecialization
-    );
-
-    const specialization = specializationKey
-        ? SPECIALIZATIONS[specializationKey]
-        : Object.values(SPECIALIZATIONS)[0];
-
-    return {
-        ...result,
-        specialization,
-        subjects: specialization.subjects,
-        sprintUrl: specialization.sprintUrl,
-    };
+        return {
+            ...result,
+            primarySpecializationId: resolvedPrimarySpecializationId,
+            primarySpecialization: specialization.name,
+            specialization,
+            subjects: specialization.subjects,
+            sprintUrl: specialization.sprintUrl,
+            recommendedCourses: retrievalFallback.recommendedCourses,
+        };
+    } catch (error) {
+        console.warn('Grounded recommendation fallback activated:', error.message);
+        return retrievalFallback;
+    }
 };
 
-/**
- * Generate a chat response in the context of the conversation
- * @param {Array} messages - Conversation history
- * @param {Object} userProfile - User's extracted profile (optional)
- * @param {Object} recommendation - Current recommendation (optional)
- * @returns {string} AI response
- */
-const generateChatResponse = async (messages, userProfile = null, recommendation = null) => {
+const generateChatResponse = async (messages, userProfile = null, recommendation = null, retrieval = null) => {
     if (!openai) {
-        const lastUserMessage = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
-        if (!userProfile || !recommendation) {
-            return `¡Recibido! Ya tengo tu mensaje: "${lastUserMessage}". Para darte una ruta personalizada, adjunta tu hoja de vida en PDF y continuaré con el análisis.`;
+        const lastUserMessage = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
+        const topCourse = retrieval?.matches?.[0];
+
+        if (topCourse) {
+            return `Con base en tu pregunta, el resultado mas relevante es ${topCourse.title}, dentro del modulo ${topCourse.moduleTitle}. Si quieres, te explico por que encaja contigo y que aprenderias alli.`;
         }
-        return `Gracias por tu mensaje. Con base en tu perfil, tu mejor enfoque actual es ${recommendation.primarySpecialization || recommendation.specialization?.name}. Si quieres, te explico el sprint 1 o cómo aprovechar esta ruta en tu trabajo actual.`;
+
+        if (!userProfile || !recommendation) {
+            return `Recibido. Ya tengo tu mensaje: "${lastUserMessage}". Para darte una ruta personalizada, adjunta tu hoja de vida en PDF y continuare con el analisis.`;
+        }
+
+        return `Gracias por tu mensaje. Con base en tu perfil, tu mejor enfoque actual es ${recommendation.primarySpecialization || recommendation.specialization?.name}. Si quieres, te explico el sprint 1 o como aprovechar esta ruta en tu trabajo actual.`;
     }
     ensureOpenAIConfigured();
 
-    const systemPrompt = `Eres un asesor académico experto y amigable de LAR University, una institución de educación ejecutiva de élite. 
-Tu nombre es "LAR Advisor" y tu misión es ayudar a los profesionales a encontrar la especialización perfecta para potenciar su carrera.
+    let systemPrompt = `Eres un asesor academico experto y amigable de LAR University, una institucion de educacion ejecutiva de elite.
+Tu nombre es "LAR Advisor" y tu mision es ayudar a los profesionales a encontrar la especializacion perfecta para potenciar su carrera.
 
 ${userProfile ? `PERFIL DEL USUARIO:
 - Nombre: ${userProfile.name || 'el usuario'}
@@ -256,26 +341,32 @@ ${userProfile ? `PERFIL DEL USUARIO:
 - Habilidades: ${(userProfile.skills || []).slice(0, 5).join(', ')}
 ` : ''}
 
-${recommendation ? `RECOMENDACIÓN ACTUAL:
-- Especialización recomendada: ${recommendation.specialization?.name || recommendation.primarySpecialization}
+${recommendation ? `RECOMENDACION ACTUAL:
+- Especializacion recomendada: ${recommendation.specialization?.name || recommendation.primarySpecialization}
 - Score de compatibilidad: ${recommendation.matchScore}%
 - Materias: ${(recommendation.subjects || []).join(', ')}
 ` : ''}
 
+${retrieval?.matches?.length ? `CONTEXTO RECUPERADO DEL CATALOGO:
+${retrieval.contextText}
+` : ''}
+
 INSTRUCCIONES:
-- Responde siempre en español
-- Sé motivador, profesional y cercano
-- Si el usuario pregunta sobre la especialización recomendada, explica los beneficios
-- Si el usuario quiere explorar otras opciones, muéstrate abierto y explica las alternativas
-- Mantén respuestas concisas pero informativas (máximo 3-4 párrafos)
-- Usa emojis ocasionalmente para hacer la conversación más amigable
-- Siempre invita al usuario a dar el siguiente paso`;
+- Responde siempre en espanol.
+- Se motivador, profesional y cercano.
+- Si el usuario pregunta sobre la especializacion recomendada, explica los beneficios.
+- Si el usuario quiere explorar otras opciones, muestrate abierto y explica las alternativas.
+- Si hay contexto recuperado del catalogo, usalo como fuente principal para recomendar modulos o temas.
+- Cuando cites resultados del catalogo, usa los titulos exactos.
+- Si el contexto recuperado no alcanza para responder algo con certeza, dilo explicitamente y no inventes contenido.
+- Manten respuestas concisas pero informativas, maximo 3-4 parrafos.
+- Siempre invita al usuario a dar el siguiente paso.`;
 
     const formattedMessages = [
         { role: 'system', content: systemPrompt },
-        ...messages.map((msg) => ({
-            role: msg.role,
-            content: msg.content,
+        ...messages.map((message) => ({
+            role: message.role,
+            content: message.content,
         })),
     ];
 
@@ -289,26 +380,19 @@ INSTRUCCIONES:
     return response.choices[0].message.content;
 };
 
-/**
- * Analyze LinkedIn profile from URL (scraping not available, uses AI with URL context)
- * @param {string} linkedinUrl - LinkedIn profile URL
- * @returns {Object} Profile data and recommendation
- */
 const analyzeLinkedInProfile = async (linkedinUrl) => {
     ensureOpenAIConfigured();
 
-    // Note: Direct LinkedIn scraping requires their API or a third-party service.
-    // This implementation asks the user to paste their LinkedIn summary instead.
-    const prompt = `Eres un experto en análisis de perfiles profesionales de LinkedIn.
+    const prompt = `Eres un experto en analisis de perfiles profesionales de LinkedIn.
 
 El usuario ha proporcionado su URL de LinkedIn: ${linkedinUrl}
 
 Como no podemos acceder directamente al perfil, genera un mensaje amigable explicando que:
-1. Por políticas de privacidad, no podemos acceder directamente a LinkedIn
-2. Pídele que copie y pegue su resumen de LinkedIn o descripción de su perfil
-3. O que suba su CV en PDF como alternativa
+1. Por politicas de privacidad, no podemos acceder directamente a LinkedIn.
+2. Pidele que copie y pegue su resumen de LinkedIn o descripcion de su perfil.
+3. O que suba su CV en PDF como alternativa.
 
-Responde en español de forma amigable y profesional.`;
+Responde en espanol de forma amigable y profesional.`;
 
     const response = await openai.chat.completions.create({
         model: OPENAI_MODEL,

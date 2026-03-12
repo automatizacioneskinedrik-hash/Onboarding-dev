@@ -5,6 +5,8 @@
 
 const { chats, analyses } = require('../store');
 const { generateChatResponse } = require('../services/openai.service');
+const { createTextEmbedding } = require('../services/embedding.service');
+const { retrieveRelevantCourses } = require('../services/course-retrieval.service');
 
 /**
  * GET /api/chat
@@ -105,6 +107,8 @@ const sendMessage = async (req, res, next) => {
         // Resolve CV analysis context
         let userProfile = null;
         let recommendation = null;
+        let messageEmbedding = null;
+        let retrieval = null;
         const analysisId = cvAnalysisId || chat.cvAnalysisId;
 
         if (analysisId) {
@@ -115,11 +119,38 @@ const sendMessage = async (req, res, next) => {
             }
         }
 
+        try {
+            messageEmbedding = await createTextEmbedding(content);
+        } catch (embeddingError) {
+            console.warn('Embedding generation skipped:', embeddingError.message);
+        }
+
+        try {
+            retrieval = await retrieveRelevantCourses({
+                question: content,
+                embeddingResult: messageEmbedding,
+                topK: 4,
+            });
+        } catch (retrievalError) {
+            console.warn('Vector retrieval skipped:', retrievalError.message);
+        }
+
         // Add user message
         const userMsg = await chats.addMessage(chatId, {
             role: 'user',
             content: content.trim(),
-            metadata: { type: 'text' },
+            metadata: {
+                type: 'text',
+                embedding: messageEmbedding
+                    ? {
+                        status: 'generated',
+                        model: messageEmbedding.model,
+                        dimensions: messageEmbedding.dimensions,
+                    }
+                    : {
+                        status: 'unavailable',
+                    },
+            },
         });
 
         // Get fresh chat state for OpenAI
@@ -145,13 +176,29 @@ const sendMessage = async (req, res, next) => {
         }));
 
         // Generate AI response
-        const aiContent = await generateChatResponse(recentMessages, userProfile, recommendation);
+        const aiContent = await generateChatResponse(recentMessages, userProfile, recommendation, retrieval);
 
         // Add assistant message
         const assistantMsg = await chats.addMessage(chatId, {
             role: 'assistant',
             content: aiContent,
-            metadata: { type: 'text' },
+            metadata: {
+                type: 'text',
+                retrieval: retrieval
+                    ? {
+                        status: retrieval.matches.length ? 'used' : 'no_matches',
+                        matches: retrieval.matches.slice(0, 3).map((match) => ({
+                            id: match.id,
+                            title: match.title,
+                            contentType: match.contentType,
+                            moduleTitle: match.moduleTitle,
+                            distance: match.distance,
+                        })),
+                    }
+                    : {
+                        status: 'unavailable',
+                    },
+            },
         });
 
         res.status(200).json({
@@ -160,6 +207,19 @@ const sendMessage = async (req, res, next) => {
                 userMessage: userMsg,
                 assistantMessage: assistantMsg,
                 chatId,
+                retrieval: {
+                    embeddingGenerated: Boolean(messageEmbedding),
+                    embeddingModel: messageEmbedding?.model || null,
+                    embeddingDimensions: messageEmbedding?.dimensions || null,
+                    vectorSearchUsed: Boolean(retrieval),
+                    matches: retrieval?.matches.slice(0, 3).map((match) => ({
+                        id: match.id,
+                        title: match.title,
+                        contentType: match.contentType,
+                        moduleTitle: match.moduleTitle,
+                        distance: match.distance,
+                    })) || [],
+                },
             },
         });
     } catch (error) {

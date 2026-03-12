@@ -31,6 +31,8 @@ const COLLECTIONS = {
     CHATS: 'chats',
     MESSAGES: 'messages',
     ANALYSES: 'analyses',
+    LEARNING_MODULES: 'learning_modules',
+    TOPICS: 'topics',
 };
 
 module.exports = { admin, db, COLLECTIONS };
