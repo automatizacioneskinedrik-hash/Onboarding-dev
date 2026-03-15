@@ -128,7 +128,7 @@ const inspectBucket = async () => {
         bucketName,
         prefix: prefix || null,
         fileCount: sortedFiles.length,
-        latestFiles: sortedFiles.slice(0, 5),
+        latestFiles: sortedFiles.slice(0, 10),
     };
 };
 
@@ -146,7 +146,7 @@ const queryVectorSearch = async (question, filters = {}) => {
         embeddingModel: embedding.model,
         embeddingDimensions: embedding.dimensions,
         neighborCount: result.neighbors.length,
-        neighbors: result.neighbors.slice(0, 5),
+        neighbors: result.neighbors.slice(0, 10),
         endpoint: result.publicEndpointDomain,
     };
 };

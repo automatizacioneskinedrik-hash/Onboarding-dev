@@ -4,6 +4,7 @@
  */
 
 const { users, stats } = require('../store');
+const { getAllMasters, getMasterById } = require('../utils/masters');
 
 /**
  * GET /api/users/profile
@@ -43,4 +44,48 @@ const deactivateAccount = async (req, res, next) => {
     }
 };
 
-module.exports = { getProfile, deactivateAccount };
+const getMasters = async (req, res, next) => {
+    try {
+        const masters = getAllMasters();
+        res.status(200).json({
+            success: true,
+            data: {
+                masters,
+                total: masters.length,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const selectMaster = async (req, res, next) => {
+    try {
+        const { masterId } = req.body;
+        const master = getMasterById(masterId);
+
+        if (!master) {
+            return res.status(400).json({
+                success: false,
+                message: 'Master no valido.',
+            });
+        }
+
+        const user = await users.update(req.user.id, {
+            selectedMasterId: master.id,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Master seleccionado exitosamente.',
+            data: {
+                user: users.safe(user),
+                selectedMaster: master,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+module.exports = { getProfile, deactivateAccount, getMasters, selectMaster };

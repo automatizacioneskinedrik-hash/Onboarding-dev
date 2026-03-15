@@ -10,7 +10,10 @@ const {
     getSpecializationIdByModuleId,
     getSpecializationNamesForPrompt,
 } = require('../utils/specializations');
-const { retrieveRelevantCoursesForProfile } = require('./course-retrieval.service');
+const {
+    retrieveRelevantCoursesForProfile,
+    loadSprintCatalogForSpecialization,
+} = require('./course-retrieval.service');
 
 const ensureOpenAIConfigured = () => {
     if (!openai) {
@@ -30,6 +33,23 @@ const FALLBACK_SKILL_KEYWORDS = {
     'mercado-cliente': ['marketing', 'cliente', 'brand', 'growth', 'producto'],
     operaciones: ['operaciones', 'logistica', 'supply chain', 'procesos'],
     comunicacion: ['comunicacion', 'comms', 'relaciones publicas', 'presentaciones'],
+};
+
+const resolveSpecializationIdFromMatch = (item) =>
+    item?.specializationId || getSpecializationIdByModuleId(item?.moduleId);
+
+const resolveSpecializationCatalog = async ({ masterId, specializationId, fallbackSpecialization }) => {
+    const sprintCatalog = masterId
+        ? await loadSprintCatalogForSpecialization({ masterId, specializationId })
+        : null;
+
+    return {
+        specialization: fallbackSpecialization,
+        subjects: sprintCatalog?.topics?.length ? sprintCatalog.topics : fallbackSpecialization.subjects,
+        sprintTitle: sprintCatalog?.title || fallbackSpecialization.name,
+        sprintUrl: fallbackSpecialization.sprintUrl,
+        sprintCatalog,
+    };
 };
 
 const pickFallbackSpecialization = (profile = {}) => {
@@ -121,11 +141,11 @@ const buildRetrievedCatalogContext = (retrieval) => {
 const buildRecommendationFromRetrievalFallback = (profile, retrieval) => {
     const preferredModule = retrieval?.moduleRanking?.[0];
     const preferredSpecializationId =
-        getSpecializationIdByModuleId(preferredModule?.moduleId) || pickFallbackSpecialization(profile).id;
+        resolveSpecializationIdFromMatch(preferredModule) || pickFallbackSpecialization(profile).id;
     const specialization = getSpecializationById(preferredSpecializationId) || pickFallbackSpecialization(profile);
     const secondarySpecializations = (retrieval?.moduleRanking || [])
         .slice(1, 3)
-        .map((item) => getSpecializationIdByModuleId(item.moduleId))
+        .map((item) => resolveSpecializationIdFromMatch(item))
         .filter(Boolean)
         .filter((id, index, array) => id !== preferredSpecializationId && array.indexOf(id) === index);
 
@@ -134,6 +154,7 @@ const buildRecommendationFromRetrievalFallback = (profile, retrieval) => {
         title: match.title,
         contentType: match.contentType,
         moduleId: match.moduleId,
+        specializationId: match.specializationId || null,
         moduleTitle: match.moduleTitle,
         distance: match.distance,
     }));
@@ -207,9 +228,14 @@ Responde unicamente con un JSON valido con esta estructura exacta:
     return JSON.parse(response.choices[0].message.content);
 };
 
-const generateRecommendation = async (profile, sourceType = 'pdf') => {
+const generateRecommendation = async (profile, sourceType = 'pdf', options = {}) => {
     if (!openai) {
         const specialization = pickFallbackSpecialization(profile);
+        const specializationCatalog = await resolveSpecializationCatalog({
+            masterId: options.masterId,
+            specializationId: specialization.id,
+            fallbackSpecialization: specialization,
+        });
         return {
             primarySpecialization: specialization.name,
             primarySpecializationId: specialization.id,
@@ -218,16 +244,26 @@ const generateRecommendation = async (profile, sourceType = 'pdf') => {
             reasoning: `Se recomienda ${specialization.name} con base en las senales detectadas en tu perfil. Esta recomendacion fue generada en modo de respaldo.`,
             keyStrengths: (profile.skills || []).slice(0, 3),
             growthAreas: ['Profundizacion tecnica', 'Liderazgo estrategico'],
-            specialization,
-            subjects: specialization.subjects,
-            sprintUrl: specialization.sprintUrl,
+            specialization: specializationCatalog.specialization,
+            subjects: specializationCatalog.subjects,
+            sprintUrl: specializationCatalog.sprintUrl,
         };
     }
     ensureOpenAIConfigured();
 
     let retrieval = null;
     try {
-        retrieval = await retrieveRelevantCoursesForProfile(profile, { topK: 6 });
+        const masterFilters = options.masterId
+            ? {
+                masterIds: [options.masterId],
+                catalogTypes: ['sprint'],
+            }
+            : { catalogTypes: ['sprint'] };
+
+        retrieval = await retrieveRelevantCoursesForProfile(profile, {
+            topK: 6,
+            filters: masterFilters,
+        });
     } catch (retrievalError) {
         console.warn('Profile vector retrieval skipped:', retrievalError.message);
     }
@@ -250,6 +286,7 @@ PERFIL DEL CANDIDATO:
 - Anos de experiencia: ${profile.yearsOfExperience || 'No especificado'}
 - Habilidades: ${(profile.skills || []).join(', ') || 'No especificadas'}
 - Resumen: ${profile.summary || 'No disponible'}
+- Master seleccionado: ${options.masterId || 'Sin seleccionar'}
 
 CONTEXTO RECUPERADO DESDE EL CATALOGO VECTORIAL:
 ${retrievedCatalogContext}
@@ -257,6 +294,7 @@ ${retrievedCatalogContext}
 MODULO MAS CONSISTENTE SEGUN VECTOR SEARCH:
 - module_id: ${retrieval?.moduleRanking?.[0]?.moduleId || 'n/a'}
 - modulo: ${retrieval?.moduleRanking?.[0]?.moduleTitle || 'n/a'}
+- specialization_id_recuperado: ${resolveSpecializationIdFromMatch(retrieval?.moduleRanking?.[0]) || 'n/a'}
 - specialization_id_preferido: ${preferredSpecializationId}
 
 SPRINTS DISPONIBLES EN LAR UNIVERSITY:
@@ -295,22 +333,39 @@ Los IDs validos son: comunicacion, emprendimiento, finanzas, talento, tecnologia
         const result = JSON.parse(response.choices[0].message.content);
         const resolvedPrimarySpecializationId =
             getSpecializationById(result.primarySpecializationId)?.id ||
-            getSpecializationIdByModuleId(retrieval?.moduleRanking?.[0]?.moduleId) ||
+            resolveSpecializationIdFromMatch(retrieval?.moduleRanking?.[0]) ||
             retrievalFallback.primarySpecializationId;
         const specialization = getSpecializationById(resolvedPrimarySpecializationId) || retrievalFallback.specialization;
+        const specializationCatalog = await resolveSpecializationCatalog({
+            masterId: options.masterId,
+            specializationId: resolvedPrimarySpecializationId,
+            fallbackSpecialization: specialization,
+        });
 
         return {
             ...result,
             primarySpecializationId: resolvedPrimarySpecializationId,
-            primarySpecialization: specialization.name,
-            specialization,
-            subjects: specialization.subjects,
-            sprintUrl: specialization.sprintUrl,
+            primarySpecialization: specializationCatalog.specialization.name,
+            specialization: specializationCatalog.specialization,
+            subjects: specializationCatalog.subjects,
+            sprintUrl: specializationCatalog.sprintUrl,
             recommendedCourses: retrievalFallback.recommendedCourses,
         };
     } catch (error) {
         console.warn('Grounded recommendation fallback activated:', error.message);
-        return retrievalFallback;
+        const specializationCatalog = await resolveSpecializationCatalog({
+            masterId: options.masterId,
+            specializationId: retrievalFallback.primarySpecializationId,
+            fallbackSpecialization: retrievalFallback.specialization,
+        });
+
+        return {
+            ...retrievalFallback,
+            primarySpecialization: specializationCatalog.specialization.name,
+            specialization: specializationCatalog.specialization,
+            subjects: specializationCatalog.subjects,
+            sprintUrl: specializationCatalog.sprintUrl,
+        };
     }
 };
 

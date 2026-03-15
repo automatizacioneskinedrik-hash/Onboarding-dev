@@ -93,6 +93,22 @@ const buildRestricts = (filters = {}) => {
         });
     }
 
+    const masterAllowList = filters.masterIds || (filters.masterId ? [filters.masterId] : null);
+    if (masterAllowList?.length) {
+        restricts.push({
+            namespace: 'master_id',
+            allowList: masterAllowList,
+        });
+    }
+
+    const catalogAllowList = filters.catalogTypes || (filters.catalogType ? [filters.catalogType] : null);
+    if (catalogAllowList?.length) {
+        restricts.push({
+            namespace: 'catalog_type',
+            allowList: catalogAllowList,
+        });
+    }
+
     return restricts;
 };
 

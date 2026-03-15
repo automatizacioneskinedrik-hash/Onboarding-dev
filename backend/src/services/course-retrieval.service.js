@@ -20,6 +20,32 @@ const readTopicsByModuleId = async (moduleId) => {
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 };
 
+const readSprintModuleBySpecialization = async ({ masterId, specializationId }) => {
+    if (!masterId || !specializationId) {
+        return null;
+    }
+
+    const snapshot = await db
+        .collection(COLLECTIONS.LEARNING_MODULES)
+        .where('master_id', '==', masterId)
+        .get();
+
+    if (snapshot.empty) {
+        return null;
+    }
+
+    const doc = snapshot.docs.find(
+        (item) =>
+            item.data().catalog_type === 'sprint' && item.data().specialization_id === specializationId
+    );
+
+    if (!doc) {
+        return null;
+    }
+
+    return { id: doc.id, ...doc.data() };
+};
+
 const loadCourseFromFirestore = async (datapointId) => {
     const [moduleDoc, topicDoc] = await Promise.all([readModuleById(datapointId), readTopicById(datapointId)]);
 
@@ -29,6 +55,9 @@ const loadCourseFromFirestore = async (datapointId) => {
         return {
             id: moduleDoc.id,
             contentType: 'learning_module',
+            catalogType: moduleDoc.catalog_type || 'master',
+            masterId: moduleDoc.master_id || 'shared',
+            specializationId: moduleDoc.specialization_id || null,
             title: moduleDoc.title,
             description: moduleDoc.description || '',
             moduleId: moduleDoc.id,
@@ -46,6 +75,9 @@ const loadCourseFromFirestore = async (datapointId) => {
         return {
             id: topicDoc.id,
             contentType: 'topic',
+            catalogType: topicDoc.catalog_type || parentModule?.catalog_type || 'master',
+            masterId: topicDoc.master_id || parentModule?.master_id || 'shared',
+            specializationId: topicDoc.specialization_id || parentModule?.specialization_id || null,
             title: topicDoc.title,
             description: parentModule?.description || '',
             moduleId: topicDoc.module_id,
@@ -69,14 +101,15 @@ const formatRetrievedCoursesContext = (courses = []) => {
         .map((course, index) => {
             const lines = [
                 `Resultado ${index + 1}:`,
-                `Tipo: ${course.contentType === 'learning_module' ? 'Módulo' : 'Tema'}`,
-                `Título: ${course.title}`,
-                `Módulo relacionado: ${course.moduleTitle}`,
+                `Tipo: ${course.contentType === 'learning_module' ? 'Modulo' : 'Tema'}`,
+                `Categoria: ${course.catalogType === 'master' ? 'Master' : 'Sprint'}`,
+                `Titulo: ${course.title}`,
+                `Modulo relacionado: ${course.moduleTitle}`,
                 `Distancia vectorial: ${course.distance ?? 'n/a'}`,
             ];
 
             if (course.description) {
-                lines.push(`Descripción: ${course.description}`);
+                lines.push(`Descripcion: ${course.description}`);
             }
 
             if (course.difficulty) {
@@ -88,7 +121,7 @@ const formatRetrievedCoursesContext = (courses = []) => {
             }
 
             if (course.topics.length) {
-                lines.push(`Topics del módulo: ${course.topics.join(', ')}`);
+                lines.push(`Topics del modulo: ${course.topics.join(', ')}`);
             }
 
             return lines.join('\n');
@@ -115,6 +148,7 @@ const buildModuleRanking = (matches = []) => {
         const current = ranking.get(match.moduleId) || {
             moduleId: match.moduleId,
             moduleTitle: match.moduleTitle,
+            specializationId: match.specializationId || null,
             score: 0,
             hits: 0,
             topMatch: match,
@@ -197,9 +231,31 @@ const retrieveRelevantCoursesForProfile = async (profile, options = {}) => {
     };
 };
 
+const loadSprintCatalogForSpecialization = async ({ masterId, specializationId }) => {
+    const moduleDoc = await readSprintModuleBySpecialization({ masterId, specializationId });
+
+    if (!moduleDoc) {
+        return null;
+    }
+
+    const moduleTopics = await readTopicsByModuleId(moduleDoc.id);
+
+    return {
+        id: moduleDoc.id,
+        masterId: moduleDoc.master_id || masterId,
+        specializationId: moduleDoc.specialization_id || specializationId,
+        title: moduleDoc.title,
+        description: moduleDoc.description || '',
+        difficulty: moduleDoc.difficulty || null,
+        estimatedHours: moduleDoc.estimated_hours || null,
+        topics: moduleTopics.map((topic) => topic.title),
+    };
+};
+
 module.exports = {
     buildProfileRetrievalQuery,
     retrieveRelevantCourses,
     retrieveRelevantCoursesForProfile,
     formatRetrievedCoursesContext,
+    loadSprintCatalogForSpecialization,
 };

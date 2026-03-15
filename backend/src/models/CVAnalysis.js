@@ -19,6 +19,10 @@ const cvAnalysisSchema = new mongoose.Schema(
             enum: ['pdf', 'linkedin'],
             required: true,
         },
+        masterId: {
+            type: String,
+            default: null,
+        },
         // File info (for PDF uploads)
         file: {
             filename: String,

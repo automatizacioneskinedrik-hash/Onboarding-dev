@@ -31,6 +31,7 @@ const COLLECTIONS = {
     CHATS: 'chats',
     MESSAGES: 'messages',
     ANALYSES: 'analyses',
+    MASTERS: 'masters',
     LEARNING_MODULES: 'learning_modules',
     TOPICS: 'topics',
 };

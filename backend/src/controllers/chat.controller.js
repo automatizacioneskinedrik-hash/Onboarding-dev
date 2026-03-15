@@ -109,6 +109,7 @@ const sendMessage = async (req, res, next) => {
         let recommendation = null;
         let messageEmbedding = null;
         let retrieval = null;
+        let selectedMasterId = req.user.selectedMasterId || null;
         const analysisId = cvAnalysisId || chat.cvAnalysisId;
 
         if (analysisId) {
@@ -116,6 +117,7 @@ const sendMessage = async (req, res, next) => {
             if (analysis && analysis.status === 'completed') {
                 userProfile = analysis.extractedProfile;
                 recommendation = analysis.recommendation;
+                selectedMasterId = analysis.masterId || selectedMasterId;
             }
         }
 
@@ -130,6 +132,11 @@ const sendMessage = async (req, res, next) => {
                 question: content,
                 embeddingResult: messageEmbedding,
                 topK: 4,
+                filters: selectedMasterId
+                    ? {
+                        masterIds: [selectedMasterId, 'shared'],
+                    }
+                    : {},
             });
         } catch (retrievalError) {
             console.warn('Vector retrieval skipped:', retrievalError.message);

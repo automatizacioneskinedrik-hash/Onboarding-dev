@@ -2,10 +2,11 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Home, User, History, LogOut, Sun, Moon, GraduationCap } from 'lucide-react';
+import { User, LogOut, Sun, Moon } from 'lucide-react';
+import { getMasterDisplayName } from '../utils/masters';
 
 const Navbar = ({ onToggleSidebar }) => {
-    const { logout } = useAuth();
+    const { logout, selectedMaster } = useAuth();
     const { isDarkMode, toggleTheme } = useTheme();
     const navigate = useNavigate();
 
@@ -56,6 +57,18 @@ const Navbar = ({ onToggleSidebar }) => {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        {selectedMaster && (
+                            <div
+                                className={`hidden sm:flex items-center px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.18em] border ${
+                                    isDarkMode
+                                        ? 'bg-white/5 border-white/10 text-white/80'
+                                        : 'bg-black/5 border-black/10 text-slate-700'
+                                }`}
+                            >
+                                {getMasterDisplayName(selectedMaster)}
+                            </div>
+                        )}
+
                         {/* Navigation Links - Icons Only */}
                         <div className="flex items-center gap-2">
                             {navItems.map((item) => (

@@ -59,6 +59,7 @@ const users = {
             googleId: userData.googleId || null,
             isGoogleAccount: userData.isGoogleAccount || false,
             cvAnalysisId: null,
+            selectedMasterId: null,
             linkedinUrl: null,
             recommendedSpecialization: null,
             lastLogin: null,
@@ -191,6 +192,7 @@ const analyses = {
             id: uuidv4(),
             userId: data.userId,
             sourceType: data.sourceType, // 'pdf' | 'linkedin'
+            masterId: data.masterId || null,
             file: data.file || null,
             linkedinUrl: data.linkedinUrl || null,
             rawText: data.rawText || null,

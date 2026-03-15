@@ -75,8 +75,10 @@ const getMyRecommendation = async (req, res, next) => {
                     subjects: analysis.recommendation?.subjects || specialization.subjects,
                     springUrl: analysis.recommendation?.springUrl || specialization.springUrl,
                     secondarySpecializations: analysis.recommendation?.secondarySpecializations || [],
+                    recommendedCourses: analysis.recommendation?.recommendedCourses || [],
                 },
                 profile: analysis.extractedProfile,
+                masterId: analysis.masterId || null,
                 analysisDate: analysis.processedAt,
                 sourceType: analysis.sourceType,
             },
@@ -111,7 +113,8 @@ const regenerateRecommendation = async (req, res, next) => {
 
         const recommendation = await generateRecommendation(
             analysis.extractedProfile,
-            analysis.sourceType
+            analysis.sourceType,
+            { masterId: analysis.masterId || req.user.selectedMasterId || null }
         );
 
         await analyses.update(cvAnalysisId, {
@@ -122,6 +125,7 @@ const regenerateRecommendation = async (req, res, next) => {
                 reasoning: recommendation.reasoning,
                 subjects: recommendation.subjects || [],
                 springUrl: recommendation.springUrl,
+                recommendedCourses: recommendation.recommendedCourses || [],
             },
         });
 
@@ -136,6 +140,7 @@ const regenerateRecommendation = async (req, res, next) => {
                     subjects: recommendation.subjects,
                     springUrl: recommendation.springUrl,
                     secondarySpecializations: recommendation.secondarySpecializations,
+                    recommendedCourses: recommendation.recommendedCourses || [],
                 },
             },
         });

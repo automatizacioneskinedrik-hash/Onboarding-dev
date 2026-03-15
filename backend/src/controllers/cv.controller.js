@@ -6,12 +6,22 @@
 const { analyses, users } = require('../store');
 const { extractTextFromFile } = require('../services/pdf.service');
 const { extractProfileFromCV, generateRecommendation } = require('../services/openai.service');
+const { isValidMasterId } = require('../utils/masters');
 
 /**
  * POST /api/cv/upload
  */
 const uploadCV = async (req, res, next) => {
     try {
+        const selectedMasterId = req.body.masterId || req.user.selectedMasterId || null;
+
+        if (!selectedMasterId || !isValidMasterId(selectedMasterId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Debes seleccionar un master valido antes de subir tu CV.',
+            });
+        }
+
         if (!req.file) {
             return res.status(400).json({
                 success: false,
@@ -26,6 +36,7 @@ const uploadCV = async (req, res, next) => {
         const analysis = await analyses.create({
             userId: req.user.id,
             sourceType: filename.toLowerCase().endsWith('.csv') ? 'csv' : 'pdf',
+            masterId: selectedMasterId,
             file: {
                 filename: req.file.filename,
                 originalName: req.file.originalname,
@@ -80,7 +91,9 @@ const uploadCV = async (req, res, next) => {
         console.log(`🎯 Generating specialization recommendation...`);
         let recommendation;
         try {
-            recommendation = await generateRecommendation(extractedProfile, analysis.sourceType);
+            recommendation = await generateRecommendation(extractedProfile, analysis.sourceType, {
+                masterId: selectedMasterId,
+            });
         } catch (aiErr) {
             console.error('❌ OpenAI Recommendation Error:', aiErr.message);
             await analyses.update(analysis.id, { status: 'failed', errorMessage: 'Error al generar recomendación' });
@@ -108,6 +121,7 @@ const uploadCV = async (req, res, next) => {
         // Update user reference
         await users.update(req.user.id, {
             cvAnalysisId: analysis.id,
+            selectedMasterId,
             recommendedSpecialization: recommendation?.specialization?.name || recommendation?.primarySpecialization,
         });
 
@@ -116,6 +130,7 @@ const uploadCV = async (req, res, next) => {
             message: 'Análisis completado exitosamente',
             data: {
                 cvAnalysisId: updated.id,
+                masterId: selectedMasterId,
                 profile: extractedProfile,
                 recommendation: updated.recommendation,
             },
@@ -132,6 +147,14 @@ const uploadCV = async (req, res, next) => {
 const analyzeLinkedIn = async (req, res, next) => {
     try {
         const { linkedinUrl, linkedinSummary } = req.body;
+        const selectedMasterId = req.body.masterId || req.user.selectedMasterId || null;
+
+        if (!selectedMasterId || !isValidMasterId(selectedMasterId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Debes seleccionar un master valido antes de analizar tu perfil.',
+            });
+        }
 
         if (!linkedinUrl) {
             return res.status(400).json({
@@ -144,6 +167,7 @@ const analyzeLinkedIn = async (req, res, next) => {
             const analysis = await analyses.create({
                 userId: req.user.id,
                 sourceType: 'linkedin',
+                masterId: selectedMasterId,
                 linkedinUrl,
                 rawText: linkedinSummary,
             });
@@ -151,7 +175,9 @@ const analyzeLinkedIn = async (req, res, next) => {
             await analyses.update(analysis.id, { status: 'processing' });
 
             const extractedProfile = await extractProfileFromCV(linkedinSummary);
-            const recommendation = await generateRecommendation(extractedProfile, 'linkedin');
+            const recommendation = await generateRecommendation(extractedProfile, 'linkedin', {
+                masterId: selectedMasterId,
+            });
 
             const updated = await analyses.update(analysis.id, {
                 extractedProfile,
@@ -172,6 +198,7 @@ const analyzeLinkedIn = async (req, res, next) => {
             await users.update(req.user.id, {
                 cvAnalysisId: analysis.id,
                 linkedinUrl,
+                selectedMasterId,
                 recommendedSpecialization: recommendation.specialization?.name,
             });
 
@@ -180,6 +207,7 @@ const analyzeLinkedIn = async (req, res, next) => {
                 message: '¡Perfil de LinkedIn analizado exitosamente!',
                 data: {
                     cvAnalysisId: updated.id,
+                    masterId: selectedMasterId,
                     profile: extractedProfile,
                     recommendation: {
                         specialization: recommendation.specialization,

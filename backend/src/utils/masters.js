@@ -1,0 +1,36 @@
+const MASTERS = [
+    {
+        id: 'mtecmba',
+        code: 'MTECMBA',
+        name: 'MTECMBA',
+        description: 'Master orientado a liderazgo, tecnologia y gestion empresarial.',
+        isActive: true,
+    },
+    {
+        id: 'mintear',
+        code: 'MINTEAR',
+        name: 'MINTEAR',
+        description: 'Master enfocado en innovacion, tecnologia emergente e inteligencia artificial.',
+        isActive: true,
+    },
+    {
+        id: 'datalar-mba',
+        code: 'DATALAR-MBA',
+        name: 'DATALAR-MBA',
+        description: 'Master centrado en analitica, datos y toma de decisiones empresariales.',
+        isActive: true,
+    },
+];
+
+const getAllMasters = () => MASTERS;
+
+const getMasterById = (id) => MASTERS.find((master) => master.id === id) || null;
+
+const isValidMasterId = (id) => Boolean(getMasterById(id));
+
+module.exports = {
+    MASTERS,
+    getAllMasters,
+    getMasterById,
+    isValidMasterId,
+};

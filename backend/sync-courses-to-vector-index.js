@@ -12,10 +12,16 @@ const run = async () => {
         console.log(`Embedding dimensions: ${result.embeddingDimensions}`);
         console.log(`JSONL uploaded to: ${result.gcsFileUri}`);
         console.log(`Vertex import source: ${result.gcsFolderUri}`);
+        console.log(`Update method used: ${result.updateMethodUsed}`);
         console.log(`Operation: ${result.operation?.name || 'not returned'}`);
 
         if (result.completedOperation) {
             console.log(`Import completed: ${result.completedOperation.done === true}`);
+        }
+
+        if (result.waitTimedOut) {
+            console.log('Import wait status: timeout');
+            console.log('Vertex acepto la operacion, pero el script dejo de esperar para no bloquear la consola.');
         }
 
         if (result.diagnostic) {

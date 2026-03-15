@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: null,
         },
+        selectedMasterId: {
+            type: String,
+            default: null,
+        },
         // Recommended specialization
         recommendedSpecialization: {
             type: String,

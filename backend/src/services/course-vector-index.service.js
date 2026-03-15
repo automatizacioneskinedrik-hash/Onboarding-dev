@@ -27,22 +27,33 @@ const getProjectId = () =>
 const normalizePrefix = (prefix = '') => prefix.replace(/^\/+|\/+$/g, '');
 
 const buildEmbeddingInput = (course) => {
+    const catalogLabel = course.catalogType === 'master' ? 'contenido troncal del master' : 'sprint de especializacion';
+    const specializationLabel = course.specializationId ? `Especializacion: ${course.specializationId}` : null;
+
     if (course.contentType === 'learning_module') {
         return [
-            `Tipo: módulo de aprendizaje`,
-            `Título: ${course.title}`,
-            `Descripción: ${course.description}`,
+            `Catalogo: ${catalogLabel}`,
+            `Master: ${course.masterId}`,
+            specializationLabel,
+            'Tipo: modulo de aprendizaje',
+            `Titulo: ${course.title}`,
+            `Descripcion: ${course.description}`,
             `Dificultad: ${course.difficulty}`,
             `Horas estimadas: ${course.estimatedHours}`,
         ].join('. ');
     }
 
     return [
-        `Tipo: tema de aprendizaje`,
-        `Título: ${course.title}`,
-        `Módulo: ${course.moduleTitle}`,
-        `Descripción del módulo: ${course.moduleDescription}`,
-    ].join('. ');
+        `Catalogo: ${catalogLabel}`,
+        `Master: ${course.masterId}`,
+        specializationLabel,
+        'Tipo: tema de aprendizaje',
+        `Titulo: ${course.title}`,
+        `Modulo: ${course.moduleTitle}`,
+        `Descripcion del modulo: ${course.moduleDescription}`,
+    ]
+        .filter(Boolean)
+        .join('. ');
 };
 
 const sortByOrder = (items) =>
@@ -82,12 +93,15 @@ const readCoursesFromFirestore = async () => {
 
     const modulesById = new Map(modules.map((module) => [module.id, module]));
 
-    const courseDocuments = [
+    return [
         ...modules.map((module) => ({
             id: module.id,
             firestoreId: module.id,
             sourceCollection: COLLECTIONS.LEARNING_MODULES,
             contentType: 'learning_module',
+            masterId: module.master_id || 'shared',
+            catalogType: module.catalog_type || 'master',
+            specializationId: module.specialization_id || null,
             moduleId: module.id,
             moduleTitle: module.title,
             moduleDescription: module.description || '',
@@ -105,6 +119,9 @@ const readCoursesFromFirestore = async () => {
                 firestoreId: topic.id,
                 sourceCollection: COLLECTIONS.TOPICS,
                 contentType: 'topic',
+                masterId: topic.master_id || parentModule?.master_id || 'shared',
+                catalogType: topic.catalog_type || parentModule?.catalog_type || 'master',
+                specializationId: topic.specialization_id || parentModule?.specialization_id || null,
                 moduleId: topic.module_id,
                 moduleTitle: parentModule?.title || topic.module_id,
                 moduleDescription: parentModule?.description || '',
@@ -116,8 +133,6 @@ const readCoursesFromFirestore = async () => {
             };
         }),
     ];
-
-    return courseDocuments;
 };
 
 const runWithConcurrency = async (items, concurrency, worker) => {
@@ -160,6 +175,11 @@ const buildJsonlRecords = (coursesWithEmbeddings) =>
         restricts: [
             { namespace: 'content_type', allow: [course.contentType] },
             { namespace: 'module_id', allow: [course.moduleId] },
+            { namespace: 'master_id', allow: [course.masterId || 'shared'] },
+            { namespace: 'catalog_type', allow: [course.catalogType || 'master'] },
+            ...(course.specializationId
+                ? [{ namespace: 'specialization_id', allow: [course.specializationId] }]
+                : []),
         ],
         embedding_metadata: {
             firestore_id: course.firestoreId,
@@ -168,6 +188,9 @@ const buildJsonlRecords = (coursesWithEmbeddings) =>
             module_id: course.moduleId,
             module_title: course.moduleTitle,
             content_type: course.contentType,
+            master_id: course.masterId || 'shared',
+            catalog_type: course.catalogType || 'master',
+            specialization_id: course.specializationId || null,
         },
     }));
 
@@ -235,16 +258,12 @@ const triggerVectorIndexImport = async ({
     const response = await axios.patch(
         endpoint,
         {
-            name: indexName,
             metadata: {
                 contentsDeltaUri,
                 isCompleteOverwrite,
             },
         },
-        {
-            params: {
-                updateMask: 'metadata.contentsDeltaUri,metadata.isCompleteOverwrite',
-            },
+        {            
             headers: {
                 Authorization: `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
@@ -252,7 +271,10 @@ const triggerVectorIndexImport = async ({
         }
     );
 
-    return response.data;
+    return {
+        ...response.data,
+        method: 'rest',
+    };
 };
 
 const waitForOperation = async ({ operationName, location, intervalMs = 10000, timeoutMs = 15 * 60 * 1000 }) => {
@@ -285,6 +307,7 @@ const syncCoursesToVectorIndex = async ({
     projectId = getProjectId(),
     overwrite = process.env.VERTEX_AI_OVERWRITE === 'true',
     waitForImport = process.env.VERTEX_AI_WAIT_FOR_IMPORT === 'true',
+    waitTimeoutMs = Number(process.env.VERTEX_AI_WAIT_TIMEOUT_MS) || 15 * 60 * 1000,
     embeddingConcurrency = process.env.VECTOR_EMBEDDING_CONCURRENCY || DEFAULT_EMBEDDING_CONCURRENCY,
     keepLocalFile = process.env.VERTEX_AI_KEEP_JSONL === 'true',
     runDiagnostic = process.env.VERTEX_AI_RUN_DIAGNOSTIC !== 'false',
@@ -320,11 +343,21 @@ const syncCoursesToVectorIndex = async ({
         });
 
         let completedOperation = null;
+        let waitTimedOut = false;
         if (waitForImport && operation.name) {
-            completedOperation = await waitForOperation({
-                operationName: operation.name,
-                location,
-            });
+            try {
+                completedOperation = await waitForOperation({
+                    operationName: operation.name,
+                    location,
+                    timeoutMs: waitTimeoutMs,
+                });
+            } catch (error) {
+                if (error.message.includes('Timed out waiting for Vertex AI operation')) {
+                    waitTimedOut = true;
+                } else {
+                    throw error;
+                }
+            }
         }
 
         let diagnostic = null;
@@ -359,6 +392,8 @@ const syncCoursesToVectorIndex = async ({
             gcsFileUri: uploadResult.fileUri,
             operation,
             completedOperation,
+            updateMethodUsed: 'rest',
+            waitTimedOut,
             diagnostic,
             diagnosticError,
         };
