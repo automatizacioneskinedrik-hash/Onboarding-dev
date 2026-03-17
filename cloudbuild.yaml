@@ -65,7 +65,7 @@ substitutions:
   _AR_REPO: europe-southwest1-docker.pkg.dev/onboarding-dev-487716/repo-onboarding-dev
   _BACKEND_IMAGE: ${_AR_REPO}/backend
   _FRONTEND_IMAGE: ${_AR_REPO}/frontend
-  _VITE_API_URL: https://backend-onboarding-866351374703.europe-southwest1.run.app/api
+  _VITE_API_URL: https://backend-dev-866351374703.europe-southwest1.run.app
 
 images:
   - ${_BACKEND_IMAGE}:${SHORT_SHA}
