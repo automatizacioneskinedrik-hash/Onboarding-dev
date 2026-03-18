@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Send, Bot, User, Loader2, Sparkles, Wand2 } from 'lucide-react';
-import api from '../services/api';
+import api, { API_URL } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import { getMasterDisplayName } from '../utils/masters';
 
@@ -10,6 +10,34 @@ const SUGGESTED_QUESTIONS = [
     'Que cursos encajan mejor con mi perfil?',
     'Como aprovecho este master en mi trabajo actual?',
 ];
+
+const buildApiUrl = (path) => `${String(API_URL || '').replace(/\/$/, '')}${path}`;
+
+const consumeSseBuffer = (buffer, onEvent) => {
+    let remaining = buffer;
+    let separatorIndex = remaining.indexOf('\n\n');
+
+    while (separatorIndex !== -1) {
+        const rawEvent = remaining.slice(0, separatorIndex).trim();
+        remaining = remaining.slice(separatorIndex + 2);
+
+        if (rawEvent) {
+            const data = rawEvent
+                .split('\n')
+                .filter((line) => line.startsWith('data:'))
+                .map((line) => line.slice(5).trim())
+                .join('\n');
+
+            if (data) {
+                onEvent(JSON.parse(data));
+            }
+        }
+
+        separatorIndex = remaining.indexOf('\n\n');
+    }
+
+    return remaining;
+};
 
 const ChatComponent = ({
     chatId,
@@ -67,29 +95,124 @@ const ChatComponent = ({
             return;
         }
 
-        const userMsg = { role: 'user', content };
-        setMessages((prev) => [...prev, userMsg]);
+        const tempUserId = `user-${Date.now()}`;
+        const tempAssistantId = `assistant-stream-${Date.now()}`;
+        const userMsg = { id: tempUserId, role: 'user', content };
+        const assistantPlaceholder = { id: tempAssistantId, role: 'assistant', content: '', streaming: true };
+
+        setMessages((prev) => [...prev, userMsg, assistantPlaceholder]);
         setInput('');
         setSending(true);
 
         try {
-            const response = await api.post(`/chat/${chatId}/message`, {
-                content,
-                cvAnalysisId: cvAnalysisId || undefined,
+            const token = localStorage.getItem('eduai_token');
+            const response = await fetch(buildApiUrl(`/chat/${chatId}/message`), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({
+                    content,
+                    cvAnalysisId: cvAnalysisId || undefined,
+                }),
             });
 
-            if (response.data.success) {
-                setMessages((prev) => [...prev, response.data.data.assistantMessage]);
+            if (!response.ok) {
+                let errorMessage = 'No pude procesar tu mensaje en este momento. Intenta de nuevo en unos segundos.';
+
+                try {
+                    const errorBody = await response.json();
+                    errorMessage = errorBody.message || errorMessage;
+                } catch {
+                    // noop
+                }
+
+                throw new Error(errorMessage);
+            }
+
+            if (!response.body) {
+                throw new Error('El navegador no pudo abrir el stream de respuesta.');
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let streamCompleted = false;
+
+            while (!streamCompleted) {
+                const { value, done } = await reader.read();
+
+                if (done) {
+                    buffer = consumeSseBuffer(buffer, (event) => {
+                        if (event.type === 'done') {
+                            streamCompleted = true;
+                        }
+                    });
+                    break;
+                }
+
+                buffer += decoder.decode(value, { stream: true }).replace(/\r/g, '');
+                buffer = consumeSseBuffer(buffer, (event) => {
+                    if (event.type === 'start' && event.userMessage) {
+                        setMessages((prev) =>
+                            prev.map((message) => (message.id === tempUserId ? event.userMessage : message))
+                        );
+                    }
+
+                    if (event.type === 'token') {
+                        setMessages((prev) =>
+                            prev.map((message) =>
+                                message.id === tempAssistantId
+                                    ? {
+                                        ...message,
+                                        content: `${message.content || ''}${event.token || ''}`,
+                                        streaming: true,
+                                    }
+                                    : message
+                            )
+                        );
+                    }
+
+                    if (event.type === 'done') {
+                        streamCompleted = true;
+                        setMessages((prev) =>
+                            prev.map((message) =>
+                                message.id === tempAssistantId
+                                    ? {
+                                        ...event.assistantMessage,
+                                        content:
+                                            event.assistantMessage?.content || message.content || '',
+                                        streaming: false,
+                                    }
+                                    : message
+                            )
+                        );
+                    }
+
+                    if (event.type === 'error') {
+                        throw new Error(
+                            event.message ||
+                                'No pude procesar tu mensaje en este momento. Intenta de nuevo en unos segundos.'
+                        );
+                    }
+                });
             }
         } catch (error) {
             console.error('Error sending message:', error);
-            setMessages((prev) => [
-                ...prev,
-                {
-                    role: 'assistant',
-                    content: 'No pude procesar tu mensaje en este momento. Intenta de nuevo en unos segundos.',
-                },
-            ]);
+            setMessages((prev) =>
+                prev.map((message) =>
+                    message.id === tempAssistantId
+                        ? {
+                            ...message,
+                            content:
+                                error.message ||
+                                'No pude procesar tu mensaje en este momento. Intenta de nuevo en unos segundos.',
+                            streaming: false,
+                        }
+                        : message
+                )
+            );
         } finally {
             setSending(false);
         }
@@ -232,27 +355,39 @@ const ChatComponent = ({
                     </div>
                 ) : (
                     <div className="max-w-5xl mx-auto w-full space-y-4">
-                        {messages.map((msg, index) => (
-                            <div
-                                key={`${msg.role}-${index}`}
-                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
-                            >
-                                <div className={`flex gap-3 max-w-[92%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                                    <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center mt-0.5 border ${msg.role === 'user' ? 'bg-orange-accent text-white border-orange-hover' : isDarkMode ? 'bg-dark-card text-orange-accent border-dark-border shadow-sm' : 'bg-light-bg text-orange-accent border-light-border'}`}>
-                                        {msg.role === 'user' ? <User size={14} /> : <Wand2 size={14} />}
-                                    </div>
-                                    <div
-                                        className={`p-4 rounded-xl text-[12px] font-bold leading-[1.5] transition-all whitespace-pre-wrap ${msg.role === 'user' ? 'bg-orange-accent text-white rounded-tr-none' : isDarkMode ? 'bg-dark-card border-l-2 border-l-orange-accent text-stone-300 rounded-tl-none border-y border-r border-[#2E2925] shadow-lg' : 'bg-slate-100/80 text-slate-800 rounded-tl-none border border-slate-200 shadow-sm'}`}
-                                    >
-                                        {msg.content}
+                        {messages.map((msg, index) => {
+                            const isStreamingAssistant = msg.role === 'assistant' && msg.streaming;
+
+                            return (
+                                <div
+                                    key={msg.id || `${msg.role}-${index}`}
+                                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+                                >
+                                    <div className={`flex gap-3 max-w-[92%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                                        <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center mt-0.5 border ${msg.role === 'user' ? 'bg-orange-accent text-white border-orange-hover' : isDarkMode ? 'bg-dark-card text-orange-accent border-dark-border shadow-sm' : 'bg-light-bg text-orange-accent border-light-border'}`}>
+                                            {msg.role === 'user' ? <User size={14} /> : <Wand2 size={14} />}
+                                        </div>
+                                        <div
+                                            className={`p-4 rounded-xl text-[12px] font-bold leading-[1.5] transition-all whitespace-pre-wrap ${msg.role === 'user' ? 'bg-orange-accent text-white rounded-tr-none' : isDarkMode ? 'bg-dark-card border-l-2 border-l-orange-accent text-stone-300 rounded-tl-none border-y border-r border-[#2E2925] shadow-lg' : 'bg-slate-100/80 text-slate-800 rounded-tl-none border border-slate-200 shadow-sm'}`}
+                                        >
+                                            {isStreamingAssistant && !msg.content ? (
+                                                <div className="flex gap-2">
+                                                    <span className="w-1.5 h-1.5 bg-orange-accent/40 rounded-full animate-bounce"></span>
+                                                    <span className="w-1.5 h-1.5 bg-orange-accent/40 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                                                    <span className="w-1.5 h-1.5 bg-orange-accent/40 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                                                </div>
+                                            ) : (
+                                                msg.content
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
 
-                {sending && (
+                {sending && !messages.some((message) => message.role === 'assistant' && message.streaming) && (
                     <div className="flex justify-start animate-pulse max-w-5xl mx-auto w-full">
                         <div className="flex gap-4 max-w-[80%]">
                             <div className="w-9 h-9 rounded-xl bg-orange-accent/10 border border-orange-accent/20 flex items-center justify-center">

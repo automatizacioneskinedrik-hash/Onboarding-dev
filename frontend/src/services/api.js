@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Prefer explicit env URL when provided; fallback to local proxy path.
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+export const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
     baseURL: API_URL,

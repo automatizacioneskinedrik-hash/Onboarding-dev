@@ -4,9 +4,27 @@
  */
 
 const { chats, analyses } = require('../store');
-const { generateChatResponse } = require('../services/openai.service');
+const { streamChatResponse } = require('../services/openai.service');
 const { createTextEmbedding } = require('../services/embedding.service');
 const { retrieveRelevantCourses } = require('../services/course-retrieval.service');
+
+const buildRetrievalPayload = (retrieval, messageEmbedding) => ({
+    embeddingGenerated: Boolean(messageEmbedding),
+    embeddingModel: messageEmbedding?.model || null,
+    embeddingDimensions: messageEmbedding?.dimensions || null,
+    vectorSearchUsed: Boolean(retrieval),
+    matches: retrieval?.matches.slice(0, 3).map((match) => ({
+        id: match.id,
+        title: match.title,
+        contentType: match.contentType,
+        moduleTitle: match.moduleTitle,
+        distance: match.distance,
+    })) || [],
+});
+
+const writeSseEvent = (res, payload) => {
+    res.write(`data: ${JSON.stringify(payload)}\n\n`);
+};
 
 /**
  * GET /api/chat
@@ -182,8 +200,34 @@ const sendMessage = async (req, res, next) => {
             content: m.content,
         }));
 
-        // Generate AI response
-        const aiContent = await generateChatResponse(recentMessages, userProfile, recommendation, retrieval);
+        res.status(200);
+        res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        res.setHeader('Connection', 'keep-alive');
+        res.flushHeaders?.();
+
+        writeSseEvent(res, {
+            type: 'start',
+            chatId,
+            userMessage: userMsg,
+            retrieval: buildRetrievalPayload(retrieval, messageEmbedding),
+        });
+
+        let aiContent = '';
+
+        try {
+            for await (const token of streamChatResponse(recentMessages, userProfile, recommendation, retrieval)) {
+                aiContent += token;
+                writeSseEvent(res, { type: 'token', token });
+            }
+        } catch (streamError) {
+            console.error('Chat streaming error:', streamError.message);
+            writeSseEvent(res, {
+                type: 'error',
+                message: 'No pude completar la respuesta en este momento. Intenta de nuevo en unos segundos.',
+            });
+            return res.end();
+        }
 
         // Add assistant message
         const assistantMsg = await chats.addMessage(chatId, {
@@ -208,27 +252,13 @@ const sendMessage = async (req, res, next) => {
             },
         });
 
-        res.status(200).json({
-            success: true,
-            data: {
-                userMessage: userMsg,
-                assistantMessage: assistantMsg,
-                chatId,
-                retrieval: {
-                    embeddingGenerated: Boolean(messageEmbedding),
-                    embeddingModel: messageEmbedding?.model || null,
-                    embeddingDimensions: messageEmbedding?.dimensions || null,
-                    vectorSearchUsed: Boolean(retrieval),
-                    matches: retrieval?.matches.slice(0, 3).map((match) => ({
-                        id: match.id,
-                        title: match.title,
-                        contentType: match.contentType,
-                        moduleTitle: match.moduleTitle,
-                        distance: match.distance,
-                    })) || [],
-                },
-            },
+        writeSseEvent(res, {
+            type: 'done',
+            chatId,
+            assistantMessage: assistantMsg,
+            retrieval: buildRetrievalPayload(retrieval, messageEmbedding),
         });
+        res.end();
     } catch (error) {
         next(error);
     }

@@ -403,24 +403,23 @@ Los IDs validos son: comunicacion, emprendimiento, finanzas, talento, tecnologia
     }
 };
 
-const generateChatResponse = async (messages, userProfile = null, recommendation = null, retrieval = null) => {
-    if (!openai) {
-        const lastUserMessage = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
-        const topCourse = retrieval?.matches?.[0];
+const buildChatResponseFallback = (messages, recommendation = null, retrieval = null) => {
+    const lastUserMessage = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
+    const topCourse = retrieval?.matches?.[0];
 
-        if (topCourse) {
-            return `Con base en tu pregunta, el resultado mas relevante es ${topCourse.title}, dentro del modulo ${topCourse.moduleTitle}. Si quieres, te explico por que encaja contigo y que aprenderias alli.`;
-        }
-
-        if (!userProfile || !recommendation) {
-            return `Recibido. Ya tengo tu mensaje: "${lastUserMessage}". Para darte una ruta personalizada, adjunta tu hoja de vida en PDF y continuare con el analisis.`;
-        }
-
-        return `Gracias por tu mensaje. Con base en tu perfil, tu mejor enfoque actual es ${recommendation.primarySpecialization || recommendation.specialization?.name}. Si quieres, te explico el sprint 1 o como aprovechar esta ruta en tu trabajo actual.`;
+    if (topCourse) {
+        return `Con base en tu pregunta, el resultado mas relevante es ${topCourse.title}, dentro del modulo ${topCourse.moduleTitle}. Si quieres, te explico por que encaja contigo y que aprenderias alli.`;
     }
-    ensureOpenAIConfigured();
 
-    let systemPrompt = `Eres un asesor academico experto y amigable de LAR University, una institucion de educacion ejecutiva de elite.
+    if (!recommendation) {
+        return `Recibido. Ya tengo tu mensaje: "${lastUserMessage}". Para darte una ruta personalizada, adjunta tu hoja de vida en PDF y continuare con el analisis.`;
+    }
+
+    return `Gracias por tu mensaje. Con base en tu perfil, tu mejor enfoque actual es ${recommendation.primarySpecialization || recommendation.specialization?.name}. Si quieres, te explico el sprint 1 o como aprovechar esta ruta en tu trabajo actual.`;
+};
+
+const buildChatMessages = (messages, userProfile = null, recommendation = null, retrieval = null) => {
+    const systemPrompt = `Eres un asesor academico experto y amigable de LAR University, una institucion de educacion ejecutiva de elite.
 Tu nombre es "LAR Advisor" y tu mision es ayudar a los profesionales a encontrar la especializacion perfecta para potenciar su carrera.
 
 ${userProfile ? `PERFIL DEL USUARIO:
@@ -451,22 +450,53 @@ INSTRUCCIONES:
 - Manten respuestas concisas pero informativas, maximo 3-4 parrafos.
 - Siempre invita al usuario a dar el siguiente paso.`;
 
-    const formattedMessages = [
+    return [
         { role: 'system', content: systemPrompt },
         ...messages.map((message) => ({
             role: message.role,
             content: message.content,
         })),
     ];
+};
+
+const generateChatResponse = async (messages, userProfile = null, recommendation = null, retrieval = null) => {
+    if (!openai) {
+        return buildChatResponseFallback(messages, recommendation, retrieval);
+    }
+    ensureOpenAIConfigured();
 
     const response = await openai.chat.completions.create({
         model: OPENAI_MODEL,
-        messages: formattedMessages,
+        messages: buildChatMessages(messages, userProfile, recommendation, retrieval),
         temperature: 0.7,
         max_tokens: 800,
     });
 
     return response.choices[0].message.content;
+};
+
+const streamChatResponse = async function* (messages, userProfile = null, recommendation = null, retrieval = null) {
+    if (!openai) {
+        yield buildChatResponseFallback(messages, recommendation, retrieval);
+        return;
+    }
+
+    ensureOpenAIConfigured();
+
+    const stream = await openai.chat.completions.create({
+        model: OPENAI_MODEL,
+        messages: buildChatMessages(messages, userProfile, recommendation, retrieval),
+        temperature: 0.7,
+        max_tokens: 800,
+        stream: true,
+    });
+
+    for await (const chunk of stream) {
+        const token = chunk.choices?.[0]?.delta?.content || '';
+        if (token) {
+            yield token;
+        }
+    }
 };
 
 const analyzeLinkedInProfile = async (linkedinUrl) => {
@@ -500,5 +530,6 @@ module.exports = {
     extractProfileFromCV,
     generateRecommendation,
     generateChatResponse,
+    streamChatResponse,
     analyzeLinkedInProfile,
 };
