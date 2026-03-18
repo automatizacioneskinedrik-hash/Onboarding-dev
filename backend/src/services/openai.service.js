@@ -13,6 +13,7 @@ const {
 const {
     retrieveRelevantCoursesForProfile,
     loadSprintCatalogForSpecialization,
+    buildMasterCatalogFallbackRetrieval,
 } = require('./course-retrieval.service');
 
 const ensureOpenAIConfigured = () => {
@@ -231,6 +232,19 @@ Responde unicamente con un JSON valido con esta estructura exacta:
 const generateRecommendation = async (profile, sourceType = 'pdf', options = {}) => {
     if (!openai) {
         const specialization = pickFallbackSpecialization(profile);
+        let fallbackRetrieval = null;
+
+        if (options.masterId) {
+            try {
+                fallbackRetrieval = await buildMasterCatalogFallbackRetrieval(profile, {
+                    masterId: options.masterId,
+                    topK: 3,
+                });
+            } catch (fallbackError) {
+                console.warn('Master catalog fallback skipped:', fallbackError.message);
+            }
+        }
+
         const specializationCatalog = await resolveSpecializationCatalog({
             masterId: options.masterId,
             specializationId: specialization.id,
@@ -247,6 +261,15 @@ const generateRecommendation = async (profile, sourceType = 'pdf', options = {})
             specialization: specializationCatalog.specialization,
             subjects: specializationCatalog.subjects,
             sprintUrl: specializationCatalog.sprintUrl,
+            recommendedCourses: (fallbackRetrieval?.matches || []).slice(0, 3).map((match) => ({
+                id: match.id,
+                title: match.title,
+                contentType: match.contentType,
+                moduleId: match.moduleId,
+                specializationId: match.specializationId || null,
+                moduleTitle: match.moduleTitle,
+                distance: match.distance,
+            })),
         };
     }
     ensureOpenAIConfigured();
@@ -266,6 +289,17 @@ const generateRecommendation = async (profile, sourceType = 'pdf', options = {})
         });
     } catch (retrievalError) {
         console.warn('Profile vector retrieval skipped:', retrievalError.message);
+    }
+
+    if ((!retrieval || !retrieval.matches?.length) && options.masterId) {
+        try {
+            retrieval = await buildMasterCatalogFallbackRetrieval(profile, {
+                masterId: options.masterId,
+                topK: 6,
+            });
+        } catch (fallbackError) {
+            console.warn('Master catalog fallback skipped:', fallbackError.message);
+        }
     }
 
     const retrievalFallback = buildRecommendationFromRetrievalFallback(profile, retrieval);

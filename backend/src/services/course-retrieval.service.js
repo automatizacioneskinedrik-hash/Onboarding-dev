@@ -1,4 +1,5 @@
 const { db, COLLECTIONS } = require('../config/firebase');
+const { getSpecializationById } = require('../utils/specializations');
 const { createTextEmbedding } = require('./embedding.service');
 const { findNeighbors } = require('./vertex-vector-search.service');
 
@@ -17,6 +18,19 @@ const readTopicsByModuleId = async (moduleId) => {
 
     return snapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+};
+
+const readSprintModulesByMasterId = async (masterId) => {
+    if (!masterId) {
+        return [];
+    }
+
+    const snapshot = await db.collection(COLLECTIONS.LEARNING_MODULES).where('master_id', '==', masterId).get();
+
+    return snapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((module) => module.catalog_type === 'sprint')
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 };
 
@@ -140,6 +154,33 @@ const buildProfileRetrievalQuery = (profile = {}) =>
         .filter(Boolean)
         .join('. ');
 
+const normalizeText = (value = '') =>
+    String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+
+const extractSearchTerms = (profileQuery = '') =>
+    [...new Set(normalizeText(profileQuery).split(/[^a-z0-9]+/).filter((term) => term.length >= 3))];
+
+const scoreModuleAgainstProfile = (module, profileTerms = []) => {
+    const specialization = getSpecializationById(module.specialization_id);
+    const searchableText = normalizeText([
+        module.title,
+        module.description,
+        ...(module.topics || []),
+        ...(specialization?.keywords || []),
+    ].join(' '));
+
+    return profileTerms.reduce((score, term) => {
+        if (!searchableText.includes(term)) {
+            return score;
+        }
+
+        return score + (term.length >= 6 ? 2 : 1);
+    }, 0);
+};
+
 const buildModuleRanking = (matches = []) => {
     const ranking = new Map();
 
@@ -231,6 +272,83 @@ const retrieveRelevantCoursesForProfile = async (profile, options = {}) => {
     };
 };
 
+const buildMasterCatalogFallbackRetrieval = async (profile, { masterId, topK = 6 } = {}) => {
+    const profileQuery = buildProfileRetrievalQuery(profile);
+    const profileTerms = extractSearchTerms(profileQuery);
+    const sprintModules = await readSprintModulesByMasterId(masterId);
+
+    if (!sprintModules.length) {
+        return {
+            profileQuery,
+            matches: [],
+            contextText: '',
+            moduleRanking: [],
+            vectorSearch: {
+                endpointName: null,
+                deployedIndexId: null,
+                publicEndpointDomain: null,
+                rawMatchCount: 0,
+                source: 'firestore_catalog_fallback',
+            },
+        };
+    }
+
+    const modulesWithTopics = await Promise.all(
+        sprintModules.map(async (module) => ({
+            ...module,
+            topics: (await readTopicsByModuleId(module.id)).map((topic) => topic.title),
+        }))
+    );
+
+    const rankedMatches = modulesWithTopics
+        .map((module) => {
+            const fallbackScore = scoreModuleAgainstProfile(module, profileTerms);
+
+            return {
+                id: module.id,
+                contentType: 'learning_module',
+                catalogType: module.catalog_type || 'sprint',
+                masterId: module.master_id || masterId,
+                specializationId: module.specialization_id || null,
+                title: module.title,
+                description: module.description || '',
+                moduleId: module.id,
+                moduleTitle: module.title,
+                difficulty: module.difficulty || null,
+                estimatedHours: module.estimated_hours || null,
+                order: module.order || null,
+                topics: module.topics || [],
+                distance: Number((1 / (fallbackScore + 1)).toFixed(4)),
+                fallbackScore,
+            };
+        })
+        .sort((a, b) => {
+            if ((b.fallbackScore || 0) !== (a.fallbackScore || 0)) {
+                return (b.fallbackScore || 0) - (a.fallbackScore || 0);
+            }
+            if ((a.order || 0) !== (b.order || 0)) {
+                return (a.order || 0) - (b.order || 0);
+            }
+            return String(a.id).localeCompare(String(b.id));
+        })
+        .slice(0, topK)
+        .map(({ fallbackScore, ...match }) => match);
+
+    return {
+        profileQuery,
+        matches: rankedMatches,
+        contextText: formatRetrievedCoursesContext(rankedMatches),
+        moduleRanking: buildModuleRanking(rankedMatches),
+        vectorSearch: {
+            endpointName: null,
+            deployedIndexId: null,
+            publicEndpointDomain: null,
+            rawMatchCount: 0,
+            source: 'firestore_catalog_fallback',
+        },
+    };
+};
+
 const loadSprintCatalogForSpecialization = async ({ masterId, specializationId }) => {
     const moduleDoc = await readSprintModuleBySpecialization({ masterId, specializationId });
 
@@ -258,4 +376,5 @@ module.exports = {
     retrieveRelevantCoursesForProfile,
     formatRetrievedCoursesContext,
     loadSprintCatalogForSpecialization,
+    buildMasterCatalogFallbackRetrieval,
 };
