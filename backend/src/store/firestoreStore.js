@@ -6,6 +6,9 @@
 const { db, COLLECTIONS, admin } = require('../config/firebase');
 const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
+const { createLogger } = require('../logging/logger');
+
+const logger = createLogger({ component: 'store.firestore' });
 
 // ─── Password Helpers ─────────────────────────────────────────────────────────
 const hashPassword = (password) => {
@@ -43,7 +46,9 @@ const users = {
             if (snapshot.empty) return null;
             return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
         } catch (error) {
-            console.error('Firestore findByEmail Error:', error);
+            logger.error('Error buscando usuario por email', {
+                error: error.message,
+            });
             throw error;
         }
     },
@@ -54,7 +59,10 @@ const users = {
             if (!doc.exists) return null;
             return { id: doc.id, ...doc.data() };
         } catch (error) {
-            console.error('Firestore findById Error:', error);
+            logger.error('Error buscando usuario por id', {
+                userId: id,
+                error: error.message,
+            });
             throw error;
         }
     },
@@ -149,7 +157,10 @@ const chats = {
 
             return { items, total };
         } catch (error) {
-            console.error('Firestore findByUserId Error:', error.message);
+            logger.error('Error buscando chats del usuario', {
+                userId,
+                error: error.message,
+            });
             throw error;
         }
     },
@@ -169,7 +180,10 @@ const chats = {
 
             return { id: doc.id, ...doc.data(), messages };
         } catch (error) {
-            console.error('Firestore findById Error:', error);
+            logger.error('Error buscando chat por id', {
+                chatId: id,
+                error: error.message,
+            });
             throw error;
         }
     },
@@ -254,7 +268,10 @@ const analyses = {
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             return items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         } catch (error) {
-            console.error('Firestore findByUserId (Analyses) Error:', error.message);
+            logger.error('Error buscando analisis del usuario', {
+                userId,
+                error: error.message,
+            });
             throw error;
         }
     },
@@ -273,7 +290,10 @@ const analyses = {
 
             return items[0];
         } catch (error) {
-            console.error('Firestore findLatestCompleted Error:', error.message);
+            logger.error('Error buscando ultimo analisis completado', {
+                userId,
+                error: error.message,
+            });
             throw error;
         }
     },

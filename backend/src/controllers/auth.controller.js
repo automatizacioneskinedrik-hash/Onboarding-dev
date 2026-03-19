@@ -3,15 +3,20 @@
  * Uses Firestore (via Store Index).
  */
 
-const { users } = require('../store');
-const { generateToken } = require('../middleware/auth.middleware');
+const crypto = require('crypto');
 const { OAuth2Client } = require('google-auth-library');
 
+const { createLogger } = require('../logging/logger');
+const { generateToken } = require('../middleware/auth.middleware');
+const { users } = require('../store');
+
+const logger = createLogger({ component: 'controller.auth' });
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-/**
- * POST /api/auth/register
- */
+// Reduce el email a su dominio para logs sin exponer PII completa.
+const getEmailDomain = (email = '') => String(email).split('@')[1] || null;
+
+// Crea una cuenta local y devuelve el token inicial del usuario.
 const register = async (req, res, next) => {
     try {
         const { name, email, password } = req.body;
@@ -19,7 +24,7 @@ const register = async (req, res, next) => {
         if (!name || !email || !password) {
             return res.status(400).json({
                 success: false,
-                message: 'Por favor proporciona nombre, email y contraseña.',
+                message: 'Por favor proporciona nombre, email y contrasena.',
             });
         }
 
@@ -28,9 +33,13 @@ const register = async (req, res, next) => {
             user = await users.create({ name, email, password });
         } catch (err) {
             if (err.message === 'DUPLICATE_EMAIL') {
+                req.log?.warn('Registro rechazado por email duplicado', {
+                    emailDomain: getEmailDomain(email),
+                });
+
                 return res.status(409).json({
                     success: false,
-                    message: 'Ya existe una cuenta con ese email. Por favor inicia sesión.',
+                    message: 'Ya existe una cuenta con ese email. Por favor inicia sesion.',
                 });
             }
             throw err;
@@ -38,9 +47,14 @@ const register = async (req, res, next) => {
 
         const token = generateToken(user.id);
 
+        req.log?.info('Usuario registrado', {
+            userId: user.id,
+            emailDomain: getEmailDomain(email),
+        });
+
         res.status(201).json({
             success: true,
-            message: '¡Cuenta creada exitosamente! Bienvenido a LAR University.',
+            message: 'Cuenta creada exitosamente. Bienvenido a LAR University.',
             data: {
                 token,
                 user: users.safe(user),
@@ -51,9 +65,7 @@ const register = async (req, res, next) => {
     }
 };
 
-/**
- * POST /api/auth/login
- */
+// Valida credenciales locales y renueva la fecha de ultimo acceso.
 const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -61,29 +73,35 @@ const login = async (req, res, next) => {
         if (!email || !password) {
             return res.status(400).json({
                 success: false,
-                message: 'Por favor proporciona email y contraseña.',
+                message: 'Por favor proporciona email y contrasena.',
             });
         }
 
         const user = await users.findByEmail(email);
 
-        // Error if user not found OR password doesn't match
         if (!user || !users.verifyPassword(user, password)) {
+            req.log?.warn('Login fallido por credenciales invalidas', {
+                emailDomain: getEmailDomain(email),
+            });
+
             return res.status(401).json({
                 success: false,
-                message: 'Credenciales inválidas. Por favor verifica tu email y contraseña.',
+                message: 'Credenciales invalidas. Por favor verifica tu email y contrasena.',
             });
         }
 
-        // Update last login
         await users.update(user.id, { lastLogin: new Date().toISOString() });
         const updatedUser = await users.findById(user.id);
-
         const token = generateToken(user.id);
+
+        req.log?.info('Login exitoso', {
+            userId: user.id,
+            emailDomain: getEmailDomain(email),
+        });
 
         res.status(200).json({
             success: true,
-            message: `¡Bienvenido de nuevo, ${updatedUser.name}!`,
+            message: `Bienvenido de nuevo, ${updatedUser.name}!`,
             data: {
                 token,
                 user: users.safe(updatedUser),
@@ -94,9 +112,7 @@ const login = async (req, res, next) => {
     }
 };
 
-/**
- * POST /api/auth/google
- */
+// Valida el token de Google y crea o sincroniza el usuario local.
 const googleLogin = async (req, res, next) => {
     try {
         const { credential } = req.body;
@@ -119,17 +135,15 @@ const googleLogin = async (req, res, next) => {
         let user = await users.findByEmail(email);
 
         if (!user) {
-            // Auto-register via Google is standard, but we'll mark it as Google Account
             user = await users.create({
                 name,
                 email,
                 avatar: picture,
                 googleId,
                 isGoogleAccount: true,
-                password: null, // Google accounts don't need local password
+                password: null,
             });
         } else {
-            // Update last login and profile info
             await users.update(user.id, {
                 lastLogin: new Date().toISOString(),
                 avatar: picture || user.avatar,
@@ -140,26 +154,34 @@ const googleLogin = async (req, res, next) => {
 
         const token = generateToken(user.id);
 
+        req.log?.info('Login con Google exitoso', {
+            userId: user.id,
+            emailDomain: getEmailDomain(email),
+        });
+
         res.status(200).json({
             success: true,
-            message: `¡Bienvenido, ${user.name}!`,
+            message: `Bienvenido, ${user.name}!`,
             data: {
                 token,
                 user: users.safe(user),
             },
         });
     } catch (error) {
-        console.error('Google Auth Error:', error);
+        (req.log || logger).error('Error en login con Google', {
+            error: error.message,
+            errorName: error.name,
+        });
+
         res.status(401).json({
             success: false,
-            message: 'Error de autenticación con Google.',
+            message: 'Error de autenticacion con Google.',
+            requestId: req.requestId,
         });
     }
 };
 
-/**
- * GET /api/auth/me
- */
+// Devuelve el perfil autenticado usando la version segura del usuario.
 const getMe = async (req, res, next) => {
     try {
         const user = await users.findById(req.user.id);
@@ -173,9 +195,7 @@ const getMe = async (req, res, next) => {
     }
 };
 
-/**
- * PUT /api/auth/update-profile
- */
+// Permite actualizar los datos basicos editables del perfil.
 const updateProfile = async (req, res, next) => {
     try {
         const { name } = req.body;
@@ -189,6 +209,10 @@ const updateProfile = async (req, res, next) => {
 
         const updated = await users.update(req.user.id, { name: name.trim() });
 
+        req.log?.info('Perfil actualizado', {
+            userId: req.user.id,
+        });
+
         res.status(200).json({
             success: true,
             message: 'Perfil actualizado exitosamente.',
@@ -199,44 +223,45 @@ const updateProfile = async (req, res, next) => {
     }
 };
 
-/**
- * PUT /api/auth/change-password
- */
+// Reemplaza la contrasena actual despues de validar la credencial previa.
 const changePassword = async (req, res, next) => {
     try {
         const { currentPassword, newPassword } = req.body;
-
         const user = await users.findById(req.user.id);
 
         if (!users.verifyPassword(user, currentPassword)) {
+            req.log?.warn('Cambio de contrasena rechazado', {
+                userId: req.user.id,
+                reason: 'current_password_invalid',
+            });
+
             return res.status(401).json({
                 success: false,
-                message: 'La contraseña actual es incorrecta.',
+                message: 'La contrasena actual es incorrecta.',
             });
         }
 
         if (!newPassword || newPassword.length < 6) {
             return res.status(400).json({
                 success: false,
-                message: 'La nueva contraseña debe tener al menos 6 caracteres.',
+                message: 'La nueva contrasena debe tener al menos 6 caracteres.',
             });
         }
 
-        // The store's update method doesn't automatically hash, we should handle it here
-        // or better, fix the store to handle password updates.
-        // For now, let's use the helper from the store if possible or a direct hash.
-        const crypto = require('crypto');
         const salt = crypto.randomBytes(16).toString('hex');
         const hash = crypto.scryptSync(newPassword, salt, 64).toString('hex');
         const hashedPassword = `${salt}:${hash}`;
 
         await users.update(req.user.id, { password: hashedPassword });
-
         const token = generateToken(req.user.id);
+
+        req.log?.info('Contrasena actualizada', {
+            userId: req.user.id,
+        });
 
         res.status(200).json({
             success: true,
-            message: 'Contraseña actualizada exitosamente.',
+            message: 'Contrasena actualizada exitosamente.',
             data: { token },
         });
     } catch (error) {

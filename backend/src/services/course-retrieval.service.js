@@ -2,6 +2,9 @@ const { db, COLLECTIONS } = require('../config/firebase');
 const { getSpecializationById } = require('../utils/specializations');
 const { createTextEmbedding } = require('./embedding.service');
 const { findNeighbors } = require('./vertex-vector-search.service');
+const { createLogger } = require('../logging/logger');
+
+const logger = createLogger({ component: 'service.course-retrieval' });
 
 const readModuleById = async (id) => {
     const doc = await db.collection(COLLECTIONS.LEARNING_MODULES).doc(id).get();
@@ -244,6 +247,13 @@ const retrieveRelevantCourses = async ({
 
     const validMatches = matches.filter(Boolean);
 
+    logger.info('Cursos recuperados', {
+        topK,
+        filters: Object.keys(filters || {}),
+        matchCount: validMatches.length,
+        neighborCount: vectorResult.neighbors.length,
+    });
+
     return {
         queryEmbedding,
         matches: validMatches,
@@ -278,6 +288,9 @@ const buildMasterCatalogFallbackRetrieval = async (profile, { masterId, topK = 6
     const sprintModules = await readSprintModulesByMasterId(masterId);
 
     if (!sprintModules.length) {
+        logger.warn('Sin sprints para fallback de catalogo', {
+            masterId,
+        });
         return {
             profileQuery,
             matches: [],
@@ -333,6 +346,12 @@ const buildMasterCatalogFallbackRetrieval = async (profile, { masterId, topK = 6
         })
         .slice(0, topK)
         .map(({ fallbackScore, ...match }) => match);
+
+    logger.info('Fallback de catalogo completado', {
+        masterId,
+        topK,
+        matchCount: rankedMatches.length,
+    });
 
     return {
         profileQuery,

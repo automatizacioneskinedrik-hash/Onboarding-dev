@@ -1,7 +1,9 @@
 const axios = require('axios');
 const { GoogleAuth } = require('google-auth-library');
+const { createLogger } = require('../logging/logger');
 
 const VECTOR_SEARCH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
+const logger = createLogger({ component: 'service.vertex-vector-search' });
 
 const getProjectId = () =>
     process.env.GOOGLE_CLOUD_PROJECT?.trim() ||
@@ -158,6 +160,12 @@ const findNeighbors = async ({
     );
 
     const neighbors = response.data?.nearestNeighbors?.[0]?.neighbors || [];
+
+    logger.info('Vector search completado', {
+        topK,
+        filters: Object.keys(filters || {}),
+        neighborCount: neighbors.length,
+    });
 
     return {
         endpointName,

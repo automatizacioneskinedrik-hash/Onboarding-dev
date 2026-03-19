@@ -4,6 +4,7 @@
  */
 
 const { openai, OPENAI_MODEL } = require('../config/openai');
+const { createLogger } = require('../logging/logger');
 const {
     SPECIALIZATIONS,
     getSpecializationById,
@@ -16,8 +17,12 @@ const {
     buildMasterCatalogFallbackRetrieval,
 } = require('./course-retrieval.service');
 
+const logger = createLogger({ component: 'service.openai' });
+
+// Centraliza la validacion para mantener consistente el fallback de IA.
 const ensureOpenAIConfigured = () => {
     if (!openai) {
+        logger.warn('OpenAI no configurado, usando fallback');
         const error = new Error('OPENAI_API_KEY is not configured.');
         error.statusCode = 503;
         throw error;
@@ -39,6 +44,7 @@ const FALLBACK_SKILL_KEYWORDS = {
 const resolveSpecializationIdFromMatch = (item) =>
     item?.specializationId || getSpecializationIdByModuleId(item?.moduleId);
 
+// Completa materias y metadata del sprint cuando existe catalogo filtrado por master.
 const resolveSpecializationCatalog = async ({ masterId, specializationId, fallbackSpecialization }) => {
     const sprintCatalog = masterId
         ? await loadSprintCatalogForSpecialization({ masterId, specializationId })
@@ -53,6 +59,7 @@ const resolveSpecializationCatalog = async ({ masterId, specializationId, fallba
     };
 };
 
+// Elige una especializacion razonable cuando no hay IA disponible.
 const pickFallbackSpecialization = (profile = {}) => {
     const haystack = [
         profile.currentRole,
@@ -78,6 +85,7 @@ const pickFallbackSpecialization = (profile = {}) => {
     return Object.values(SPECIALIZATIONS).find((item) => item.id === bestId) || Object.values(SPECIALIZATIONS)[0];
 };
 
+// Construye un perfil minimo desde texto libre para no bloquear el flujo completo.
 const buildFallbackProfile = (cvText = '') => {
     const lines = cvText
         .split(/\n+/)
@@ -177,8 +185,12 @@ const buildRecommendationFromRetrievalFallback = (profile, retrieval) => {
     };
 };
 
+// Extrae un perfil profesional estructurado desde el texto del CV.
 const extractProfileFromCV = async (cvText) => {
     if (!openai) {
+        logger.info('Perfil CV con fallback local', {
+            textLength: cvText?.length || 0,
+        });
         return buildFallbackProfile(cvText);
     }
     ensureOpenAIConfigured();
@@ -226,9 +238,15 @@ Responde unicamente con un JSON valido con esta estructura exacta:
         response_format: { type: 'json_object' },
     });
 
+    logger.info('Perfil CV extraido', {
+        model: OPENAI_MODEL,
+        textLength: cvText?.length || 0,
+    });
+
     return JSON.parse(response.choices[0].message.content);
 };
 
+// Genera la recomendacion principal priorizando retrieval y cayendo a fallback si hace falta.
 const generateRecommendation = async (profile, sourceType = 'pdf', options = {}) => {
     if (!openai) {
         const specialization = pickFallbackSpecialization(profile);
@@ -241,7 +259,10 @@ const generateRecommendation = async (profile, sourceType = 'pdf', options = {})
                     topK: 3,
                 });
             } catch (fallbackError) {
-                console.warn('Master catalog fallback skipped:', fallbackError.message);
+                logger.warn('Fallback de catalogo omitido', {
+                    masterId: options.masterId,
+                    error: fallbackError.message,
+                });
             }
         }
 
@@ -249,6 +270,12 @@ const generateRecommendation = async (profile, sourceType = 'pdf', options = {})
             masterId: options.masterId,
             specializationId: specialization.id,
             fallbackSpecialization: specialization,
+        });
+        logger.info('Recomendacion generada con fallback local', {
+            sourceType,
+            masterId: options.masterId || null,
+            specializationId: specialization.id,
+            matchCount: fallbackRetrieval?.matches?.length || 0,
         });
         return {
             primarySpecialization: specialization.name,
@@ -288,7 +315,10 @@ const generateRecommendation = async (profile, sourceType = 'pdf', options = {})
             filters: masterFilters,
         });
     } catch (retrievalError) {
-        console.warn('Profile vector retrieval skipped:', retrievalError.message);
+        logger.warn('Busqueda vectorial omitida para recomendacion', {
+            masterId: options.masterId,
+            error: retrievalError.message,
+        });
     }
 
     if ((!retrieval || !retrieval.matches?.length) && options.masterId) {
@@ -298,7 +328,10 @@ const generateRecommendation = async (profile, sourceType = 'pdf', options = {})
                 topK: 6,
             });
         } catch (fallbackError) {
-            console.warn('Master catalog fallback skipped:', fallbackError.message);
+            logger.warn('Fallback de catalogo omitido', {
+                masterId: options.masterId,
+                error: fallbackError.message,
+            });
         }
     }
 
@@ -375,6 +408,13 @@ Los IDs validos son: comunicacion, emprendimiento, finanzas, talento, tecnologia
             specializationId: resolvedPrimarySpecializationId,
             fallbackSpecialization: specialization,
         });
+        logger.info('Recomendacion generada', {
+            model: OPENAI_MODEL,
+            sourceType,
+            masterId: options.masterId || null,
+            specializationId: resolvedPrimarySpecializationId,
+            matchCount: retrieval?.matches?.length || 0,
+        });
 
         return {
             ...result,
@@ -386,11 +426,20 @@ Los IDs validos son: comunicacion, emprendimiento, finanzas, talento, tecnologia
             recommendedCourses: retrievalFallback.recommendedCourses,
         };
     } catch (error) {
-        console.warn('Grounded recommendation fallback activated:', error.message);
+        logger.warn('Respuesta IA invalida, usando fallback', {
+            masterId: options.masterId,
+            error: error.message,
+        });
         const specializationCatalog = await resolveSpecializationCatalog({
             masterId: options.masterId,
             specializationId: retrievalFallback.primarySpecializationId,
             fallbackSpecialization: retrievalFallback.specialization,
+        });
+        logger.info('Recomendacion generada con fallback de retrieval', {
+            sourceType,
+            masterId: options.masterId || null,
+            specializationId: retrievalFallback.primarySpecializationId,
+            matchCount: retrieval?.matches?.length || 0,
         });
 
         return {
@@ -403,6 +452,7 @@ Los IDs validos son: comunicacion, emprendimiento, finanzas, talento, tecnologia
     }
 };
 
+// Respuesta minima cuando no hay IA disponible o falla el modelo.
 const buildChatResponseFallback = (messages, recommendation = null, retrieval = null) => {
     const lastUserMessage = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
     const topCourse = retrieval?.matches?.[0];
@@ -418,6 +468,7 @@ const buildChatResponseFallback = (messages, recommendation = null, retrieval = 
     return `Gracias por tu mensaje. Con base en tu perfil, tu mejor enfoque actual es ${recommendation.primarySpecialization || recommendation.specialization?.name}. Si quieres, te explico el sprint 1 o como aprovechar esta ruta en tu trabajo actual.`;
 };
 
+// Inyecta el contexto de perfil, recomendacion y retrieval en el prompt del chat.
 const buildChatMessages = (messages, userProfile = null, recommendation = null, retrieval = null) => {
     const systemPrompt = `Eres un asesor academico experto y amigable de LAR University, una institucion de educacion ejecutiva de elite.
 Tu nombre es "LAR Advisor" y tu mision es ayudar a los profesionales a encontrar la especializacion perfecta para potenciar su carrera.
@@ -459,8 +510,14 @@ INSTRUCCIONES:
     ];
 };
 
+// Genera una respuesta de chat completa en modo no streaming.
 const generateChatResponse = async (messages, userProfile = null, recommendation = null, retrieval = null) => {
     if (!openai) {
+        logger.info('Respuesta de chat con fallback local', {
+            messageCount: messages.length,
+            hasRecommendation: Boolean(recommendation),
+            matchCount: retrieval?.matches?.length || 0,
+        });
         return buildChatResponseFallback(messages, recommendation, retrieval);
     }
     ensureOpenAIConfigured();
@@ -472,11 +529,22 @@ const generateChatResponse = async (messages, userProfile = null, recommendation
         max_tokens: 800,
     });
 
+    logger.info('Respuesta de chat generada', {
+        model: OPENAI_MODEL,
+        messageCount: messages.length,
+        hasRecommendation: Boolean(recommendation),
+        matchCount: retrieval?.matches?.length || 0,
+    });
+
     return response.choices[0].message.content;
 };
 
+// Entrega tokens parciales para el chat en tiempo real via SSE.
 const streamChatResponse = async function* (messages, userProfile = null, recommendation = null, retrieval = null) {
     if (!openai) {
+        logger.info('Streaming de chat con fallback local', {
+            messageCount: messages.length,
+        });
         yield buildChatResponseFallback(messages, recommendation, retrieval);
         return;
     }
@@ -499,6 +567,7 @@ const streamChatResponse = async function* (messages, userProfile = null, recomm
     }
 };
 
+// Devuelve una guia para pedir al usuario el texto de LinkedIn manualmente.
 const analyzeLinkedInProfile = async (linkedinUrl) => {
     ensureOpenAIConfigured();
 
@@ -518,6 +587,11 @@ Responde en espanol de forma amigable y profesional.`;
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 300,
+    });
+
+    logger.info('Guia de LinkedIn generada', {
+        model: OPENAI_MODEL,
+        linkedinUrl,
     });
 
     return {

@@ -10,6 +10,9 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 
+const { logger } = require('./src/logging/logger');
+const { attachRequestContext } = require('./src/middleware/requestContext.middleware');
+const { requestLogger } = require('./src/middleware/httpLogger.middleware');
 const { errorHandler, notFound } = require('./src/middleware/errorHandler');
 
 // Route imports
@@ -22,6 +25,10 @@ const userRoutes = require('./src/routes/user.routes');
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 const HOST = '0.0.0.0';
+const appLogger = logger.child({ component: 'server' });
+
+app.use(attachRequestContext);
+app.use(requestLogger);
 
 // ─── Security Middleware ─────────────────────────────────────────────────────────
 app.use(
@@ -58,7 +65,10 @@ const corsOptions = {
             return callback(null, true);
         }
 
-        console.warn(`⚠️ CORS blocked for: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
+        logger.warn('CORS bloqueado', {
+            origin,
+            allowedOrigins,
+        });
         return callback(null, false); // Reject without throwing hard error
     },
     credentials: true,
@@ -72,12 +82,31 @@ app.options('*', cors(corsOptions));
 const limiter = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
     max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
-    message: {
-        success: false,
-        message: 'Demasiadas solicitudes, por favor intenta más tarde.',
-    },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: (req, res) => {
+        req.log?.warn('Rate limit excedido', {
+            userId: req.user?.id,
+            method: req.method,
+            path: req.originalUrl,
+            maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100,
+            windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000,
+            httpRequest: {
+                requestMethod: req.method,
+                requestUrl: req.originalUrl,
+                remoteIp: req.ip,
+                userAgent: req.get('user-agent'),
+                status: 429,
+                protocol: req.protocol,
+            },
+        });
+
+        res.status(429).json({
+            success: false,
+            message: 'Demasiadas solicitudes, por favor intenta más tarde.',
+            requestId: req.requestId,
+        });
+    },
 });
 app.use('/api/', limiter);
 
@@ -96,6 +125,7 @@ app.get('/health', (req, res) => {
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
         storage: process.env.USE_FIRESTORE === 'true' ? 'Firestore' : 'In-Memory',
+        requestId: req.requestId,
     });
 });
 
@@ -112,12 +142,12 @@ app.use(errorHandler);
 
 // ─── Start Server ───────────────────────────────────────────────────────────────
 app.listen(PORT, HOST, () => {
-    const storageMsg = process.env.USE_FIRESTORE === 'true' ? 'Firestore (Google Cloud)' : 'In-Memory (no DB yet)';
+   const storageMsg = process.env.USE_FIRESTORE === 'true' ? 'Firestore (Google Cloud)' : 'In-Memory (no DB yet)';
     console.log(`
   ╔═════════════════════════════════════════╗
-  ║     LAR University Backend Server        ║
-  ║     Port    : ${PORT}                       ║
-  ║     Mode    : ${(process.env.NODE_ENV || 'development').padEnd(12)}          ║
+  ║     LAR University Backend Server       ║
+  ║     Port    : ${PORT}                      ║
+  ║     Mode    : ${(process.env.NODE_ENV || 'development').padEnd(12)}              ║
   ║     Storage : ${storageMsg.padEnd(25)} ║
   ╚═════════════════════════════════════════╝
   `);

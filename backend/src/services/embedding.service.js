@@ -4,9 +4,13 @@
  */
 
 const { openai, OPENAI_EMBEDDING_MODEL } = require('../config/openai');
+const { createLogger } = require('../logging/logger');
+
+const logger = createLogger({ component: 'service.embedding' });
 
 const ensureEmbeddingConfigured = () => {
     if (!openai) {
+        logger.error('Embeddings no disponibles, OpenAI no configurado');
         const error = new Error('OPENAI_API_KEY is not configured.');
         error.statusCode = 503;
         throw error;
@@ -41,6 +45,12 @@ const createTextEmbedding = async (text) => {
     if (!Array.isArray(embedding) || embedding.length === 0) {
         throw new Error('Embedding generation returned an empty vector.');
     }
+
+    logger.debug('Embedding generado', {
+        model: OPENAI_EMBEDDING_MODEL,
+        dimensions: embedding.length,
+        inputLength: normalizedText.length,
+    });
 
     return {
         embedding,

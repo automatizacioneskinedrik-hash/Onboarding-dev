@@ -6,6 +6,9 @@
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
+const { createLogger } = require('../logging/logger');
+
+const logger = createLogger({ component: 'service.pdf' });
 
 /**
  * Extract text from a PDF or CSV buffer or file path
@@ -49,6 +52,10 @@ const extractTextFromFile = async (input, filename = '') => {
                 pages = data.numpages;
                 info = data.info;
             } catch (pdfErr) {
+                logger.warn('PDF con fallback a texto plano', {
+                    filename,
+                    error: pdfErr.message,
+                });
                 // If PDF parsing fails, try reading as raw text as fallback
                 text = buffer.toString('utf-8');
                 info = { type: 'unknown_raw' };
@@ -71,6 +78,10 @@ const extractTextFromFile = async (input, filename = '') => {
             info,
         };
     } catch (error) {
+        logger.error('Error extrayendo texto de archivo', {
+            filename,
+            error: error.message,
+        });
         throw new Error(error.message);
     }
 };
@@ -85,7 +96,10 @@ const deleteFile = (filePath) => {
             fs.unlinkSync(filePath);
         }
     } catch (error) {
-        console.error(`Error deleting file ${filePath}:`, error.message);
+        logger.warn('No se pudo borrar archivo', {
+            filePath: path.relative(process.cwd(), filePath),
+            error: error.message,
+        });
     }
 };
 

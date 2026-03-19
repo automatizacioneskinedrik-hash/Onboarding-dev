@@ -4,13 +4,14 @@
  */
 
 const { analyses, users } = require('../store');
+const { createLogger } = require('../logging/logger');
 const { extractTextFromFile } = require('../services/pdf.service');
 const { extractProfileFromCV, generateRecommendation } = require('../services/openai.service');
 const { isValidMasterId } = require('../utils/masters');
 
-/**
- * POST /api/cv/upload
- */
+const logger = createLogger({ component: 'controller.cv' });
+
+// Sube un CV, extrae el texto, analiza el perfil y guarda la recomendacion final.
 const uploadCV = async (req, res, next) => {
     try {
         const selectedMasterId = req.body.masterId || req.user.selectedMasterId || null;
@@ -25,14 +26,13 @@ const uploadCV = async (req, res, next) => {
         if (!req.file) {
             return res.status(400).json({
                 success: false,
-                message: 'Por favor sube un archivo PDF o CSV con tu información.',
+                message: 'Por favor sube un archivo PDF o CSV con tu informacion.',
             });
         }
 
         const filePath = req.file.path;
         const filename = req.file.originalname;
 
-        // Create analysis record
         const analysis = await analyses.create({
             userId: req.user.id,
             sourceType: filename.toLowerCase().endsWith('.csv') ? 'csv' : 'pdf',
@@ -48,8 +48,16 @@ const uploadCV = async (req, res, next) => {
 
         await analyses.update(analysis.id, { status: 'processing' });
 
-        // Extract text from file
-        console.log(`📄 Extracting text from file: ${filename}`);
+        req.log?.info('CV upload iniciado', {
+            userId: req.user.id,
+            analysisId: analysis.id,
+            masterId: selectedMasterId,
+            sourceType: analysis.sourceType,
+            fileName: req.file.originalname,
+            fileSize: req.file.size,
+        });
+
+        // El analisis se persiste desde el inicio para poder marcar fallos intermedios.
         let extractResult;
         try {
             extractResult = await extractTextFromFile(filePath, filename);
@@ -58,6 +66,13 @@ const uploadCV = async (req, res, next) => {
                 status: 'failed',
                 errorMessage: err.message,
             });
+
+            req.log?.warn('Error extrayendo texto del CV', {
+                userId: req.user.id,
+                analysisId: analysis.id,
+                error: err.message,
+            });
+
             return res.status(422).json({
                 success: false,
                 message: err.message,
@@ -71,36 +86,64 @@ const uploadCV = async (req, res, next) => {
                 status: 'failed',
                 errorMessage: 'No se pudo extraer suficiente contenido del archivo.',
             });
+
+            req.log?.warn('CV rechazado por contenido insuficiente', {
+                userId: req.user.id,
+                analysisId: analysis.id,
+                textLength: text?.length || 0,
+            });
+
             return res.status(422).json({
                 success: false,
-                message: 'No se pudo leer el contenido del archivo. Asegúrate de que no esté vacío y sea un formato válido.',
+                message: 'No se pudo leer el contenido del archivo. Asegurate de que no este vacio y sea un formato valido.',
             });
         }
 
-        // Analyze with OpenAI
-        console.log(`🤖 Analyzing content with OpenAI (${analysis.sourceType})...`);
+        // Primero generamos el perfil estructurado y luego la recomendacion academica.
         let extractedProfile;
         try {
             extractedProfile = await extractProfileFromCV(text);
         } catch (aiErr) {
-            console.error('❌ OpenAI Extraction Error:', aiErr.message);
-            await analyses.update(analysis.id, { status: 'failed', errorMessage: 'Error al extraer perfil con IA' });
-            return res.status(502).json({ success: false, message: 'La IA no pudo procesar el contenido del archivo. Intenta con un archivo más claro.' });
+            await analyses.update(analysis.id, {
+                status: 'failed',
+                errorMessage: 'Error al extraer perfil con IA',
+            });
+
+            (req.log || logger).error('Error extrayendo perfil del CV', {
+                userId: req.user.id,
+                analysisId: analysis.id,
+                error: aiErr.message,
+            });
+
+            return res.status(502).json({
+                success: false,
+                message: 'La IA no pudo procesar el contenido del archivo. Intenta con un archivo mas claro.',
+            });
         }
 
-        console.log(`🎯 Generating specialization recommendation...`);
         let recommendation;
         try {
             recommendation = await generateRecommendation(extractedProfile, analysis.sourceType, {
                 masterId: selectedMasterId,
             });
         } catch (aiErr) {
-            console.error('❌ OpenAI Recommendation Error:', aiErr.message);
-            await analyses.update(analysis.id, { status: 'failed', errorMessage: 'Error al generar recomendación' });
-            return res.status(502).json({ success: false, message: 'Hubo un error al generar tu recomendación personalizada.' });
+            await analyses.update(analysis.id, {
+                status: 'failed',
+                errorMessage: 'Error al generar recomendacion',
+            });
+
+            (req.log || logger).error('Error generando recomendacion del CV', {
+                userId: req.user.id,
+                analysisId: analysis.id,
+                error: aiErr.message,
+            });
+
+            return res.status(502).json({
+                success: false,
+                message: 'Hubo un error al generar tu recomendacion personalizada.',
+            });
         }
 
-        // Save results safely
         const updated = await analyses.update(analysis.id, {
             rawText: text.substring(0, 5000),
             extractedProfile,
@@ -118,16 +161,23 @@ const uploadCV = async (req, res, next) => {
             processedAt: new Date().toISOString(),
         });
 
-        // Update user reference
         await users.update(req.user.id, {
             cvAnalysisId: analysis.id,
             selectedMasterId,
             recommendedSpecialization: recommendation?.specialization?.name || recommendation?.primarySpecialization,
         });
 
+        req.log?.info('CV procesado', {
+            userId: req.user.id,
+            analysisId: updated.id,
+            masterId: selectedMasterId,
+            matchScore: updated.recommendation.matchScore,
+            specializationId: updated.recommendation.primarySpecializationId,
+        });
+
         res.status(200).json({
             success: true,
-            message: 'Análisis completado exitosamente',
+            message: 'Analisis completado exitosamente',
             data: {
                 cvAnalysisId: updated.id,
                 masterId: selectedMasterId,
@@ -136,14 +186,15 @@ const uploadCV = async (req, res, next) => {
             },
         });
     } catch (error) {
-        console.error('🔥 Fatal Upload Error:', error);
+        (req.log || logger).error('Error fatal en upload de CV', {
+            userId: req.user?.id,
+            error: error.message,
+        });
         next(error);
     }
 };
 
-/**
- * POST /api/cv/linkedin
- */
+// Procesa un resumen de LinkedIn o indica al usuario que debe pegarlo manualmente.
 const analyzeLinkedIn = async (req, res, next) => {
     try {
         const { linkedinUrl, linkedinSummary } = req.body;
@@ -173,7 +224,6 @@ const analyzeLinkedIn = async (req, res, next) => {
             });
 
             await analyses.update(analysis.id, { status: 'processing' });
-
             const extractedProfile = await extractProfileFromCV(linkedinSummary);
             const recommendation = await generateRecommendation(extractedProfile, 'linkedin', {
                 masterId: selectedMasterId,
@@ -202,9 +252,17 @@ const analyzeLinkedIn = async (req, res, next) => {
                 recommendedSpecialization: recommendation.specialization?.name,
             });
 
+            req.log?.info('LinkedIn procesado', {
+                userId: req.user.id,
+                analysisId: updated.id,
+                masterId: selectedMasterId,
+                specializationId: updated.recommendation.primarySpecializationId,
+                matchScore: updated.recommendation.matchScore,
+            });
+
             return res.status(200).json({
                 success: true,
-                message: '¡Perfil de LinkedIn analizado exitosamente!',
+                message: 'Perfil de LinkedIn analizado exitosamente.',
                 data: {
                     cvAnalysisId: updated.id,
                     masterId: selectedMasterId,
@@ -222,12 +280,17 @@ const analyzeLinkedIn = async (req, res, next) => {
             });
         }
 
-        // No summary provided — ask user to paste it
+        req.log?.info('LinkedIn requiere resumen manual', {
+            userId: req.user.id,
+            masterId: selectedMasterId,
+            linkedinUrl,
+        });
+
         return res.status(200).json({
             success: true,
             requiresManualInput: true,
             message:
-                'Para analizar tu perfil de LinkedIn, por favor copia y pega el texto de tu perfil (sección "Acerca de" y experiencia) en el siguiente mensaje del chat.',
+                'Para analizar tu perfil de LinkedIn, por favor copia y pega el texto de tu perfil (seccion "Acerca de" y experiencia) en el siguiente mensaje del chat.',
             linkedinUrl,
         });
     } catch (error) {
@@ -235,9 +298,7 @@ const analyzeLinkedIn = async (req, res, next) => {
     }
 };
 
-/**
- * GET /api/cv/my-analysis
- */
+// Devuelve el ultimo analisis completado asociado al usuario autenticado.
 const getMyAnalysis = async (req, res, next) => {
     try {
         const analysis = await analyses.findLatestCompleted(req.user.id);
@@ -245,7 +306,7 @@ const getMyAnalysis = async (req, res, next) => {
         if (!analysis) {
             return res.status(404).json({
                 success: false,
-                message: 'No se encontró ningún análisis de CV. Por favor sube tu CV.',
+                message: 'No se encontro ningun analisis de CV. Por favor sube tu CV.',
             });
         }
 
@@ -258,14 +319,12 @@ const getMyAnalysis = async (req, res, next) => {
     }
 };
 
-/**
- * GET /api/cv/history
- */
+// Lista el historial de analisis sin exponer el texto crudo almacenado.
 const getAnalysisHistory = async (req, res, next) => {
     try {
         const userAnalyses = await analyses.findByUserId(req.user.id);
-        const allAnalyses = userAnalyses.map((a) => {
-            const { rawText, ...rest } = a; // exclude raw text
+        const allAnalyses = userAnalyses.map((analysis) => {
+            const { rawText, ...rest } = analysis;
             return rest;
         });
 

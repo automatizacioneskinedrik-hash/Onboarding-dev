@@ -1,31 +1,35 @@
+const fs = require('fs');
 const admin = require('firebase-admin');
 const path = require('path');
 
-// Initialize Firebase Admin
+const { createLogger } = require('../logging/logger');
+
+const logger = createLogger({ component: 'config.firebase' });
+
 if (admin.apps.length === 0) {
     try {
         const projectId = process.env.FIREBASE_PROJECT_ID || 'onboarding-dev-487716';
         const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+        const config = { projectId };
 
-        const config = {
-            projectId: projectId,
-        };
-
-        // If we have a local service account file, use it
-        if (serviceAccountPath && require('fs').existsSync(path.resolve(process.cwd(), serviceAccountPath))) {
+        if (serviceAccountPath && fs.existsSync(path.resolve(process.cwd(), serviceAccountPath))) {
             config.credential = admin.credential.cert(path.resolve(process.cwd(), serviceAccountPath));
         }
 
         admin.initializeApp(config);
-        console.log('✅ Firebase Admin Initialized');
+        logger.info('Firebase inicializado', {
+            projectId,
+            credentialsFile: Boolean(config.credential),
+        });
     } catch (error) {
-        console.error('❌ Firebase Admin Initialization Error:', error.stack);
+        logger.error('Error inicializando Firebase', {
+            error: error.message,
+        });
     }
 }
 
 const db = admin.firestore();
 
-// Set collection names as constants
 const COLLECTIONS = {
     USERS: 'users',
     CHATS: 'chats',
