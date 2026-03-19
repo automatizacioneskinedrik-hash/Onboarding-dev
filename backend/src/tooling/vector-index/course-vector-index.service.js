@@ -4,8 +4,8 @@ const path = require('path');
 const axios = require('axios');
 const { GoogleAuth } = require('google-auth-library');
 
-const { admin, db, COLLECTIONS } = require('../config/firebase');
-const { createTextEmbedding } = require('./embedding.service');
+const { admin, db, COLLECTIONS } = require('../../config/firebase');
+const { createTextEmbedding } = require('../../services/embedding.service');
 
 const VECTOR_SEARCH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
 const DEFAULT_GCS_PREFIX = 'vector-search/imports/courses';
@@ -263,7 +263,7 @@ const triggerVectorIndexImport = async ({
                 isCompleteOverwrite,
             },
         },
-        {            
+        {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',

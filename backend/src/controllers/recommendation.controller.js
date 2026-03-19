@@ -1,20 +1,22 @@
 /**
  * Recommendation Controller
- * Uses Firestore (via Store Index).
+ * Delegates recommendation flows to the recommendations module.
  */
 
-const { analyses } = require('../store');
-const { getAllSpecializations, getSpecializationById } = require('../utils/specializations');
-const { generateRecommendation } = require('../services/openai.service');
+const { sendSuccess } = require('../shared/http/respond');
+const { serializeRecommendationDetails, serializeRegeneratedRecommendation } = require('../modules/recommendations/serializer');
+const {
+    listSpecializations,
+    getSpecializationOrThrow,
+    getUserRecommendation,
+    regenerateUserRecommendation,
+} = require('../modules/recommendations/service');
 
-/**
- * GET /api/recommendations/specializations
- */
 const getAllSpecializationsHandler = async (req, res, next) => {
     try {
-        const specializations = getAllSpecializations();
-        res.status(200).json({
-            success: true,
+        const specializations = await listSpecializations();
+
+        return sendSuccess(res, {
             data: { specializations, total: specializations.length },
         });
     } catch (error) {
@@ -22,22 +24,11 @@ const getAllSpecializationsHandler = async (req, res, next) => {
     }
 };
 
-/**
- * GET /api/recommendations/specializations/:id
- */
 const getSpecializationByIdHandler = async (req, res, next) => {
     try {
-        const specialization = getSpecializationById(req.params.id);
+        const specialization = await getSpecializationOrThrow(req.params.id);
 
-        if (!specialization) {
-            return res.status(404).json({
-                success: false,
-                message: 'Especialización no encontrada.',
-            });
-        }
-
-        res.status(200).json({
-            success: true,
+        return sendSuccess(res, {
             data: { specialization },
         });
     } catch (error) {
@@ -45,104 +36,28 @@ const getSpecializationByIdHandler = async (req, res, next) => {
     }
 };
 
-/**
- * GET /api/recommendations/my-recommendation
- */
 const getMyRecommendation = async (req, res, next) => {
     try {
-        const analysis = await analyses.findLatestCompleted(req.user.id);
+        const result = await getUserRecommendation({ userId: req.user.id });
 
-        if (!analysis) {
-            return res.status(404).json({
-                success: false,
-                message: 'No tienes una recomendación aún. Por favor sube tu CV o perfil de LinkedIn.',
-            });
-        }
-
-        // Match specialization from catalog
-        const allSpecs = getAllSpecializations();
-        const specialization =
-            allSpecs.find((s) => s.name === analysis.recommendation?.primarySpecialization) ||
-            allSpecs[0];
-
-        res.status(200).json({
-            success: true,
-            data: {
-                recommendation: {
-                    specialization,
-                    matchScore: analysis.recommendation?.matchScore,
-                    reasoning: analysis.recommendation?.reasoning,
-                    subjects: analysis.recommendation?.subjects || specialization.subjects,
-                    springUrl: analysis.recommendation?.springUrl || specialization.springUrl,
-                    secondarySpecializations: analysis.recommendation?.secondarySpecializations || [],
-                    recommendedCourses: analysis.recommendation?.recommendedCourses || [],
-                },
-                profile: analysis.extractedProfile,
-                masterId: analysis.masterId || null,
-                analysisDate: analysis.processedAt,
-                sourceType: analysis.sourceType,
-            },
+        return sendSuccess(res, {
+            data: serializeRecommendationDetails(result),
         });
     } catch (error) {
         next(error);
     }
 };
 
-/**
- * POST /api/recommendations/regenerate
- */
 const regenerateRecommendation = async (req, res, next) => {
     try {
-        const { cvAnalysisId } = req.body;
-
-        const analysis = await analyses.findById(cvAnalysisId);
-
-        if (!analysis || analysis.userId !== req.user.id) {
-            return res.status(404).json({
-                success: false,
-                message: 'Análisis de CV no encontrado.',
-            });
-        }
-
-        if (!analysis.extractedProfile) {
-            return res.status(400).json({
-                success: false,
-                message: 'No hay datos de perfil para regenerar la recomendación.',
-            });
-        }
-
-        const recommendation = await generateRecommendation(
-            analysis.extractedProfile,
-            analysis.sourceType,
-            { masterId: analysis.masterId || req.user.selectedMasterId || null }
-        );
-
-        await analyses.update(cvAnalysisId, {
-            recommendation: {
-                primarySpecialization: recommendation.specialization?.name || recommendation.primarySpecialization,
-                secondarySpecializations: recommendation.secondarySpecializations || [],
-                matchScore: recommendation.matchScore,
-                reasoning: recommendation.reasoning,
-                subjects: recommendation.subjects || [],
-                springUrl: recommendation.springUrl,
-                recommendedCourses: recommendation.recommendedCourses || [],
-            },
+        const recommendation = await regenerateUserRecommendation({
+            cvAnalysisId: req.body.cvAnalysisId,
+            user: req.user,
         });
 
-        res.status(200).json({
-            success: true,
-            message: 'Recomendación regenerada exitosamente.',
-            data: {
-                recommendation: {
-                    specialization: recommendation.specialization,
-                    matchScore: recommendation.matchScore,
-                    reasoning: recommendation.reasoning,
-                    subjects: recommendation.subjects,
-                    springUrl: recommendation.springUrl,
-                    secondarySpecializations: recommendation.secondarySpecializations,
-                    recommendedCourses: recommendation.recommendedCourses || [],
-                },
-            },
+        return sendSuccess(res, {
+            message: 'Recomendacion regenerada exitosamente.',
+            data: serializeRegeneratedRecommendation(recommendation),
         });
     } catch (error) {
         next(error);

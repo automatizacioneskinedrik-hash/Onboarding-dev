@@ -22,33 +22,29 @@ backend/
 |-- seed-learning-content.js
 |-- sync-courses-to-vector-index.js
 |-- diagnose-vector-index.js
-|-- test-recommendation.js
-|-- test-vector-search-query.js
 `-- src/
+    |-- app.js
     |-- config/
     |   |-- firebase.js
     |   `-- openai.js
     |-- controllers/
-    |   |-- auth.controller.js
-    |   |-- chat.controller.js
-    |   |-- cv.controller.js
-    |   |-- recommendation.controller.js
-    |   `-- user.controller.js
     |-- middleware/
+    |-- modules/
+    |-- repositories/
     |-- routes/
     |-- services/
-    |   |-- course-retrieval.service.js
-    |   |-- course-vector-index.service.js
+    |   |-- course-retrieval/
     |   |-- embedding.service.js
-    |   |-- openai.service.js
+    |   |-- openai/
     |   |-- pdf.service.js
-    |   |-- vector-index-diagnostic.service.js
     |   `-- vertex-vector-search.service.js
+    |-- shared/
     |-- store/
+    |-- tooling/
+    |   `-- vector-index/
     `-- utils/
-        |-- masters.js
-        |-- seed-learning-content.js
-        `-- specializations.js
+|-- test/
+    `-- *.test.js
 ```
 
 ## Configuracion
@@ -102,8 +98,7 @@ npm start
 npm run seed:learning-content
 npm run sync:vector-index
 npm run diagnose:vector-index
-npm run test:vector-search -- "analitica de datos para directivos"
-npm run test:ai
+npm test
 ```
 
 Que hace cada uno:
@@ -111,8 +106,7 @@ Que hace cada uno:
 - `seed:learning-content`: sincroniza masters, modulos y topics en Firestore.
 - `sync:vector-index`: genera embeddings y publica el catalogo en Vertex AI Vector Search.
 - `diagnose:vector-index`: revisa el estado del indice desplegado.
-- `test:vector-search`: prueba una consulta semantica contra el indice.
-- `test:ai`: valida conexion OpenAI, extraccion de perfil y recomendacion.
+- `test`: corre la suite de contratos HTTP y pruebas unitarias del backend.
 
 ## Flujo de recomendacion
 

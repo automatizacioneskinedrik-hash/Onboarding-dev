@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const { syncCoursesToVectorIndex } = require('./src/services/course-vector-index.service');
+const { syncCoursesToVectorIndex } = require('./src/tooling/vector-index/course-vector-index.service');
 
 const run = async () => {
     try {

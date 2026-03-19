@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const { runVectorIndexDiagnostic } = require('./src/services/vector-index-diagnostic.service');
+const { runVectorIndexDiagnostic } = require('./src/tooling/vector-index/vector-index-diagnostic.service');
 
 const run = async () => {
     const question = process.argv.slice(2).join(' ').trim();

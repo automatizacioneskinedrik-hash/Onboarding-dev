@@ -1,13 +1,8 @@
 /**
  * Recommendation Routes
- * GET  /api/recommendations/specializations       - Get all specializations (public)
- * GET  /api/recommendations/specializations/:id   - Get one specialization (public)
- * GET  /api/recommendations/my-recommendation     - Get user's recommendation (private)
- * POST /api/recommendations/regenerate            - Regenerate recommendation (private)
  */
 
 const express = require('express');
-const router = express.Router();
 
 const {
     getAllSpecializationsHandler,
@@ -16,13 +11,14 @@ const {
     regenerateRecommendation,
 } = require('../controllers/recommendation.controller');
 const { protect } = require('../middleware/auth.middleware');
+const { validate } = require('../shared/http/validate');
+const { regenerateRecommendationValidation } = require('../modules/recommendations/validator');
 
-// Public routes
+const router = express.Router();
+
 router.get('/specializations', getAllSpecializationsHandler);
 router.get('/specializations/:id', getSpecializationByIdHandler);
-
-// Private routes
 router.get('/my-recommendation', protect, getMyRecommendation);
-router.post('/regenerate', protect, regenerateRecommendation);
+router.post('/regenerate', protect, regenerateRecommendationValidation, validate, regenerateRecommendation);
 
 module.exports = router;

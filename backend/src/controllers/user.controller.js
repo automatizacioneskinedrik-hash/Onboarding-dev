@@ -1,42 +1,38 @@
 /**
  * User Controller
- * Uses Firestore (via Store Index).
+ * Delegates user flows to the users module.
  */
 
-const { users, stats } = require('../store');
-const { getAllMasters, getMasterById } = require('../utils/masters');
+const { users } = require('../store');
+const { sendSuccess } = require('../shared/http/respond');
+const { serializeProfileResponse, serializeMasterSelection } = require('../modules/users/serializer');
+const {
+    getUserProfile,
+    deactivateUserAccount,
+    listMasters,
+    selectUserMaster,
+} = require('../modules/users/service');
 
-/**
- * GET /api/users/profile
- */
 const getProfile = async (req, res, next) => {
     try {
-        const user = await users.findById(req.user.id);
+        const result = await getUserProfile({ userId: req.user.id });
 
-        const chatCount = await stats.chatCountByUser(req.user.id);
-        const analysisCount = await stats.analysisCountByUser(req.user.id);
-
-        res.status(200).json({
-            success: true,
-            data: {
-                user: users.safe(user),
-                stats: { chatCount, analysisCount },
-            },
+        return sendSuccess(res, {
+            data: serializeProfileResponse({
+                usersRepository: users,
+                ...result,
+            }),
         });
     } catch (error) {
         next(error);
     }
 };
 
-/**
- * DELETE /api/users/account
- */
 const deactivateAccount = async (req, res, next) => {
     try {
-        await users.update(req.user.id, { isActive: false });
+        await deactivateUserAccount({ userId: req.user.id });
 
-        res.status(200).json({
-            success: true,
+        return sendSuccess(res, {
             message: 'Tu cuenta ha sido desactivada exitosamente.',
         });
     } catch (error) {
@@ -46,9 +42,9 @@ const deactivateAccount = async (req, res, next) => {
 
 const getMasters = async (req, res, next) => {
     try {
-        const masters = getAllMasters();
-        res.status(200).json({
-            success: true,
+        const masters = await listMasters();
+
+        return sendSuccess(res, {
             data: {
                 masters,
                 total: masters.length,
@@ -61,27 +57,18 @@ const getMasters = async (req, res, next) => {
 
 const selectMaster = async (req, res, next) => {
     try {
-        const { masterId } = req.body;
-        const master = getMasterById(masterId);
-
-        if (!master) {
-            return res.status(400).json({
-                success: false,
-                message: 'Master no valido.',
-            });
-        }
-
-        const user = await users.update(req.user.id, {
-            selectedMasterId: master.id,
+        const result = await selectUserMaster({
+            userId: req.user.id,
+            masterId: req.body.masterId,
         });
 
-        res.status(200).json({
-            success: true,
+        return sendSuccess(res, {
             message: 'Master seleccionado exitosamente.',
-            data: {
-                user: users.safe(user),
-                selectedMaster: master,
-            },
+            data: serializeMasterSelection({
+                usersRepository: users,
+                user: result.user,
+                selectedMaster: result.master,
+            }),
         });
     } catch (error) {
         next(error);

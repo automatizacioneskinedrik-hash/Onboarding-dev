@@ -3,6 +3,7 @@
  */
 
 const { createLogger } = require('../logging/logger');
+const { isAppError } = require('../shared/errors/app-error');
 
 const logger = createLogger({ component: 'middleware.error-handler' });
 
@@ -21,6 +22,13 @@ const notFound = (req, res, next) => {
 const errorHandler = (err, req, res, next) => {
     let statusCode = err.statusCode || err.status || 500;
     let message = err.message || 'Error interno del servidor';
+    let details = err.details || null;
+
+    if (isAppError(err)) {
+        statusCode = err.statusCode;
+        message = err.message;
+        details = err.details || null;
+    }
 
     if (err.name === 'ValidationError') {
         statusCode = 400;
@@ -56,20 +64,18 @@ const errorHandler = (err, req, res, next) => {
         statusCode,
         error: err.message,
         errorName: err.name,
-        httpRequest: {
-            requestMethod: req.method,
-            requestUrl: req.originalUrl,
-            remoteIp: req.ip,
-            userAgent: req.get('user-agent'),
-            status: statusCode,
-            protocol: req.protocol,
-        },
+        ...(details ? { details } : {}),
     });
+
+    if (res.headersSent) {
+        return next(err);
+    }
 
     res.status(statusCode).json({
         success: false,
         message,
         requestId: req.requestId,
+        ...(details ? { details } : {}),
         ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
     });
 };
