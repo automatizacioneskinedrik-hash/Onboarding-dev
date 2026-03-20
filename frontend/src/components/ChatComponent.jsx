@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Send, Bot, User, Loader2, Sparkles, Wand2 } from 'lucide-react';
+import { Send, User, Loader2, Sparkles, Wand2 } from 'lucide-react';
 import api, { API_URL } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import { getMasterDisplayName } from '../utils/masters';
@@ -84,8 +84,6 @@ const ChatComponent = ({
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, sending]);
-
-    const userMessagesCount = messages.filter((message) => message.role === 'user').length;
 
     const handleSendMessage = async (e, textOverride = null) => {
         if (e) e.preventDefault();
@@ -237,45 +235,13 @@ const ChatComponent = ({
         : lockedMessage;
 
     return (
-        <div className={`chat-container flex flex-col h-full min-h-[600px] transition-all duration-500 overflow-hidden relative rounded-2xl border ${isDarkMode ? 'border-white/10 bg-black/30' : 'border-stone-200 bg-white/70'}`}>
-            <div className={`p-3.5 border-b flex items-center justify-between ${isDarkMode ? 'border-dark-border bg-dark-card/30' : 'border-light-border bg-light-bg/30'} backdrop-blur-xl z-20`}>
-                <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <div className="w-10 h-10 rounded-xl bg-orange-accent/10 flex items-center justify-center border border-orange-accent/20">
-                            <Bot className="text-orange-accent" size={20} />
-                        </div>
-                        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-[#1C1917] rounded-full"></span>
-                    </div>
-                    <div>
-                        <h3 className={`font-black tracking-tight text-base ${isDarkMode ? 'text-white' : 'text-light-text'}`}>
-                            LAR <span className="text-orange-accent italic">AI</span>
-                        </h3>
-                        <p className={`text-[8px] uppercase font-bold tracking-[0.15em] ${isDarkMode ? 'text-dark-muted' : 'text-light-muted'}`}>
-                            Asesor academico
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex flex-col items-end gap-1.5">
-                    {selectedMasterDisplayName && (
-                        <div className={`text-[8px] uppercase tracking-widest font-black px-2.5 py-1 rounded-lg border ${isDarkMode ? 'bg-white/5 border-white/10 text-white/80' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
-                            {selectedMasterDisplayName}
-                        </div>
-                    )}
-                    {chatId && (
-                        <div className={`text-[8px] uppercase tracking-widest font-black px-2.5 py-1 rounded-lg border ${isDarkMode ? 'bg-orange-accent/10 border-orange-accent/20 text-orange-accent' : 'bg-orange-accent/10 border-orange-accent/30 text-orange-accent'}`}>
-                            Consultas: {userMessagesCount}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-5 space-y-4 no-scrollbar">
+        <div className={`chat-container relative flex h-full min-h-[600px] flex-col overflow-hidden transition-all duration-500 ${isDarkMode ? 'bg-transparent' : 'bg-transparent'}`}>
+            <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-4 no-scrollbar">
                 {messages.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
+                    <div className="flex h-full flex-col items-center justify-center space-y-5 px-6 py-8 text-center">
                         <div className="relative">
                             <div className="absolute inset-0 bg-orange-accent blur-2xl opacity-5"></div>
-                            <div className="relative bg-orange-accent/10 p-8 rounded-[2rem] border border-orange-accent/20 shadow-[0_0_50px_rgba(240,90,40,0.1)]">
+                            <div className="relative rounded-[2rem] border border-orange-accent/20 bg-orange-accent/10 p-8 shadow-[0_0_50px_rgba(240,90,40,0.1)]">
                                 <Sparkles className="text-orange-accent" size={48} />
                             </div>
                         </div>
@@ -289,7 +255,7 @@ const ChatComponent = ({
                         </div>
 
                         {recommendation && (
-                            <div className="w-full max-w-3xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] gap-4 pt-4">
+                            <div className="mx-auto grid w-full max-w-3xl grid-cols-1 gap-4 pt-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
                                 <div className={`rounded-2xl border p-4 text-left ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'}`}>
                                     <div className="flex items-start justify-between gap-3">
                                         <div>
@@ -354,7 +320,7 @@ const ChatComponent = ({
                         )}
                     </div>
                 ) : (
-                    <div className="max-w-5xl mx-auto w-full space-y-4">
+                    <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
                         {messages.map((msg, index) => {
                             const isStreamingAssistant = msg.role === 'assistant' && msg.streaming;
 
@@ -363,12 +329,12 @@ const ChatComponent = ({
                                     key={msg.id || `${msg.role}-${index}`}
                                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
                                 >
-                                    <div className={`flex gap-3 max-w-[92%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                                        <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center mt-0.5 border ${msg.role === 'user' ? 'bg-orange-accent text-white border-orange-hover' : isDarkMode ? 'bg-dark-card text-orange-accent border-dark-border shadow-sm' : 'bg-light-bg text-orange-accent border-light-border'}`}>
+                                    <div className={`flex max-w-[92%] gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                                        <div className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border ${msg.role === 'user' ? 'border-orange-hover bg-orange-accent text-white' : isDarkMode ? 'border-white/10 bg-[#151515] text-orange-accent shadow-sm' : 'border-stone-200 bg-white text-orange-accent'}`}>
                                             {msg.role === 'user' ? <User size={14} /> : <Wand2 size={14} />}
                                         </div>
                                         <div
-                                            className={`p-4 rounded-xl text-[12px] font-bold leading-[1.5] transition-all whitespace-pre-wrap ${msg.role === 'user' ? 'bg-orange-accent text-white rounded-tr-none' : isDarkMode ? 'bg-dark-card border-l-2 border-l-orange-accent text-stone-300 rounded-tl-none border-y border-r border-[#2E2925] shadow-lg' : 'bg-slate-100/80 text-slate-800 rounded-tl-none border border-slate-200 shadow-sm'}`}
+                                            className={`whitespace-pre-wrap rounded-[22px] p-4 text-[12px] font-bold leading-[1.6] transition-all ${msg.role === 'user' ? 'rounded-tr-md bg-orange-accent text-white shadow-[0_14px_32px_rgba(240,90,40,0.22)]' : isDarkMode ? 'rounded-tl-md border border-white/10 bg-[#141414] text-stone-300 shadow-[0_12px_32px_rgba(0,0,0,0.25)]' : 'rounded-tl-md border border-slate-200 bg-white text-slate-800 shadow-sm'}`}
                                         >
                                             {isStreamingAssistant && !msg.content ? (
                                                 <div className="flex gap-2">
@@ -388,12 +354,12 @@ const ChatComponent = ({
                 )}
 
                 {sending && !messages.some((message) => message.role === 'assistant' && message.streaming) && (
-                    <div className="flex justify-start animate-pulse max-w-5xl mx-auto w-full">
-                        <div className="flex gap-4 max-w-[80%]">
-                            <div className="w-9 h-9 rounded-xl bg-orange-accent/10 border border-orange-accent/20 flex items-center justify-center">
+                    <div className="mx-auto flex w-full max-w-5xl animate-pulse justify-start">
+                        <div className="flex max-w-[80%] gap-4">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-accent/20 bg-orange-accent/10">
                                 <Loader2 size={18} className="text-orange-accent animate-spin" />
                             </div>
-                            <div className={`px-5 py-4 rounded-3xl rounded-tl-none border ${isDarkMode ? 'bg-dark-card border-dark-border' : 'bg-light-bg border-light-border'}`}>
+                            <div className={`rounded-[22px] rounded-tl-md border px-5 py-4 ${isDarkMode ? 'border-white/10 bg-[#141414]' : 'border-slate-200 bg-white'}`}>
                                 <div className="flex gap-2">
                                     <span className="w-1.5 h-1.5 bg-orange-accent/40 rounded-full animate-bounce"></span>
                                     <span className="w-1.5 h-1.5 bg-orange-accent/40 rounded-full animate-bounce [animation-delay:0.2s]"></span>
@@ -407,14 +373,14 @@ const ChatComponent = ({
                 <div ref={messagesEndRef} />
             </div>
 
-            <div className={`chat-bar-wrapper p-4 border-t ${isDarkMode ? 'border-dark-border bg-black/20' : 'border-light-border bg-light-bg/10'} space-y-3`}>
+            <div className={`chat-bar-wrapper space-y-3 border-t px-4 py-4 sm:px-6 ${isDarkMode ? 'border-white/10 bg-[#111111]/92' : 'border-stone-200 bg-white/92'} backdrop-blur-xl`}>
                 {chatEnabled && chatId && !sending && (
-                    <div className="chat-suggestions flex flex-wrap gap-1.5 animate-in fade-in duration-300">
+                    <div className="chat-suggestions flex flex-wrap gap-2 animate-in fade-in duration-300">
                         {SUGGESTED_QUESTIONS.map((question) => (
                             <button
                                 key={question}
                                 onClick={() => handleSendMessage(null, question)}
-                                className={`text-[8px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border transition-all ${isDarkMode ? 'bg-dark-card border-dark-border text-dark-muted hover:border-orange-accent hover:text-orange-accent' : 'bg-white border-light-border text-light-muted hover:border-orange-accent hover:text-orange-accent'}`}
+                                className={`rounded-xl border px-3 py-2 text-[8px] font-black uppercase tracking-wider transition-all ${isDarkMode ? 'border-white/10 bg-white/[0.03] text-dark-muted hover:border-orange-accent hover:text-orange-accent' : 'border-stone-200 bg-stone-50 text-light-muted hover:border-orange-accent hover:text-orange-accent'}`}
                             >
                                 {question}
                             </button>
@@ -428,13 +394,13 @@ const ChatComponent = ({
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder={!chatEnabled ? lockedMessage : !chatId ? 'Preparando chat...' : `Pregunta sobre ${selectedMasterDisplayName || 'tu ruta'}...`}
-                        className={`input-field pr-12 h-11 text-[10px] font-black uppercase tracking-[0.1em] rounded-xl border transition-all ${!isDarkMode ? 'bg-white text-slate-900 border-slate-200 placeholder:text-slate-400' : 'bg-[#12100E] border-stone-800 text-white placeholder:text-white focus:border-orange-accent/30'} disabled:opacity-40 disabled:cursor-not-allowed`}
+                        className={`input-field h-12 rounded-2xl border pr-12 text-[10px] font-black uppercase tracking-[0.1em] transition-all ${!isDarkMode ? 'border-slate-200 bg-white text-slate-900 placeholder:text-slate-400' : 'border-white/10 bg-[#181818] text-white placeholder:text-white/35 focus:border-orange-accent/30'} disabled:cursor-not-allowed disabled:opacity-40`}
                         disabled={sending || !chatId || !chatEnabled}
                     />
                     <button
                         type="submit"
                         disabled={!input.trim() || sending || !chatId || !chatEnabled}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-orange-accent text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
+                        className="absolute right-2 top-1/2 rounded-xl bg-orange-accent p-2 text-white transition-all hover:opacity-90 disabled:opacity-50 -translate-y-1/2"
                     >
                         <Send size={14} />
                     </button>
@@ -445,3 +411,4 @@ const ChatComponent = ({
 };
 
 export default ChatComponent;
+

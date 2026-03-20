@@ -118,21 +118,25 @@
         border: none;
         background: transparent;
         box-shadow: none;
+        min-height: 0;
     }
 
     .chat-bar-wrapper {
-        @apply flex flex-col items-start px-4 sm:px-6;
+        @apply flex flex-col items-start;
     }
 
     .chat-bar {
         width: 100%;
-        max-width: 980px;
-        margin-left: 0;
+        max-width: 1080px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .chat-suggestions {
         width: 100%;
-        max-width: 980px;
+        max-width: 1080px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .no-scrollbar {
@@ -155,17 +159,6 @@
 
         .chat-suggestions {
             max-width: 100%;
-        }
-    }
-
-    .cv-upload-section {
-        max-width: 100%;
-        margin-left: auto;
-    }
-
-    @media (min-width: 1280px) {
-        .cv-upload-section {
-            max-width: 250px;
         }
     }
 }
@@ -231,3 +224,4 @@
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     will-change: width, transform, opacity;
 }
+

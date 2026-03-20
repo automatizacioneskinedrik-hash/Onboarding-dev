@@ -72,6 +72,7 @@ const HomePage = () => {
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
     const [isChoosingMaster, setIsChoosingMaster] = useState(false);
+    const [hoverTooltip, setHoverTooltip] = useState(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(
         typeof window !== 'undefined' ? window.innerWidth >= 1280 : false
     );
@@ -261,6 +262,21 @@ const HomePage = () => {
         setError('');
     };
 
+    const showSidebarTooltip = (event, text) => {
+        if (isSidebarOpen) return;
+
+        const rect = event.currentTarget.getBoundingClientRect();
+        setHoverTooltip({
+            text,
+            left: rect.right + 12,
+            top: rect.top + rect.height / 2,
+        });
+    };
+
+    const hideSidebarTooltip = () => {
+        setHoverTooltip(null);
+    };
+
     const handleUpload = async () => {
         if (!file || !selectedMaster) return;
 
@@ -307,154 +323,168 @@ const HomePage = () => {
     };
 
     return (
-        <div className={`flex w-full min-h-screen relative overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-transparent' : 'bg-light-bg'}`}>
+        <div className={`relative flex h-full min-h-screen w-full overflow-hidden transition-colors duration-300 xl:h-screen ${isDarkMode ? 'bg-transparent' : 'bg-light-bg'}`}>
             <aside
-                className={`sidebar-transition flex-shrink-0 relative z-[60] overflow-hidden border-r transition-colors duration-300 ${
-                    isDarkMode ? 'bg-[#0A0A0A] border-white/5' : 'bg-white border-stone-200'
-                } ${isSidebarOpen ? 'w-52 xl:w-48 opacity-100 p-2.5 xl:p-2' : 'w-0 opacity-0 p-0'}`}
+                className={`sidebar-transition relative z-[90] flex h-full flex-shrink-0 overflow-x-visible overflow-y-hidden border-r transition-colors duration-300 ${
+                    isDarkMode ? 'border-white/5 bg-[#070707]/95 backdrop-blur-xl' : 'border-stone-200 bg-white/95 backdrop-blur-xl'
+                } ${isSidebarOpen ? 'w-[258px]' : 'w-[78px]'}`}
             >
-                <div className="h-full flex flex-col space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-40">Historial</h3>
+                <div className="flex h-full min-h-0 w-full flex-col px-3 py-3">
+                    <div className={`shrink-0 space-y-3 border-b pb-3 ${isDarkMode ? 'border-white/10' : 'border-stone-200'}`}>
+                        <div className={`flex items-center ${isSidebarOpen ? 'justify-start gap-3 px-1.5' : 'justify-center'}`}>
+                            <button
+                                type="button"
+                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                title={isSidebarOpen ? 'Contraer sidebar' : 'Expandir sidebar'}
+                                className={`group flex min-w-0 items-center rounded-2xl transition-all ${isSidebarOpen ? 'gap-2.5 px-1.5 py-1.5 hover:bg-white/[0.04]' : 'justify-center p-1.5 hover:bg-white/[0.04]'}`}
+                            >
+                                <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${isDarkMode ? 'bg-white/[0.04]' : 'bg-stone-100/80'}`}>
+                                    <svg viewBox="0 0 100 100" className="h-6 w-6">
+                                        <polygon points="50,20 15,80 85,80" fill="none" stroke="#F05A28" strokeWidth="12" />
+                                        <rect x="42" y="4" width="8" height="8" fill="#F05A28" />
+                                        <rect x="52" y="4" width="8" height="8" fill="#F05A28" />
+                                    </svg>
+                                </div>
+                                {isSidebarOpen && (
+                                    <div className="min-w-0 leading-none">
+                                        <p className={`truncate text-[0.92rem] font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-[#1A1A1A]'}`}>
+                                            LAR <span className="text-orange-accent">UNIVERSITY</span>
+                                        </p>
+                                        <p className="mt-1 text-[8px] font-black uppercase tracking-[0.18em] text-orange-accent/60">
+                                            Elite Tech
+                                        </p>
+                                    </div>
+                                )}
+                            </button>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            {[
+                                {
+                                    key: 'perfil',
+                                    label: 'Perfil',
+                                    onClick: () => navigate('/perfil'),
+                                    icon: <User size={13} />,
+                                    className: isDarkMode
+                                        ? 'border-white/10 bg-white/[0.04] text-white/80 hover:bg-white/[0.08]'
+                                        : 'border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100',
+                                },
+                                {
+                                    key: 'theme',
+                                    label: 'Cambiar tema',
+                                    onClick: toggleTheme,
+                                    icon: isDarkMode ? <Sun size={13} /> : <Moon size={13} />,
+                                    className: isDarkMode
+                                        ? 'border-white/10 bg-white/[0.04] text-orange-accent hover:bg-white/[0.08]'
+                                        : 'border-stone-200 bg-stone-50 text-orange-accent hover:bg-stone-100',
+                                },
+                                {
+                                    key: 'logout',
+                                    label: 'Cerrar sesion',
+                                    onClick: handleLogout,
+                                    icon: <LogOut size={13} />,
+                                    className: isDarkMode
+                                        ? 'border-white/10 bg-white/[0.04] text-white/80 hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400'
+                                        : 'border-stone-200 bg-stone-50 text-stone-700 hover:border-red-200 hover:bg-red-50 hover:text-red-600',
+                                },
+                            ].map((action) => (
+                                <button
+                                    key={action.key}
+                                    onClick={action.onClick}
+                                    title={action.label}
+                                    onMouseEnter={(event) => showSidebarTooltip(event, action.label)}
+                                    onMouseLeave={hideSidebarTooltip}
+                                    className={`group relative flex items-center rounded-xl border transition-all ${action.className} ${
+                                        isSidebarOpen ? 'w-full gap-3 px-3 py-2.5 justify-start' : 'mx-auto h-9 w-9 justify-center'
+                                    }`}
+                                >
+                                    <span className="flex-shrink-0">{action.icon}</span>
+                                    {isSidebarOpen ? (
+                                        <span className="truncate text-[10px] font-bold tracking-[0.08em]">{action.label}</span>
+                                    ) : null}
+                                </button>
+                            ))}
+                        </div>
+
                         <button
-                            onClick={() => setIsSidebarOpen(false)}
-                            className="p-1.5 hover:bg-orange-accent/10 rounded-lg text-orange-accent transition-all"
+                            onClick={handleNewChat}
+                            className={`rounded-2xl bg-orange-accent text-white shadow-[0_14px_34px_rgba(240,90,40,0.22)] transition-all hover:brightness-110 active:scale-[0.99] ${
+                                isSidebarOpen
+                                    ? 'w-full px-4 py-2.5 text-[9px] font-bold uppercase tracking-[0.22em]'
+                                    : 'mx-auto flex h-10 w-10 items-center justify-center'
+                            }`}
+                            title="Nuevo chat"
                         >
-                            <Plus className="rotate-45" size={16} />
+                            {isSidebarOpen ? 'Nuevo chat' : <Plus size={16} />}
                         </button>
                     </div>
 
-                    <div className={`grid grid-cols-3 gap-1.5 pb-2 border-b ${isDarkMode ? 'border-white/10' : 'border-stone-200'}`}>
-                        <button
-                            onClick={() => navigate('/perfil')}
-                            title="Perfil"
-                            className={`h-8 rounded-lg flex items-center justify-center transition-all ${
-                                isDarkMode ? 'bg-white/5 text-white/80 hover:bg-white/10' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                            }`}
-                        >
-                            <User size={14} />
-                        </button>
-                        <button
-                            onClick={toggleTheme}
-                            title={isDarkMode ? 'Modo claro' : 'Modo oscuro'}
-                            className={`h-8 rounded-lg flex items-center justify-center transition-all ${
-                                isDarkMode ? 'bg-white/5 text-orange-accent hover:bg-white/10' : 'bg-stone-100 text-orange-accent hover:bg-stone-200'
-                            }`}
-                        >
-                            {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
-                        </button>
-                        <button
-                            onClick={handleLogout}
-                            title="Cerrar sesion"
-                            className={`h-8 rounded-lg flex items-center justify-center transition-all ${
-                                isDarkMode ? 'bg-white/5 text-white/80 hover:bg-red-500/10 hover:text-red-400' : 'bg-stone-100 text-stone-700 hover:bg-red-100 hover:text-red-600'
-                            }`}
-                        >
-                            <LogOut size={14} />
-                        </button>
-                    </div>
-
-                    <div className="flex-1 space-y-1.5 overflow-y-auto pr-1 custom-scrollbar">
+                    <div className="custom-scrollbar flex-1 min-h-0 overflow-y-auto px-1.5 pt-3">
+                        <div className="space-y-2">
+                            {isSidebarOpen && (
+                                <div className="px-1">
+                                    <p className={`text-[9px] font-bold tracking-[0.08em] ${isDarkMode ? 'text-white/28' : 'text-stone-500'}`}>
+                                        Historial
+                                    </p>
+                                </div>
+                            )}
+                            <div className="space-y-1.5">
                         {historyLoading ? (
-                            <div className="text-center py-10 opacity-40">
+                            <div className="py-10 text-center opacity-40">
                                 <Loader2 size={24} className="mx-auto mb-2 animate-spin" />
-                                <p className="text-[8px] font-bold uppercase">Cargando</p>
+                                <p className="text-[8px] font-bold uppercase tracking-[0.18em]">Cargando</p>
                             </div>
                         ) : history.length > 0 ? (
                             history.map((chat) => (
                                 <div key={chat.id} className="group relative">
                                     <button
                                         onClick={() => setChatId(chat.id)}
-                                        className={`w-full text-left px-2.5 py-2 rounded-lg transition-all flex items-center gap-2 border ${
+                                        onMouseEnter={(event) => showSidebarTooltip(event, chat.title)}
+                                        onMouseLeave={hideSidebarTooltip}
+                                        className={`w-full rounded-xl border text-left transition-all ${
                                             chatId === chat.id
-                                                ? 'bg-orange-accent/10 border-orange-accent/20 text-orange-accent'
-                                                : 'border-transparent hover:bg-stone-100 dark:hover:bg-white/5 opacity-60 hover:opacity-100'
-                                        }`}
-                                    >
-                                        <MessageSquare size={12} className="flex-shrink-0" />
-                                        <p className="font-bold text-[8px] truncate uppercase tracking-tight">{chat.title}</p>
+                                                ? 'border-orange-accent/25 bg-orange-accent/12 text-orange-accent shadow-[0_8px_24px_rgba(240,90,40,0.12)]'
+                                                : isDarkMode
+                                                    ? 'border-transparent bg-transparent text-white/60 hover:border-white/10 hover:bg-white/[0.04] hover:text-white'
+                                                    : 'border-transparent bg-transparent text-stone-500 hover:border-stone-200 hover:bg-stone-100/80 hover:text-stone-900'
+                                        } ${isSidebarOpen ? 'px-3 py-2' : 'mx-auto flex h-10 w-10 items-center justify-center px-0 py-0'}`}
+                                        >
+                                            <div className={`flex items-center ${isSidebarOpen ? 'gap-2.5 pr-7' : 'justify-center'}`}>
+                                                <MessageSquare size={13} className="flex-shrink-0" />
+                                                {isSidebarOpen && (
+                                                    <div className="min-w-0">
+                                                        <p className="truncate text-[10px] font-bold tracking-[0.02em]">{chat.title}</p>
+                                                    </div>
+                                                )}
+                                            </div>
                                     </button>
-                                    <button
-                                        onClick={(e) => handleDeleteChat(e, chat.id)}
-                                        className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 transition-all"
-                                    >
-                                        <Trash2 size={11} />
-                                    </button>
+                                    {isSidebarOpen && (
+                                        <button
+                                            onClick={(e) => handleDeleteChat(e, chat.id)}
+                                            className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-stone-400 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    )}
                                 </div>
                             ))
                         ) : (
-                            <div className="text-center py-10 opacity-20">
+                            <div className="py-10 text-center opacity-20">
                                 <Clock size={24} className="mx-auto mb-2" />
-                                <p className="text-[8px] font-bold uppercase">Sin actividad</p>
+                                <p className="text-[8px] font-bold uppercase tracking-[0.18em]">Sin actividad</p>
                             </div>
                         )}
                     </div>
-
-                    <button
-                        onClick={handleNewChat}
-                        className="w-full py-3 rounded-lg bg-orange-accent text-white font-bold text-[9px] tracking-[0.18em] shadow-xl shadow-orange-accent/20 hover:scale-[1.01] active:scale-[0.99] transition-all"
-                    >
-                        Nuevo chat
-                    </button>
+                    </div>
+                    </div>
                 </div>
             </aside>
 
-            <div className="flex-1 flex flex-col min-w-0 transform-gpu overflow-y-auto overflow-x-hidden">
-                <button
-                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className={`fixed top-3 sm:top-0 left-0 z-[100] w-12 h-12 rounded-br-2xl bg-orange-accent text-white shadow-2xl shadow-orange-accent/40 flex flex-col items-center justify-center transition-all duration-300 ${isSidebarOpen ? 'w-14 h-14' : 'hover:w-14 hover:h-14'} border-none m-0 p-0`}
-                >
-                    <div className="flex flex-col gap-[4px]">
-                        <span className="hamburger-line line-1"></span>
-                        <span className="hamburger-line line-2"></span>
-                        <span className="hamburger-line line-3"></span>
-                    </div>
-                </button>
-
-                <div className="w-full space-y-4 py-4 px-2 sm:px-3 lg:px-4 xl:px-3 2xl:px-4">
-                    <div className="flex items-center justify-start pl-14 sm:pl-24 lg:pl-12 pt-12 sm:pt-0">
-                        <button type="button" onClick={() => navigate('/')} className="flex items-center gap-2.5 group">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-white border border-stone-200'}`}>
-                                <svg viewBox="0 0 100 100" className="w-6 h-6">
-                                    <polygon points="50,20 15,80 85,80" fill="none" stroke="#F05A28" strokeWidth="12" />
-                                    <rect x="42" y="4" width="8" height="8" fill="#F05A28" />
-                                    <rect x="52" y="4" width="8" height="8" fill="#F05A28" />
-                                </svg>
-                            </div>
-                            <div className="leading-none text-left">
-                                <p className={`text-[1rem] font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-[#1A1A1A]'}`}>
-                                    LAR <span className="text-orange-accent">UNIVERSITY</span>
-                                </p>
-                                <p className="text-[8px] uppercase tracking-[0.22em] text-orange-accent/60 font-black mt-1">
-                                    Elite Tech
-                                </p>
-                            </div>
-                        </button>
-                    </div>
-                    <header className="w-full max-w-xl mx-auto">
-                        <div className="flex items-center justify-between relative px-2">
-                            <div className={`absolute top-1/2 left-0 w-full h-[4px] -translate-y-1/2 z-0 rounded-full transition-colors duration-300 ${isDarkMode ? 'bg-white shadow-[0_0_15px_rgba(255,255,255,0.6)]' : 'bg-stone-200 shadow-[0_0_12px_rgba(0,0,0,0.12)]'}`}></div>
-                            {[1, 2, 3].map((step) => (
-                                <div key={step} className="relative z-10 flex flex-col items-center gap-3">
-                                    <div
-                                        className={`w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold transition-all border-2 ${
-                                            currentStep >= step
-                                                ? 'bg-orange-accent text-white border-orange-accent shadow-[0_0_15px_rgba(240,90,40,0.5)] scale-110'
-                                                : isDarkMode
-                                                    ? 'bg-stone-900 border-white/10 text-stone-500'
-                                                    : 'bg-white border-stone-200 text-stone-500'
-                                        }`}
-                                    >
-                                        {step}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </header>
-
-                    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4 items-start">
-                        <div className="space-y-4">
-                            <div className={`rounded-[2rem] border p-4 sm:p-5 ${isDarkMode ? 'bg-[#0D0D0D]/80 border-white/10' : 'bg-white/90 border-stone-200'} shadow-2xl`}>
+            <div className="flex min-w-0 flex-1 overflow-hidden">
+                <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                    <div className="flex-1 min-h-0 overflow-hidden px-3 pb-3 pt-2 sm:px-4 sm:pt-3 xl:px-5 xl:pt-4">
+                        <div className="grid h-full min-h-0 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-0">
+                            <div className={`min-h-0 overflow-hidden rounded-[28px] border ${isDarkMode ? 'border-white/5 bg-[#0C0C0C]/88' : 'border-stone-200 bg-white/88'} shadow-[0_18px_60px_rgba(0,0,0,0.22)]`}>
                                 <ChatComponent
                                     chatId={chatId}
                                     cvAnalysisId={analysisForChat}
@@ -467,135 +497,163 @@ const HomePage = () => {
                                     lockedMessage={lockedMessage}
                                 />
                             </div>
-                        </div>
 
-                        <div className={`rounded-[2rem] border p-5 sm:p-6 cv-upload-section ${isDarkMode ? 'bg-[#0D0D0D]/90 border-white/10' : 'bg-white/95 border-stone-200'} shadow-2xl space-y-6`}>
-                            {needsMasterSelection ? (
-                                <div className="flex flex-col items-center justify-center text-center py-12 space-y-5">
-                                    <div className="w-20 h-20 rounded-[1.5rem] flex items-center justify-center border border-orange-accent/20 bg-orange-accent/10">
-                                        <Upload className="text-orange-accent" size={28} />
-                                    </div>
-                                    <div className="space-y-2 max-w-[260px]">
-                                        <p className="text-[10px] uppercase tracking-[0.2em] text-orange-accent font-bold">Primer paso</p>
-                                        <h3 className={`text-xl font-black uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
-                                            Selecciona tu master
-                                        </h3>
-                                        <p className={`text-[10px] font-medium uppercase tracking-[0.16em] leading-relaxed ${isDarkMode ? 'text-white/50' : 'text-stone-500'}`}>
-                                            El selector aparecera sobre la pantalla para definir el contexto de tu ruta.
-                                        </p>
-                                    </div>
-                                </div>
-                            ) : (
-                                <>
-                                    <div className={`flex items-center justify-between border-b pb-4 ${isDarkMode ? 'border-white/10' : 'border-stone-200'}`}>
-                                        <button
-                                            onClick={handleChangeMaster}
-                                            className={`text-[10px] font-bold tracking-widest uppercase transition-all ${isDarkMode ? 'text-white/50 hover:text-orange-accent' : 'text-stone-500 hover:text-orange-accent'}`}
-                                        >
-                                            Cambiar master
-                                        </button>
-                                        <span
-                                            className="text-[10px] font-bold py-2 px-4 rounded-full text-white uppercase tracking-widest"
-                                            style={{ backgroundColor: selectedMasterVisual.color }}
-                                        >
-                                            {getMasterDisplayName(selectedMaster)}
-                                        </span>
-                                    </div>
-
-                                    {analysisLoading ? (
-                                        <div className="flex flex-col items-center justify-center py-16 gap-3">
-                                            <Loader2 className="animate-spin text-orange-accent" size={28} />
-                                            <p className={`${isDarkMode ? 'text-white/60' : 'text-stone-500'} text-[10px] uppercase tracking-[0.18em]`}>
-                                                Cargando analisis
-                                            </p>
-                                        </div>
-                                    ) : !analysis ? (
-                                        <div className="space-y-5">
-                                            <div className="flex flex-col items-center text-center space-y-5">
-                                                <div className="relative w-20 h-20 rounded-[1.5rem] flex items-center justify-center border-2 border-dashed border-orange-accent/40 bg-orange-accent/5">
-                                                    <Upload className="text-orange-accent" size={30} />
+                            <aside className="min-h-0 overflow-hidden xl:pl-3">
+                                <div className={`flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] border xl:rounded-none xl:border-y-0 xl:border-r-0 xl:border-l ${isDarkMode ? 'border-white/5 bg-[#111111]/86 xl:bg-[#0E0E0E]/88' : 'border-stone-200 bg-white/92 xl:bg-white/88'} backdrop-blur-xl`}>
+                                    <div className="custom-scrollbar flex-1 min-h-0 overflow-y-auto px-4 py-4">
+                                        {needsMasterSelection ? (
+                                            <div className="flex h-full flex-col items-center justify-center text-center">
+                                                <div className="flex h-16 w-16 items-center justify-center rounded-[1.3rem] border border-orange-accent/20 bg-orange-accent/10">
+                                                    <Upload className="text-orange-accent" size={24} />
+                                                </div>
+                                                <div className="mt-5 max-w-[240px] space-y-2">
+                                                    <h3 className={`text-[1.05rem] font-black uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
+                                                        Selecciona tu master
+                                                    </h3>
+                                                    <p className={`text-[11px] uppercase tracking-[0.16em] leading-relaxed ${isDarkMode ? 'text-white/45' : 'text-stone-500'}`}>
+                                                        El panel derecho se convertira en tu area de apoyo cuando definas el contexto.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : analysisLoading ? (
+                                            <div className="flex flex-col items-center justify-center gap-3 py-16">
+                                                <Loader2 className="animate-spin text-orange-accent" size={28} />
+                                                <p className={`${isDarkMode ? 'text-white/60' : 'text-stone-500'} text-[10px] uppercase tracking-[0.18em]`}>
+                                                    Cargando analisis
+                                                </p>
+                                            </div>
+                                        ) : !analysis ? (
+                                            <div className="space-y-5">
+                                                <div className={`flex items-center justify-between gap-2 rounded-[18px] border px-3.5 py-3 ${isDarkMode ? 'border-white/10 bg-white/[0.02]' : 'border-stone-200 bg-stone-50/80'}`}>
+                                                    <button
+                                                        onClick={handleChangeMaster}
+                                                        className={`text-[9px] font-bold uppercase tracking-[0.16em] transition-all ${isDarkMode ? 'text-white/55 hover:text-orange-accent' : 'text-stone-500 hover:text-orange-accent'}`}
+                                                    >
+                                                        Cambiar master
+                                                    </button>
+                                                    <span
+                                                        className="rounded-full px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white"
+                                                        style={{ backgroundColor: selectedMasterVisual.color }}
+                                                    >
+                                                        {getMasterDisplayName(selectedMaster)}
+                                                    </span>
                                                 </div>
 
-                                                <div className="space-y-2">
-                                                    <h3 className={`text-xl font-bold tracking-tight uppercase italic ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
-                                                        Vincular potencial
+                                                <div className={`rounded-[24px] border px-4 py-4 ${isDarkMode ? 'border-white/10 bg-white/[0.02]' : 'border-stone-200 bg-stone-50/80'}`}>
+                                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-orange-accent/20 bg-orange-accent/10">
+                                                        <Upload className="text-orange-accent" size={20} />
+                                                    </div>
+                                                    <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.22em] text-orange-accent">Vincular potencial</p>
+                                                    <h3 className={`mt-2 text-[1.15rem] font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
+                                                        Activa una recomendacion personalizada
                                                     </h3>
-                                                    <p className={`text-[10px] font-medium uppercase tracking-[0.2em] leading-relaxed ${isDarkMode ? 'opacity-50 text-white' : 'text-stone-500'}`}>
-                                                        Sube tu CV para obtener una recomendacion y una ruta adaptada a {getMasterDisplayName(selectedMaster)}.
+                                                    <p className={`mt-2.5 text-[11px] leading-relaxed ${isDarkMode ? 'text-white/60' : 'text-stone-600'}`}>
+                                                        Sube tu CV para que podamos conectar tu perfil con {getMasterDisplayName(selectedMaster)} y proponerte una ruta mas precisa.
                                                     </p>
                                                 </div>
 
-                                                <div className="w-full space-y-3">
+                                                <div className="space-y-2.5">
                                                     <label
-                                                        className={`flex items-center justify-center gap-3 w-full h-12 rounded-xl border-2 font-bold text-[10px] tracking-widest transition-all cursor-pointer ${
+                                                        className={`flex h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border px-3.5 transition-all ${
                                                             file
                                                                 ? isDarkMode
-                                                                    ? 'border-orange-accent text-orange-accent bg-orange-accent/10'
-                                                                    : 'border-orange-accent text-orange-accent bg-orange-50'
+                                                                    ? 'border-orange-accent/40 bg-orange-accent/10 text-orange-accent'
+                                                                    : 'border-orange-accent/40 bg-orange-50 text-orange-accent'
                                                                 : isDarkMode
-                                                                    ? 'border-white/10 bg-stone-900/40 text-white/70'
-                                                                    : 'border-stone-300 bg-white text-stone-700'
+                                                                    ? 'border-white/10 bg-black/20 text-white/70 hover:border-white/20 hover:bg-white/[0.03]'
+                                                                    : 'border-stone-200 bg-white text-stone-700 hover:border-stone-300'
                                                         }`}
                                                     >
-                                                        <FileText size={16} />
-                                                        <span className="truncate max-w-[220px]">{file ? file.name : 'Seleccionar PDF'}</span>
+                                                        <div className="flex min-w-0 items-center gap-3">
+                                                            <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${file ? 'bg-orange-accent/15' : isDarkMode ? 'bg-white/5' : 'bg-stone-100'}`}>
+                                                                <FileText size={15} />
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <p className="text-[9px] font-bold uppercase tracking-[0.18em]">Subir PDF</p>
+                                                                <p className="truncate text-[11px]">{file ? file.name : 'Seleccionar archivo'}</p>
+                                                            </div>
+                                                        </div>
                                                         <input type="file" className="hidden" accept=".pdf" onChange={handleFileChange} />
+                                                        <ArrowRight size={16} className="flex-shrink-0" />
                                                     </label>
 
                                                     <button
                                                         onClick={handleUpload}
                                                         disabled={!file || uploading}
-                                                        className="w-full h-12 rounded-xl bg-orange-accent text-white font-bold text-[10px] tracking-[0.25em] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                                        className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-orange-accent text-[9px] font-bold uppercase tracking-[0.24em] text-white transition-all disabled:cursor-not-allowed disabled:opacity-40"
                                                     >
                                                         {uploading ? <Loader2 className="animate-spin" size={18} /> : 'Analizar CV'}
                                                     </button>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-5">
-                                            <div className={`flex items-center gap-3 p-3 rounded-xl border ${isDarkMode ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-emerald-500/40 bg-emerald-50'}`}>
-                                                <CheckCircle size={18} className={isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} />
-                                                <p className={`text-[10px] uppercase tracking-[0.15em] font-bold ${isDarkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>
-                                                    CV analizado para {getMasterDisplayName(selectedMaster)}
-                                                </p>
-                                            </div>
-
-                                            <div className="space-y-3">
-                                                <p className="text-[10px] uppercase tracking-[0.2em] text-orange-accent font-bold">Resumen del perfil</p>
-                                                <div className={`space-y-2 text-[11px] ${isDarkMode ? 'text-white/80' : 'text-stone-700'}`}>
-                                                    <p><span className={isDarkMode ? 'text-white/50' : 'text-stone-500'}>Rol:</span> {cvSummary.role}</p>
-                                                    <p><span className={isDarkMode ? 'text-white/50' : 'text-stone-500'}>Industria:</span> {cvSummary.industry}</p>
-                                                    <p><span className={isDarkMode ? 'text-white/50' : 'text-stone-500'}>Experiencia:</span> {cvSummary.experience}</p>
-                                                    <p><span className={isDarkMode ? 'text-white/50' : 'text-stone-500'}>Skills:</span> {cvSummary.topSkills.length ? cvSummary.topSkills.join(', ') : 'No especificadas'}</p>
+                                        ) : (
+                                            <div className="space-y-5">
+                                                <div className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 ${isDarkMode ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-emerald-500/30 bg-emerald-50'}`}>
+                                                    <CheckCircle size={18} className={isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} />
+                                                    <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${isDarkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                                                        CV analizado para {getMasterDisplayName(selectedMaster)}
+                                                    </p>
                                                 </div>
-                                            </div>
 
-                                            {improvementTips.length > 0 && (
-                                                <div className="space-y-3 pt-1">
-                                                    <p className="text-[10px] uppercase tracking-[0.2em] text-orange-accent font-bold">Recomendaciones de tu CV</p>
-                                                    <div className="space-y-2">
-                                                        {improvementTips.map((tip) => (
-                                                            <div
-                                                                key={tip}
-                                                                className={`rounded-xl border px-3 py-2 ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'}`}
-                                                            >
-                                                                <p className={`text-[10px] leading-relaxed ${isDarkMode ? 'text-white/85' : 'text-stone-700'}`}>
-                                                                    {tip}
-                                                                </p>
-                                                            </div>
-                                                        ))}
+                                                <div className={`rounded-[24px] border p-4 ${isDarkMode ? 'border-white/10 bg-white/[0.02]' : 'border-stone-200 bg-stone-50/80'}`}>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-orange-accent">Resumen del perfil</p>
+                                                        <button
+                                                            onClick={handleChangeMaster}
+                                                            className={`text-[9px] font-bold uppercase tracking-[0.16em] transition-all ${isDarkMode ? 'text-white/45 hover:text-orange-accent' : 'text-stone-500 hover:text-orange-accent'}`}
+                                                        >
+                                                            Cambiar master
+                                                        </button>
+                                                    </div>
+                                                    <div className={`mt-3.5 space-y-2.5 text-[11px] ${isDarkMode ? 'text-white/80' : 'text-stone-700'}`}>
+                                                        <p><span className={isDarkMode ? 'text-white/45' : 'text-stone-500'}>Rol:</span> {cvSummary.role}</p>
+                                                        <p><span className={isDarkMode ? 'text-white/45' : 'text-stone-500'}>Industria:</span> {cvSummary.industry}</p>
+                                                        <p><span className={isDarkMode ? 'text-white/45' : 'text-stone-500'}>Experiencia:</span> {cvSummary.experience}</p>
+                                                        <p><span className={isDarkMode ? 'text-white/45' : 'text-stone-500'}>Skills:</span> {cvSummary.topSkills.length ? cvSummary.topSkills.join(', ') : 'No especificadas'}</p>
                                                     </div>
                                                 </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </>
-                            )}
+
+                                                {improvementTips.length > 0 && (
+                                                    <div className="space-y-2.5">
+                                                        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-orange-accent">Recomendaciones de tu CV</p>
+                                                        <div className="space-y-2.5">
+                                                            {improvementTips.map((tip) => (
+                                                                <div
+                                                                    key={tip}
+                                                                    className={`rounded-[20px] border px-4 py-3.5 ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50/80'}`}
+                                                                >
+                                                                    <p className={`text-[11px] leading-relaxed ${isDarkMode ? 'text-white/82' : 'text-stone-700'}`}>
+                                                                        {tip}
+                                                                    </p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </aside>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
+
+            {hoverTooltip && (
+                <div
+                    className={`pointer-events-none fixed z-[220] whitespace-nowrap rounded-lg border px-2 py-1 text-[10px] font-medium shadow-lg ${
+                        isDarkMode ? 'border-white/10 bg-[#161616] text-white' : 'border-stone-700 bg-stone-900 text-white'
+                    }`}
+                    style={{
+                        left: hoverTooltip.left,
+                        top: hoverTooltip.top,
+                        transform: 'translateY(-50%)',
+                    }}
+                >
+                    {hoverTooltip.text}
+                </div>
+            )}
 
             {error && (
                 <div className="fixed bottom-10 right-10 flex items-center gap-4 p-6 bg-[#0D0D0D] border-l-[6px] border-orange-accent rounded-3xl text-white shadow-[0_30px_80px_rgba(0,0,0,0.8)] z-[100] max-w-lg">
@@ -665,3 +723,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+

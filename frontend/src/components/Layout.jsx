@@ -29,8 +29,8 @@ const Layout = () => {
 
             {!isHomeRoute && <Navbar />}
 
-            <main className="flex-1 flex flex-col min-h-screen relative z-10 w-full overflow-x-hidden">
-                <div className={`flex-1 overflow-y-auto overflow-x-hidden ${isHomeRoute ? 'px-0 py-0' : 'px-4 sm:px-10 py-8'}`}>
+            <main className={`flex-1 flex flex-col relative z-10 w-full overflow-x-hidden ${isHomeRoute ? 'h-screen min-h-screen overflow-hidden' : 'min-h-screen'}`}>
+                <div className={`flex-1 overflow-x-hidden ${isHomeRoute ? 'h-full overflow-hidden px-0 py-0' : 'overflow-y-auto px-4 sm:px-10 py-8'}`}>
                     <div className="w-full">
                         <Outlet />
                     </div>
@@ -38,7 +38,7 @@ const Layout = () => {
 
                 {!isHomeRoute && (
                     <footer className={`p-6 border-t ${isDarkMode ? 'border-dark-border bg-dark-card/30 text-dark-muted' : 'border-light-border bg-white/30 text-light-muted'} text-center text-sm backdrop-blur-sm`}>
-                        <p>LÄR UNIVERSITY 2026</p>
+                        <p>LAR UNIVERSITY 2026</p>
                     </footer>
                 )}
             </main>
@@ -47,3 +47,4 @@ const Layout = () => {
 };
 
 export default Layout;
+
