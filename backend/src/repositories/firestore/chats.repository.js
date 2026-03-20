@@ -1,9 +1,10 @@
 const { v4: uuidv4 } = require('uuid');
 
-const { db, COLLECTIONS, admin } = require('../../config/firebase');
-const { createLogger } = require('../../logging/logger');
+const { createFirestoreClient } = require('../../infra/firestore.client');
+const { createLogger } = require('../../services/observability/logger');
 
 const logger = createLogger({ component: 'repository.firestore.chats' });
+const { db, collections: COLLECTIONS, admin } = createFirestoreClient();
 
 const chats = {
     findByUserId: async (userId, { page = 1, limit = 20 } = {}) => {

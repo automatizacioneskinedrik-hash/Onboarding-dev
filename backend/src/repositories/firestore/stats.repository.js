@@ -1,4 +1,6 @@
-const { db, COLLECTIONS } = require('../../config/firebase');
+const { createFirestoreClient } = require('../../infra/firestore.client');
+
+const { db, collections: COLLECTIONS } = createFirestoreClient();
 
 const stats = {
     chatCountByUser: async (userId) => {

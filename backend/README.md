@@ -24,30 +24,53 @@ backend/
 |-- diagnose-vector-index.js
 `-- src/
     |-- app.js
-    |-- config/
-    |   |-- firebase.js
-    |   `-- openai.js
-    |-- controllers/
-    |-- middleware/
-    |-- modules/
+    |-- composition-root.js
+    |-- ai/
+    |-- http/
+    |   |-- controllers/
+    |   |-- middleware/
+    |   |-- routes/
+    |   |-- serializers/
+    |   |-- validators/
+    |   |-- respond.js
+    |   |-- sse.js
+    |   `-- validate.js
+    |-- infra/
     |-- repositories/
-    |-- routes/
     |-- services/
-    |   |-- course-retrieval/
-    |   |-- embedding.service.js
-    |   |-- openai/
-    |   |-- pdf.service.js
-    |   `-- vertex-vector-search.service.js
-    |-- shared/
-    |-- store/
+    |   |-- auth/
+    |   |   `-- jwt.service.js
+    |   |-- documents/
+    |   |   `-- pdf-parser.service.js
+    |   |-- errors/
+    |   |   `-- app-error.js
+    |   |-- observability/
+    |   |   |-- logger.js
+    |   |   `-- request-context.service.js
+    |   |-- search/
+    |   |   |-- embedding.service.js
+    |   |   `-- vertex-vector-search.service.js
+    |   `-- serialization/
+    |       |-- analysis-serializer.js
+    |       `-- recommendation-serializer.js
     |-- tooling/
     |   `-- vector-index/
+    |-- use-cases/
     `-- utils/
 |-- test/
     `-- *.test.js
 ```
 
 ## Configuracion
+
+Arquitectura runtime:
+
+- `http/`: capa HTTP completa (`routes`, `controllers`, `middleware`, `validators`, `serializers`, `respond`, `sse`).
+- `use-cases/`: logica de negocio.
+- `ai/`: orquestacion de prompts, contexto y fallback RAG.
+- `repositories/`: acceso de dominio a persistencia.
+- `services/`: servicios auxiliares agrupados por responsabilidad (`auth`, `documents`, `errors`, `observability`, `search`, `serialization`).
+- `infra/`: adaptadores externos (Firestore, OpenAI, Vertex).
 
 ### 1. Instalar dependencias
 

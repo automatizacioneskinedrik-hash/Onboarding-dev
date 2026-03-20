@@ -21,6 +21,9 @@ test('POST /api/cv/upload returns completed analysis contract', async () => {
     assert.ok(response.body.data.cvAnalysisId);
     assert.equal(response.body.data.masterId, 'mtecmba');
     assert.equal(response.body.data.recommendation.primarySpecializationId, 'tecnologia');
+    assert.equal(response.body.data.recommendation.sprint.courses.length, 6);
+    assert.equal(response.body.data.recommendation.sprint.blocks.length, 6);
+    assert.equal(response.body.data.recommendation.sprintUrl, 'https://lar.dev/sprints/tecnologia');
 });
 
 test('POST /api/cv/linkedin returns analysis contract', async () => {
@@ -41,4 +44,7 @@ test('POST /api/cv/linkedin returns analysis contract', async () => {
     assert.equal(response.body.success, true);
     assert.ok(response.body.data.cvAnalysisId);
     assert.equal(response.body.data.recommendation.springUrl, 'https://lar.dev/sprints/tecnologia');
+    assert.equal(response.body.data.recommendation.sprintUrl, 'https://lar.dev/sprints/tecnologia');
+    assert.equal(response.body.data.recommendation.sprint.courses.length, 6);
+    assert.equal(response.body.data.recommendation.sprint.blocks.length, 6);
 });

@@ -7,6 +7,7 @@ import { findMasterById, getMasterDisplayName } from '../utils/masters';
 const PerfilPage = () => {
     const { user, masters } = useAuth();
     const [analysis, setAnalysis] = useState(null);
+    const [availableModules, setAvailableModules] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -25,6 +26,29 @@ const PerfilPage = () => {
 
         fetchProfile();
     }, []);
+
+    useEffect(() => {
+        if (!analysis?.masterId) return;
+
+        const fetchModules = async () => {
+            try {
+                const response = await api.get('/users/master-modules', {
+                    params: { masterId: analysis.masterId },
+                });
+
+                if (response.data.success) {
+                    setAvailableModules(response.data.data.modules || []);
+                } else {
+                    setAvailableModules([]);
+                }
+            } catch (err) {
+                console.error('Error fetching modules:', err);
+                setAvailableModules([]);
+            }
+        };
+
+        fetchModules();
+    }, [analysis?.masterId]);
 
     if (loading) {
         return (
@@ -53,7 +77,7 @@ const PerfilPage = () => {
 
     const { extractedProfile = {}, recommendation = {}, masterId } = analysis;
     const selectedMaster = findMasterById(masters, masterId || user?.selectedMasterId);
-    const recommendedCourses = recommendation.recommendedCourses || [];
+    const routeBlocks = recommendation.sprint?.blocks || recommendation.planBlocks || [];
     const subjects = recommendation.subjects || [];
 
     return (
@@ -132,33 +156,40 @@ const PerfilPage = () => {
                         </p>
                     </div>
 
-                    {subjects.length > 0 && (
+                    {(routeBlocks.length > 0 || subjects.length > 0) && (
                         <div className="card">
                             <h3 className="text-xl font-bold flex items-center gap-3 mb-6">
                                 <GraduationCap className="text-orange-accent" size={24} />
-                                Materias del sprint
+                                Ruta recomendada
                             </h3>
                             <div className="grid md:grid-cols-2 gap-3">
-                                {subjects.map((subject) => (
-                                    <div key={subject} className="p-4 bg-dark-bg/50 rounded-xl border border-dark-border">
-                                        <p className="text-sm text-dark-text">{subject}</p>
+                                {(routeBlocks.length ? routeBlocks : subjects.map((subject, index) => ({
+                                    id: `subject-${index + 1}`,
+                                    blockTitle: subject,
+                                }))).slice(0, 6).map((block, index) => (
+                                    <div key={block.id || block.blockTitle} className="p-4 bg-dark-bg/50 rounded-xl border border-dark-border">
+                                        <p className="text-sm font-bold text-dark-text">{block.blockTitle || block.title}</p>
+                                        <p className="mt-1 text-xs text-dark-muted">
+                                            Curso {index + 1}
+                                            {block.specializationName ? ` • ${block.specializationName}` : ''}
+                                        </p>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     )}
 
-                    {recommendedCourses.length > 0 && (
+                    {availableModules.length > 0 && (
                         <div className="card">
                             <h3 className="text-xl font-bold flex items-center gap-3 mb-6">
                                 <Briefcase className="text-orange-accent" size={24} />
-                                Cursos recuperados desde el catalogo
+                                Modulos existentes del MBA
                             </h3>
                             <div className="space-y-4">
-                                {recommendedCourses.map((course) => (
-                                    <div key={course.id} className="p-4 bg-dark-bg/50 rounded-xl border border-dark-border">
-                                        <h4 className="font-bold">{course.title}</h4>
-                                        <p className="text-sm text-dark-muted">{course.moduleTitle}</p>
+                                {availableModules.map((module) => (
+                                    <div key={module.id} className="p-4 bg-dark-bg/50 rounded-xl border border-dark-border">
+                                        <h4 className="font-bold">{module.title}</h4>
+                                        <p className="text-sm text-dark-muted">{module.topicsCount ?? module.topics?.length ?? 0} temas</p>
                                     </div>
                                 ))}
                             </div>

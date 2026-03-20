@@ -1,10 +1,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { buildProfileExtractionPrompt } = require('../src/services/openai/prompts/profile-extraction.prompt');
-const { buildRecommendationPrompt } = require('../src/services/openai/prompts/recommendation-generation.prompt');
-const { buildChatMessages } = require('../src/services/openai/prompts/chat-advisor.prompt');
-const { resolveSpecializationIdFromMatch } = require('../src/services/openai/ai-fallbacks.service');
+const {
+    buildProfileExtractionPrompt,
+    buildRecommendationPrompt,
+    buildChatMessages,
+} = require('../src/ai/prompt-builder');
 
 test('profile extraction prompt includes CV text', () => {
     const prompt = buildProfileExtractionPrompt('CV de ejemplo');
@@ -13,7 +14,7 @@ test('profile extraction prompt includes CV text', () => {
     assert.match(prompt, /JSON valido/);
 });
 
-test('recommendation prompt includes retrieved context and preferred specialization', () => {
+test('recommendation prompt enforces a 6-block route inside the selected MBA', () => {
     const prompt = buildRecommendationPrompt({
         profile: {
             name: 'Ana',
@@ -24,17 +25,12 @@ test('recommendation prompt includes retrieved context and preferred specializat
             summary: 'Perfil de prueba',
         },
         options: { masterId: 'mtecmba' },
-        retrievedCatalogContext: 'Resultado 1',
-        retrieval: {
-            moduleRanking: [{ moduleId: 'module-1', moduleTitle: 'Producto', specializationId: 'tecnologia' }],
-        },
-        preferredSpecializationId: 'tecnologia',
         specializationsList: 'tecnologia',
-        resolveSpecializationIdFromMatch,
     });
 
-    assert.match(prompt, /Resultado 1/);
-    assert.match(prompt, /specialization_id_preferido: tecnologia/);
+    assert.match(prompt, /exactamente 6 bloques/);
+    assert.match(prompt, /maximo 1 bloque por especializacion/);
+    assert.match(prompt, /Master seleccionado: mtecmba/);
 });
 
 test('chat prompt keeps system role and user messages', () => {

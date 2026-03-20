@@ -46,7 +46,9 @@ const ChatComponent = ({
     selectedMaster,
     recommendation = null,
     suggestedSubjects = [],
-    recommendedCourses = [],
+    routeBlocks = [],
+    availableModules = [],
+    modulesLoading = false,
     chatEnabled = true,
     lockedMessage = 'Selecciona un master y sube tu CV para habilitar el chat.',
 }) => {
@@ -233,6 +235,86 @@ const ChatComponent = ({
             ? `Pregunta por tu recomendacion, los sprints o el contenido de ${selectedMasterDisplayName || 'tu master'}.`
             : `Ya puedes explorar el contenido de ${selectedMasterDisplayName || 'tu master'}. Si subes tu CV, la recomendacion sera personalizada.`
         : lockedMessage;
+    const visibleRouteBlocks = routeBlocks.length
+        ? routeBlocks
+        : suggestedSubjects.map((subject, index) => ({
+              id: `subject-${index + 1}`,
+              blockTitle: subject,
+              specializationName: recommendation?.primarySpecialization || '',
+          }));
+    const recommendationPanel = recommendation ? (
+        <div className="mx-auto grid w-full max-w-3xl grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+            <div className={`rounded-2xl border p-4 text-left ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'}`}>
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-orange-accent font-bold">
+                            Ruta recomendada
+                        </p>
+                        <p className={`mt-2 text-base font-black uppercase tracking-[0.12em] ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
+                            {recommendation.primarySpecialization || 'Ruta recomendada'}
+                        </p>
+                        <p className={`mt-2 text-[11px] leading-relaxed ${isDarkMode ? 'text-white/70' : 'text-stone-600'}`}>
+                            {recommendation.reasoning || 'La recomendacion aparecera aqui cuando el CV haya sido analizado.'}
+                        </p>
+                    </div>
+                    {recommendation.matchScore ? (
+                        <div className="px-3 py-2 rounded-xl bg-orange-accent/10 text-orange-accent text-[10px] font-black uppercase tracking-[0.16em]">
+                            {recommendation.matchScore}%
+                        </div>
+                    ) : null}
+                </div>
+
+                {visibleRouteBlocks.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                        {visibleRouteBlocks.slice(0, 6).map((block, index) => (
+                            <div
+                                key={block.id || `${block.blockTitle}-${index}`}
+                                className={`rounded-xl border px-3 py-3 ${isDarkMode ? 'border-white/10 bg-black/20' : 'border-stone-200 bg-white'}`}
+                            >
+                                <p className={`text-[10px] font-bold uppercase tracking-[0.12em] ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
+                                    {block.blockTitle || block.title}
+                                </p>
+                                <p className={`mt-1 text-[10px] ${isDarkMode ? 'text-white/60' : 'text-stone-500'}`}>
+                                    Bloque {index + 1} {block.specializationName ? `- ${block.specializationName}` : ''}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <div className={`rounded-2xl border p-4 text-left ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'}`}>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-orange-accent font-bold">
+                    Modulos existentes del MBA
+                </p>
+                <div className="mt-3 space-y-3">
+                    {modulesLoading ? (
+                        <p className={`text-[11px] leading-relaxed ${isDarkMode ? 'text-white/60' : 'text-stone-500'}`}>
+                            Cargando modulos del programa...
+                        </p>
+                    ) : availableModules.length > 0 ? (
+                        availableModules.slice(0, 6).map((module) => (
+                            <div
+                                key={module.id}
+                                className={`rounded-xl border px-3 py-3 ${isDarkMode ? 'border-white/10 bg-black/20' : 'border-stone-200 bg-white'}`}
+                            >
+                                <p className={`text-[10px] font-bold uppercase tracking-[0.12em] ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
+                                    {module.title}
+                                </p>
+                                <p className={`mt-1 text-[10px] ${isDarkMode ? 'text-white/60' : 'text-stone-500'}`}>
+                                    {module.topicsCount ?? module.topics?.length ?? 0} temas
+                                </p>
+                            </div>
+                        ))
+                    ) : (
+                        <p className={`text-[11px] leading-relaxed ${isDarkMode ? 'text-white/60' : 'text-stone-500'}`}>
+                            Cuando el MBA tenga modulos cargados, aqui los veras listados.
+                        </p>
+                    )}
+                </div>
+            </div>
+        </div>
+    ) : null;
 
     return (
         <div className={`chat-container relative flex h-full min-h-[600px] flex-col overflow-hidden transition-all duration-500 ${isDarkMode ? 'bg-transparent' : 'bg-transparent'}`}>
@@ -260,7 +342,7 @@ const ChatComponent = ({
                                     <div className="flex items-start justify-between gap-3">
                                         <div>
                                             <p className="text-[10px] uppercase tracking-[0.2em] text-orange-accent font-bold">
-                                                Ruta elegida
+                                                Ruta recomendada
                                             </p>
                                             <p className={`mt-2 text-base font-black uppercase tracking-[0.12em] ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
                                                 {recommendation.primarySpecialization || 'Ruta recomendada'}
@@ -276,15 +358,20 @@ const ChatComponent = ({
                                         ) : null}
                                     </div>
 
-                                    {suggestedSubjects.length > 0 && (
-                                        <div className="flex flex-wrap gap-2 mt-4">
-                                            {suggestedSubjects.slice(0, 4).map((subject) => (
-                                                <span
-                                                    key={subject}
-                                                    className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.12em] ${isDarkMode ? 'bg-white/5 text-white/70 border border-white/10' : 'bg-white text-stone-700 border border-stone-200'}`}
+                                    {visibleRouteBlocks.length > 0 && (
+                                        <div className="mt-4 space-y-2">
+                                            {visibleRouteBlocks.slice(0, 6).map((block, index) => (
+                                                <div
+                                                    key={block.id || `${block.blockTitle}-${index}`}
+                                                    className={`rounded-xl border px-3 py-3 ${isDarkMode ? 'border-white/10 bg-black/20' : 'border-stone-200 bg-white'}`}
                                                 >
-                                                    {subject}
-                                                </span>
+                                                    <p className={`text-[10px] font-bold uppercase tracking-[0.12em] ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
+                                                        {block.blockTitle || block.title}
+                                                    </p>
+                                                    <p className={`mt-1 text-[10px] ${isDarkMode ? 'text-white/60' : 'text-stone-500'}`}>
+                                                        Bloque {index + 1} {block.specializationName ? `• ${block.specializationName}` : ''}
+                                                    </p>
+                                                </div>
                                             ))}
                                         </div>
                                     )}
@@ -292,26 +379,30 @@ const ChatComponent = ({
 
                                 <div className={`rounded-2xl border p-4 text-left ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'}`}>
                                     <p className="text-[10px] uppercase tracking-[0.2em] text-orange-accent font-bold">
-                                        Cursos recomendados
+                                        Modulos existentes del MBA
                                     </p>
                                     <div className="mt-3 space-y-3">
-                                        {recommendedCourses.length > 0 ? (
-                                            recommendedCourses.slice(0, 3).map((course) => (
+                                        {modulesLoading ? (
+                                            <p className={`text-[11px] leading-relaxed ${isDarkMode ? 'text-white/60' : 'text-stone-500'}`}>
+                                                Cargando modulos del programa...
+                                            </p>
+                                        ) : availableModules.length > 0 ? (
+                                            availableModules.slice(0, 6).map((module) => (
                                                 <div
-                                                    key={course.id}
+                                                    key={module.id}
                                                     className={`rounded-xl border px-3 py-3 ${isDarkMode ? 'border-white/10 bg-black/20' : 'border-stone-200 bg-white'}`}
                                                 >
                                                     <p className={`text-[10px] font-bold uppercase tracking-[0.12em] ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
-                                                        {course.title}
+                                                        {module.title}
                                                     </p>
                                                     <p className={`mt-1 text-[10px] ${isDarkMode ? 'text-white/60' : 'text-stone-500'}`}>
-                                                        {course.moduleTitle}
+                                                        {module.topicsCount ?? module.topics?.length ?? 0} temas
                                                     </p>
                                                 </div>
                                             ))
                                         ) : (
                                             <p className={`text-[11px] leading-relaxed ${isDarkMode ? 'text-white/60' : 'text-stone-500'}`}>
-                                                Cuando exista una recomendacion completa, aqui veras los cursos mas cercanos a tu perfil.
+                                                Cuando el MBA tenga modulos cargados, aqui los veras listados.
                                             </p>
                                         )}
                                     </div>
@@ -321,6 +412,11 @@ const ChatComponent = ({
                     </div>
                 ) : (
                     <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
+                        {recommendationPanel ? (
+                            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                {recommendationPanel}
+                            </div>
+                        ) : null}
                         {messages.map((msg, index) => {
                             const isStreamingAssistant = msg.role === 'assistant' && msg.streaming;
 

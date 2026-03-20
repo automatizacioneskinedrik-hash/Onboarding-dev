@@ -1,10 +1,10 @@
 const axios = require('axios');
 const { GoogleAuth } = require('google-auth-library');
 
-const { admin } = require('../../config/firebase');
+const { admin } = require('../../infra/firestore.client');
 const { readCoursesFromFirestore } = require('./course-vector-index.service');
-const { createTextEmbedding } = require('../../services/embedding.service');
-const { findNeighbors, getIndexEndpoint } = require('../../services/vertex-vector-search.service');
+const { createTextEmbedding } = require('../../services/search/embedding.service');
+const { findNeighbors, getIndexEndpoint } = require('../../services/search/vertex-vector-search.service');
 
 const VECTOR_SEARCH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
 const DEFAULT_QUERY = 'Quiero mejorar mi liderazgo y mis habilidades de comunicacion';

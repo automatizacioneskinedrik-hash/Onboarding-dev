@@ -4,8 +4,8 @@ const path = require('path');
 const axios = require('axios');
 const { GoogleAuth } = require('google-auth-library');
 
-const { admin, db, COLLECTIONS } = require('../../config/firebase');
-const { createTextEmbedding } = require('../../services/embedding.service');
+const { admin, db, COLLECTIONS } = require('../../infra/firestore.client');
+const { createTextEmbedding } = require('../../services/search/embedding.service');
 
 const VECTOR_SEARCH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
 const DEFAULT_GCS_PREFIX = 'vector-search/imports/courses';

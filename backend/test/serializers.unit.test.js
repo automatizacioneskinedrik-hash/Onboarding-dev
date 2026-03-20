@@ -5,20 +5,34 @@ const {
     normalizeRecommendation,
     serializeRecommendationPayload,
     serializeStoredRecommendation,
-} = require('../src/shared/serializers/recommendation.serializer');
-const { serializeAnalysisHistoryItem } = require('../src/shared/serializers/analysis.serializer');
-const { serializeChatListResponse } = require('../src/shared/serializers/chat.serializer');
+} = require('../src/services/serialization/recommendation-serializer');
+const { serializeAnalysisHistoryItem } = require('../src/services/serialization/analysis-serializer');
+const { serializeChatList } = require('../src/http/serializers/chat.serializer');
 
 test('recommendation serializer normalizes sprintUrl and springUrl', () => {
     const normalized = normalizeRecommendation({
         primarySpecialization: 'Tecnologia',
         springUrl: 'https://lar.dev/sprint',
-        subjects: ['Arquitectura'],
+        subjects: [
+            'Curso 1',
+            'Curso 2',
+            'Curso 3',
+            'Curso 4',
+            'Curso 5',
+            'Curso 6',
+            'Curso 7',
+        ],
     });
 
     assert.equal(normalized.sprintUrl, 'https://lar.dev/sprint');
+    assert.equal(normalized.sprint.courses.length, 6);
+    assert.equal(normalized.sprint.blocks.length, 6);
     assert.equal(serializeRecommendationPayload(normalized).springUrl, 'https://lar.dev/sprint');
+    assert.equal(serializeRecommendationPayload(normalized).sprint.courses.length, 6);
+    assert.equal(serializeRecommendationPayload(normalized).sprint.blocks.length, 6);
     assert.equal(serializeStoredRecommendation(normalized).sprintUrl, 'https://lar.dev/sprint');
+    assert.equal(serializeStoredRecommendation(normalized).sprint.courses.length, 6);
+    assert.equal(serializeStoredRecommendation(normalized).sprint.blocks.length, 6);
 });
 
 test('analysis history serializer hides rawText', () => {
@@ -33,7 +47,7 @@ test('analysis history serializer hides rawText', () => {
 });
 
 test('chat serializer keeps pagination contract', () => {
-    const serialized = serializeChatListResponse({
+    const serialized = serializeChatList({
         items: [{ id: 'chat-1', title: 'Demo' }],
         total: 1,
         page: 1,

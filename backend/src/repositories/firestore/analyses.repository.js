@@ -1,9 +1,10 @@
 const { v4: uuidv4 } = require('uuid');
 
-const { db, COLLECTIONS } = require('../../config/firebase');
-const { createLogger } = require('../../logging/logger');
+const { createFirestoreClient } = require('../../infra/firestore.client');
+const { createLogger } = require('../../services/observability/logger');
 
 const logger = createLogger({ component: 'repository.firestore.analyses' });
+const { db, collections: COLLECTIONS } = createFirestoreClient();
 
 const analyses = {
     findByUserId: async (userId) => {

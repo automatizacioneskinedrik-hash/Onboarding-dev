@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const { logger } = require('./src/logging/logger');
+const { logger } = require('./src/services/observability/logger');
 const { buildApp } = require('./src/app');
 
 const app = buildApp();

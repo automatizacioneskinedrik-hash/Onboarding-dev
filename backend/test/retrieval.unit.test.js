@@ -1,13 +1,13 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { buildProfileRetrievalQuery } = require('../src/services/course-retrieval/profile-query-builder');
+const { buildProfileRetrievalQuery } = require('../src/ai/profile-query-builder');
 const {
     extractSearchTerms,
     scoreModuleAgainstProfile,
     buildModuleRanking,
-} = require('../src/services/course-retrieval/retrieval-ranking');
-const { formatRetrievedCoursesContext } = require('../src/services/course-retrieval/retrieval-context-builder');
+} = require('../src/ai/retrieval-ranking');
+const { formatRetrievedCoursesContext } = require('../src/ai/retrieval-context-builder');
 
 test('profile query builder composes a searchable query', () => {
     const query = buildProfileRetrievalQuery({

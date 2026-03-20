@@ -1,4 +1,4 @@
-const { db, COLLECTIONS } = require('../config/firebase');
+const { db, COLLECTIONS } = require('../infra/firestore.client');
 const { MASTERS } = require('./masters');
 
 const MTECMBA_ID = 'mtecmba';

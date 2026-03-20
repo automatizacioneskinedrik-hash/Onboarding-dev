@@ -4,21 +4,24 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 
-const { logger } = require('./logging/logger');
-const { attachRequestContext } = require('./middleware/requestContext.middleware');
-const { requestLogger } = require('./middleware/httpLogger.middleware');
-const { errorHandler, notFound } = require('./middleware/errorHandler');
+const { logger } = require('./services/observability/logger');
+const { getAppContainer } = require('./composition-root');
+const { attachRequestContext } = require('./http/middleware/request-context.middleware');
+const { requestLogger } = require('./http/middleware/http-logger.middleware');
+const { errorHandler, notFound } = require('./http/middleware/error-handler.middleware');
+const { buildOpenApiSpec, buildSwaggerHtml } = require('./http/swagger/openapi');
 
-const authRoutes = require('./routes/auth.routes');
-const chatRoutes = require('./routes/chat.routes');
-const cvRoutes = require('./routes/cv.routes');
-const recommendationRoutes = require('./routes/recommendation.routes');
-const userRoutes = require('./routes/user.routes');
+const authRoutes = require('./http/routes/auth.routes');
+const chatRoutes = require('./http/routes/chat.routes');
+const cvRoutes = require('./http/routes/cv.routes');
+const recommendationRoutes = require('./http/routes/recommendation.routes');
+const userRoutes = require('./http/routes/user.routes');
 
 const normalizeOrigin = (value = '') => value.trim().replace(/\/+$/, '');
 
 const buildApp = () => {
     const app = express();
+    app.locals.container = getAppContainer();
     const configuredOrigins = (
         process.env.CORS_ORIGINS ||
         process.env.CORS_ORIGIN ||
@@ -103,6 +106,20 @@ const buildApp = () => {
             storage: process.env.USE_FIRESTORE === 'true' ? 'Firestore' : 'In-Memory',
             requestId: req.requestId,
         });
+    });
+
+    app.get('/api/docs.json', (req, res) => {
+        const host = req.get('host') || `localhost:${process.env.PORT || 5000}`;
+        const protocol = req.protocol || 'http';
+        res.status(200).json(
+            buildOpenApiSpec({
+                baseUrl: `${protocol}://${host}`,
+            })
+        );
+    });
+
+    app.get('/api/docs', (req, res) => {
+        res.type('html').send(buildSwaggerHtml());
     });
 
     app.use('/api/auth', authRoutes);

@@ -67,6 +67,8 @@ const HomePage = () => {
     const [historyLoading, setHistoryLoading] = useState(false);
     const [analysisLoading, setAnalysisLoading] = useState(true);
     const [analysis, setAnalysis] = useState(null);
+    const [availableModules, setAvailableModules] = useState([]);
+    const [modulesLoading, setModulesLoading] = useState(false);
     const [chatId, setChatId] = useState(location.state?.openChatId || null);
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -134,12 +136,41 @@ const HomePage = () => {
         }
     }, [analysis, selectedMaster]);
 
+    useEffect(() => {
+        if (!selectedMaster?.id) {
+            setAvailableModules([]);
+            return;
+        }
+
+        const fetchMasterModules = async () => {
+            setModulesLoading(true);
+            try {
+                const response = await api.get('/users/master-modules', {
+                    params: { masterId: selectedMaster.id },
+                });
+
+                if (response.data.success) {
+                    setAvailableModules(response.data.data.modules || []);
+                } else {
+                    setAvailableModules([]);
+                }
+            } catch (error) {
+                console.error('Error fetching master modules:', error);
+                setAvailableModules([]);
+            } finally {
+                setModulesLoading(false);
+            }
+        };
+
+        fetchMasterModules();
+    }, [selectedMaster]);
+
     const needsMasterSelection = !selectedMaster || isChoosingMaster;
     const currentStep = analysis ? 3 : needsMasterSelection ? 1 : 2;
     const selectedMasterVisual = getMasterVisual(selectedMaster?.id);
     const cvSummary = buildCvSummary(analysis);
     const recommendation = analysis?.recommendation || null;
-    const recommendedCourses = recommendation?.recommendedCourses || [];
+    const routeBlocks = recommendation?.sprint?.blocks || recommendation?.planBlocks || [];
     const suggestedSubjects = recommendation?.subjects || [];
 
     const lockedMessage = selectedMaster
@@ -161,17 +192,17 @@ const HomePage = () => {
             tips.push(`Materias clave: ${suggestedSubjects.slice(0, 3).join(', ')}.`);
         }
 
-        if (recommendedCourses.length) {
+        if (routeBlocks.length) {
             tips.push(
-                `Cursos mas cercanos a tu perfil: ${recommendedCourses
+                `Bloques principales de la ruta: ${routeBlocks
                     .slice(0, 2)
-                    .map((course) => course.title)
+                    .map((block) => block.blockTitle || block.title)
                     .join(', ')}.`
             );
         }
 
         return tips.slice(0, 3);
-    }, [recommendation, suggestedSubjects, recommendedCourses]);
+    }, [recommendation, suggestedSubjects, routeBlocks]);
 
     const handleLogout = () => {
         logout();
@@ -492,7 +523,9 @@ const HomePage = () => {
                                     selectedMaster={selectedMaster}
                                     recommendation={recommendation}
                                     suggestedSubjects={suggestedSubjects}
-                                    recommendedCourses={recommendedCourses}
+                                    routeBlocks={routeBlocks}
+                                    availableModules={availableModules}
+                                    modulesLoading={modulesLoading}
                                     chatEnabled={Boolean(selectedMaster && chatId)}
                                     lockedMessage={lockedMessage}
                                 />
