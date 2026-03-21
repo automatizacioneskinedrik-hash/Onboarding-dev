@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Send, User, Loader2, Sparkles, Wand2 } from 'lucide-react';
 import api, { API_URL } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
@@ -47,8 +47,6 @@ const ChatComponent = ({
     recommendation = null,
     suggestedSubjects = [],
     routeBlocks = [],
-    availableModules = [],
-    modulesLoading = false,
     chatEnabled = true,
     lockedMessage = 'Selecciona un master y sube tu CV para habilitar el chat.',
 }) => {
@@ -57,7 +55,11 @@ const ChatComponent = ({
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [moduleItems, setModuleItems] = useState([]);
+    const [moduleListLoading, setModuleListLoading] = useState(false);
     const messagesEndRef = useRef(null);
+    const recommendationCardRef = useRef(null);
+    const [recommendationCardHeight, setRecommendationCardHeight] = useState(null);
     const selectedMasterDisplayName = getMasterDisplayName(selectedMaster);
 
     useEffect(() => {
@@ -86,6 +88,94 @@ const ChatComponent = ({
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, sending]);
+
+    useLayoutEffect(() => {
+        if (!recommendation) {
+            setRecommendationCardHeight(null);
+            return;
+        }
+
+        const card = recommendationCardRef.current;
+
+        if (!card) {
+            return;
+        }
+
+        let frameId = null;
+
+        const updateHeight = () => {
+            setRecommendationCardHeight(card.getBoundingClientRect().height || null);
+        };
+
+        frameId = window.requestAnimationFrame(() => {
+            updateHeight();
+        });
+
+        if (typeof ResizeObserver === 'undefined') {
+            return () => {
+                if (frameId !== null) {
+                    window.cancelAnimationFrame(frameId);
+                }
+            };
+        }
+
+        const observer = new ResizeObserver(() => {
+            updateHeight();
+        });
+
+        observer.observe(card);
+
+        return () => {
+            if (frameId !== null) {
+                window.cancelAnimationFrame(frameId);
+            }
+            observer.disconnect();
+        };
+    }, [recommendation, routeBlocks.length, suggestedSubjects.length]);
+
+    useEffect(() => {
+        if (!selectedMaster?.id) {
+            setModuleItems([]);
+            setModuleListLoading(false);
+            return;
+        }
+
+        let isMounted = true;
+
+        const fetchMasterModules = async () => {
+            setModuleListLoading(true);
+            try {
+                const response = await api.get('/users/master-modules', {
+                    params: { masterId: selectedMaster.id },
+                });
+
+                if (!isMounted) {
+                    return;
+                }
+
+                if (response.data.success) {
+                    setModuleItems(response.data.data.modules || []);
+                } else {
+                    setModuleItems([]);
+                }
+            } catch (error) {
+                if (isMounted) {
+                    console.error('Error fetching master modules:', error);
+                    setModuleItems([]);
+                }
+            } finally {
+                if (isMounted) {
+                    setModuleListLoading(false);
+                }
+            }
+        };
+
+        fetchMasterModules();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [selectedMaster?.id]);
 
     const handleSendMessage = async (e, textOverride = null) => {
         if (e) e.preventDefault();
@@ -243,8 +333,11 @@ const ChatComponent = ({
               specializationName: recommendation?.primarySpecialization || '',
           }));
     const recommendationPanel = recommendation ? (
-        <div className="mx-auto grid w-full max-w-3xl grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-            <div className={`rounded-2xl border p-4 text-left ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'}`}>
+        <div className="mx-auto grid w-full max-w-3xl grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+            <div
+                ref={recommendationCardRef}
+                className={`rounded-2xl border p-4 text-left ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'}`}
+            >
                 <div className="flex items-start justify-between gap-3">
                     <div>
                         <p className="text-[10px] uppercase tracking-[0.2em] text-orange-accent font-bold">
@@ -283,17 +376,20 @@ const ChatComponent = ({
                 )}
             </div>
 
-            <div className={`rounded-2xl border p-4 text-left ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'}`}>
+            <div
+                style={recommendationCardHeight ? { height: `${recommendationCardHeight}px` } : undefined}
+                className={`flex flex-col overflow-hidden rounded-2xl border p-4 text-left ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'}`}
+            >
                 <p className="text-[10px] uppercase tracking-[0.2em] text-orange-accent font-bold">
                     Modulos existentes del MBA
                 </p>
-                <div className="mt-3 space-y-3">
-                    {modulesLoading ? (
+                <div className="custom-scrollbar mt-3 flex-1 min-h-0 space-y-3 overflow-y-auto pr-1">
+                    {moduleListLoading ? (
                         <p className={`text-[11px] leading-relaxed ${isDarkMode ? 'text-white/60' : 'text-stone-500'}`}>
                             Cargando modulos del programa...
                         </p>
-                    ) : availableModules.length > 0 ? (
-                        availableModules.slice(0, 6).map((module) => (
+                    ) : moduleItems.length > 0 ? (
+                        moduleItems.map((module) => (
                             <div
                                 key={module.id}
                                 className={`rounded-xl border px-3 py-3 ${isDarkMode ? 'border-white/10 bg-black/20' : 'border-stone-200 bg-white'}`}
@@ -336,9 +432,12 @@ const ChatComponent = ({
                             </p>
                         </div>
 
-                        {recommendation && (
-                            <div className="mx-auto grid w-full max-w-3xl grid-cols-1 gap-4 pt-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-                                <div className={`rounded-2xl border p-4 text-left ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'}`}>
+                        {false && recommendation && (
+                            <div className="mx-auto grid w-full max-w-3xl grid-cols-1 items-stretch gap-4 pt-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+                                <div
+                                    ref={recommendationCardRef}
+                                    className={`rounded-2xl border p-4 text-left ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'}`}
+                                >
                                     <div className="flex items-start justify-between gap-3">
                                         <div>
                                             <p className="text-[10px] uppercase tracking-[0.2em] text-orange-accent font-bold">
@@ -377,17 +476,20 @@ const ChatComponent = ({
                                     )}
                                 </div>
 
-                                <div className={`rounded-2xl border p-4 text-left ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'}`}>
+                                <div
+                                    style={recommendationCardHeight ? { height: `${recommendationCardHeight}px` } : undefined}
+                                    className={`flex flex-col overflow-hidden rounded-2xl border p-4 text-left ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-stone-200 bg-stone-50'}`}
+                                >
                                     <p className="text-[10px] uppercase tracking-[0.2em] text-orange-accent font-bold">
                                         Modulos existentes del MBA
                                     </p>
-                                    <div className="mt-3 space-y-3">
-                                        {modulesLoading ? (
+                                    <div className="custom-scrollbar mt-3 flex-1 min-h-0 space-y-3 overflow-y-auto pr-1">
+                                        {moduleListLoading ? (
                                             <p className={`text-[11px] leading-relaxed ${isDarkMode ? 'text-white/60' : 'text-stone-500'}`}>
                                                 Cargando modulos del programa...
                                             </p>
-                                        ) : availableModules.length > 0 ? (
-                                            availableModules.slice(0, 6).map((module) => (
+                                        ) : moduleItems.length > 0 ? (
+                                            moduleItems.map((module) => (
                                                 <div
                                                     key={module.id}
                                                     className={`rounded-xl border px-3 py-3 ${isDarkMode ? 'border-white/10 bg-black/20' : 'border-stone-200 bg-white'}`}
@@ -409,6 +511,7 @@ const ChatComponent = ({
                                 </div>
                             </div>
                         )}
+                        {recommendationPanel ? <div className="w-full pt-4">{recommendationPanel}</div> : null}
                     </div>
                 ) : (
                     <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
