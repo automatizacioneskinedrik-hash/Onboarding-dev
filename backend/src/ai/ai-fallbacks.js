@@ -1,3 +1,4 @@
+const { buildWelcomeAssistantMessage } = require('./chat-welcome-builder');
 const {
     SPECIALIZATIONS,
     getSpecializationById,
@@ -143,9 +144,26 @@ const buildRecommendationFromRetrievalFallback = (profile, retrieval) => {
     };
 };
 
-const buildChatResponseFallback = (messages, recommendation = null, retrieval = null) => {
+const buildChatResponseFallback = (
+    messages,
+    recommendation = null,
+    retrieval = null,
+    chatJourneyContext = null
+) => {
     const lastUserMessage = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
     const topCourse = retrieval?.matches?.[0];
+
+    if (chatJourneyContext?.shouldSendWelcome) {
+        const welcomeMessage = buildWelcomeAssistantMessage({
+            journeyContext: chatJourneyContext,
+        });
+
+        if (!lastUserMessage) {
+            return welcomeMessage;
+        }
+
+        return `${welcomeMessage}\n\nSobre tu consulta: puedo orientarte a partir de "${lastUserMessage}" y guiarte con el siguiente paso dentro del sistema.`;
+    }
 
     if (topCourse) {
         return `Con base en tu pregunta, el resultado mas relevante es ${topCourse.title}, dentro del modulo ${topCourse.moduleTitle}. Si quieres, te explico por que encaja contigo y que aprenderias alli.`;

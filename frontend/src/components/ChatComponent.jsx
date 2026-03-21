@@ -3,13 +3,12 @@ import { Send, User, Loader2, Sparkles, Wand2 } from 'lucide-react';
 import api, { API_URL } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import { getMasterDisplayName } from '../utils/masters';
-
-const SUGGESTED_QUESTIONS = [
-    'Que sprint me conviene priorizar?',
-    'Por que me recomendaron esta ruta?',
-    'Que cursos encajan mejor con mi perfil?',
-    'Como aprovecho este master en mi trabajo actual?',
-];
+import MarkdownMessage from './MarkdownMessage';
+import {
+    getChatEmptyStateCopy,
+    getSuggestedQuestionsForStage,
+    resolveChatJourneyStage,
+} from '../utils/chatJourney';
 
 const buildApiUrl = (path) => `${String(API_URL || '').replace(/\/$/, '')}${path}`;
 
@@ -61,6 +60,16 @@ const ChatComponent = ({
     const recommendationCardRef = useRef(null);
     const [recommendationCardHeight, setRecommendationCardHeight] = useState(null);
     const selectedMasterDisplayName = getMasterDisplayName(selectedMaster);
+    const chatJourneyStage = resolveChatJourneyStage({
+        selectedMaster,
+        cvAnalysisId,
+        recommendation,
+    });
+    const suggestedQuestions = getSuggestedQuestionsForStage(chatJourneyStage);
+    const emptyStateCopy = getChatEmptyStateCopy({
+        stage: chatJourneyStage,
+        selectedMasterDisplayName,
+    });
 
     useEffect(() => {
         if (!chatId) {
@@ -319,12 +328,8 @@ const ChatComponent = ({
         );
     }
 
-    const emptyStateTitle = chatEnabled ? 'Sistema listo para conversar' : 'Chat bloqueado';
-    const emptyStateText = chatEnabled
-        ? cvAnalysisId
-            ? `Pregunta por tu recomendacion, los sprints o el contenido de ${selectedMasterDisplayName || 'tu master'}.`
-            : `Ya puedes explorar el contenido de ${selectedMasterDisplayName || 'tu master'}. Si subes tu CV, la recomendacion sera personalizada.`
-        : lockedMessage;
+    const emptyStateTitle = chatEnabled ? emptyStateCopy.title : 'Chat bloqueado';
+    const emptyStateText = chatEnabled ? emptyStateCopy.text : lockedMessage;
     const visibleRouteBlocks = routeBlocks.length
         ? routeBlocks
         : suggestedSubjects.map((subject, index) => ({
@@ -522,6 +527,9 @@ const ChatComponent = ({
                         ) : null}
                         {messages.map((msg, index) => {
                             const isStreamingAssistant = msg.role === 'assistant' && msg.streaming;
+                            const bubbleTextClass = msg.role === 'user'
+                                ? 'text-[12px] font-bold leading-[1.6]'
+                                : 'text-[13px] font-normal leading-[1.75]';
 
                             return (
                                 <div
@@ -533,7 +541,7 @@ const ChatComponent = ({
                                             {msg.role === 'user' ? <User size={14} /> : <Wand2 size={14} />}
                                         </div>
                                         <div
-                                            className={`whitespace-pre-wrap rounded-[22px] p-4 text-[12px] font-bold leading-[1.6] transition-all ${msg.role === 'user' ? 'rounded-tr-md bg-orange-accent text-white shadow-[0_14px_32px_rgba(240,90,40,0.22)]' : isDarkMode ? 'rounded-tl-md border border-white/10 bg-[#141414] text-stone-300 shadow-[0_12px_32px_rgba(0,0,0,0.25)]' : 'rounded-tl-md border border-slate-200 bg-white text-slate-800 shadow-sm'}`}
+                                            className={`${msg.role === 'user' ? 'whitespace-pre-wrap' : ''} rounded-[22px] p-4 transition-all ${bubbleTextClass} ${msg.role === 'user' ? 'rounded-tr-md bg-orange-accent text-white shadow-[0_14px_32px_rgba(240,90,40,0.22)]' : isDarkMode ? 'rounded-tl-md border border-white/10 bg-[#141414] text-stone-300 shadow-[0_12px_32px_rgba(0,0,0,0.25)]' : 'rounded-tl-md border border-slate-200 bg-white text-slate-800 shadow-sm'}`}
                                         >
                                             {isStreamingAssistant && !msg.content ? (
                                                 <div className="flex gap-2">
@@ -541,6 +549,8 @@ const ChatComponent = ({
                                                     <span className="w-1.5 h-1.5 bg-orange-accent/40 rounded-full animate-bounce [animation-delay:0.2s]"></span>
                                                     <span className="w-1.5 h-1.5 bg-orange-accent/40 rounded-full animate-bounce [animation-delay:0.4s]"></span>
                                                 </div>
+                                            ) : msg.role === 'assistant' ? (
+                                                <MarkdownMessage content={msg.content} />
                                             ) : (
                                                 msg.content
                                             )}
@@ -575,7 +585,7 @@ const ChatComponent = ({
             <div className={`chat-bar-wrapper space-y-3 border-t px-4 py-4 sm:px-6 ${isDarkMode ? 'border-white/10 bg-[#111111]/92' : 'border-stone-200 bg-white/92'} backdrop-blur-xl`}>
                 {chatEnabled && chatId && !sending && (
                     <div className="chat-suggestions flex flex-wrap gap-2 animate-in fade-in duration-300">
-                        {SUGGESTED_QUESTIONS.map((question) => (
+                        {suggestedQuestions.map((question) => (
                             <button
                                 key={question}
                                 onClick={() => handleSendMessage(null, question)}
@@ -592,7 +602,7 @@ const ChatComponent = ({
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder={!chatEnabled ? lockedMessage : !chatId ? 'Preparando chat...' : `Pregunta sobre ${selectedMasterDisplayName || 'tu ruta'}...`}
+                        placeholder={!chatEnabled ? lockedMessage : !chatId ? 'Preparando chat...' : emptyStateCopy.placeholder}
                         className={`input-field h-12 rounded-2xl border pr-12 text-[10px] font-black uppercase tracking-[0.1em] transition-all ${!isDarkMode ? 'border-slate-200 bg-white text-slate-900 placeholder:text-slate-400' : 'border-white/10 bg-[#181818] text-white placeholder:text-white/35 focus:border-orange-accent/30'} disabled:cursor-not-allowed disabled:opacity-40`}
                         disabled={sending || !chatId || !chatEnabled}
                     />

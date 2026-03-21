@@ -16,6 +16,7 @@ test('POST /api/chat creates a chat', async () => {
     assert.equal(response.body.success, true);
     assert.ok(response.body.data.chat.id);
     assert.equal(response.body.data.chat.title, 'Mi chat de prueba');
+    assert.deepEqual(response.body.data.chat.messages, []);
 });
 
 test('POST /api/chat/:chatId/message preserves SSE format', async () => {

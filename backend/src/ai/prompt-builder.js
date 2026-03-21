@@ -1,3 +1,8 @@
+const {
+    buildChatJourneyPromptSection,
+    resolveChatJourneyContext,
+} = require('./chat-journey-context');
+
 const buildProfileExtractionPrompt = (cvText) => `Eres un experto en analisis de CVs y perfiles profesionales.
 Analiza el siguiente CV y extrae la informacion estructurada en formato JSON.
 
@@ -87,9 +92,21 @@ Responde unicamente con un JSON valido:
 
 Los IDs validos son: comunicacion, emprendimiento, finanzas, talento, tecnologia, ia-automatizacion, mercado-cliente, operaciones, analitica-datos`;
 
-const buildChatMessages = (messages, userProfile = null, recommendation = null, retrieval = null) => {
+const buildChatMessages = (
+    messages,
+    userProfile = null,
+    recommendation = null,
+    retrieval = null,
+    chatJourneyContext = null
+) => {
+    const resolvedJourneyContext = chatJourneyContext || resolveChatJourneyContext({
+        userProfile,
+        recommendation,
+    });
     const systemPrompt = `Eres un asesor academico experto y amigable de LAR University, una institucion de educacion ejecutiva de elite.
 Tu nombre es "LAR Advisor" y tu mision es ayudar a los profesionales a encontrar la especializacion perfecta para potenciar su carrera.
+
+${buildChatJourneyPromptSection(resolvedJourneyContext)}
 
 ${userProfile ? `PERFIL DEL USUARIO:
 - Nombre: ${userProfile.name || 'el usuario'}
@@ -111,6 +128,10 @@ ${retrieval.contextText}
 INSTRUCCIONES:
 - Responde siempre en espanol.
 - Se motivador, profesional y cercano.
+- ${resolvedJourneyContext.shouldSendWelcome ? 'Esta es la primera interaccion real del usuario: tu respuesta debe comenzar con una bienvenida calida a LAR University y una explicacion breve del flujo antes de continuar.' : 'Si el usuario vuelve a pedir orientacion general, puedes retomar la explicacion breve del flujo cuando aporte valor.'}
+- Usa Markdown simple y limpio cuando ayude a la lectura, por ejemplo parrafos, listas y negritas puntuales.
+- No uses tablas, HTML ni formatos complejos.
+- Explica de forma breve como funciona la plataforma cuando el usuario aun no haya subido su CV o pregunte por el proceso.
 - Si el usuario pregunta por la ruta, explica por que se eligieron esos 6 bloques y como se complementan.
 - Si el usuario quiere explorar otras opciones, muestrate abierto y explica las alternativas.
 - Cuando cites bloques o especializaciones, usa los titulos exactos del catalogo del MBA.

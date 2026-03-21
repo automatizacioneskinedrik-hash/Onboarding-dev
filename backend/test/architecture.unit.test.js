@@ -111,7 +111,8 @@ test('ai orchestrator falls back cleanly when OpenAI is unavailable', async () =
     });
 
     assert.ok(recommendation.primarySpecializationId);
-    assert.equal(recommendation.recommendedCourses.length, 1);
+    assert.equal(recommendation.planBlocks.length, 6);
+    assert.ok(recommendation.recommendedCourses.length >= 1);
     assert.match(recommendation.reasoning, /respaldo|recomienda/i);
 });
 

@@ -29,7 +29,7 @@ const getUserChats = async (req, res, next) => {
 const createChat = async (req, res, next) => {
     try {
         const chat = await getUseCases().createUserChat({
-            userId: req.user.id,
+            user: req.user,
             title: req.body.title,
             cvAnalysisId: req.body.cvAnalysisId,
         });

@@ -1,4 +1,5 @@
 const { AppError } = require('../services/errors/app-error');
+const { resolveChatJourneyContext } = require('../ai/chat-journey-context');
 
 const createChatUseCases = ({
     chatRepo,
@@ -8,12 +9,15 @@ const createChatUseCases = ({
 }) => {
     const listUserChats = async ({ userId, page, limit }) => chatRepo.findByUserId(userId, { page, limit });
 
-    const createUserChat = async ({ userId, title, cvAnalysisId }) =>
-        chatRepo.create({
-            userId,
+    const createUserChat = async ({ user, title, cvAnalysisId }) => {
+        const analysisId = cvAnalysisId || user?.cvAnalysisId || null;
+
+        return chatRepo.create({
+            userId: user.id,
             title: title || 'Nueva conversacion',
-            cvAnalysisId: cvAnalysisId || null,
+            cvAnalysisId: analysisId,
         });
+    };
 
     const getUserChatById = async ({ chatId, userId }) => {
         const chat = await chatRepo.findByIdAndUser(chatId, userId);
@@ -122,7 +126,9 @@ const createChatUseCases = ({
 
         const freshChat = await chatRepo.findById(chatId);
 
-        if (!freshChat.titleGenerated && freshChat.messages.length === 1) {
+        const userMessageCount = freshChat.messages.filter((message) => message.role === 'user').length;
+
+        if (!freshChat.titleGenerated && userMessageCount === 1) {
             await chatRepo.update(chatId, {
                 title: content.substring(0, 60) + (content.length > 60 ? '...' : ''),
                 titleGenerated: true,
@@ -137,6 +143,14 @@ const createChatUseCases = ({
             role: message.role,
             content: message.content,
         }));
+        const chatJourneyContext = resolveChatJourneyContext({
+            userName: user?.name,
+            selectedMasterId,
+            cvAnalysisId: analysisId,
+            userProfile,
+            recommendation,
+            userMessageCount,
+        });
 
         onStart?.({ chatId, userMessage, retrieval, messageEmbedding });
 
@@ -148,6 +162,7 @@ const createChatUseCases = ({
                 userProfile,
                 recommendation,
                 retrieval,
+                chatJourneyContext,
                 log,
             })) {
                 aiContent += token;

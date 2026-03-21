@@ -109,6 +109,7 @@ const createAiOrchestrator = ({
         userProfile = null,
         recommendation = null,
         retrieval = null,
+        chatJourneyContext = null,
         log = logger,
     }) => {
         if (!openAiClient.isConfigured()) {
@@ -117,13 +118,19 @@ const createAiOrchestrator = ({
                 hasRecommendation: Boolean(recommendation),
                 matchCount: retrieval?.matches?.length || 0,
             });
-            return buildChatResponseFallback(messages, recommendation, retrieval);
+            return buildChatResponseFallback(messages, recommendation, retrieval, chatJourneyContext);
         }
 
         openAiClient.ensureConfigured();
 
         const response = await openAiClient.createChatCompletion({
-            messages: promptBuilder.buildChatMessages(messages, userProfile, recommendation, retrieval),
+            messages: promptBuilder.buildChatMessages(
+                messages,
+                userProfile,
+                recommendation,
+                retrieval,
+                chatJourneyContext
+            ),
             temperature: 0.7,
             max_tokens: 800,
         });
@@ -143,20 +150,27 @@ const createAiOrchestrator = ({
         userProfile = null,
         recommendation = null,
         retrieval = null,
+        chatJourneyContext = null,
         log = logger,
     }) {
         if (!openAiClient.isConfigured()) {
             log?.info('Streaming de chat con fallback local', {
                 messageCount: messages.length,
             });
-            yield buildChatResponseFallback(messages, recommendation, retrieval);
+            yield buildChatResponseFallback(messages, recommendation, retrieval, chatJourneyContext);
             return;
         }
 
         openAiClient.ensureConfigured();
 
         const stream = await openAiClient.createChatCompletionStream({
-            messages: promptBuilder.buildChatMessages(messages, userProfile, recommendation, retrieval),
+            messages: promptBuilder.buildChatMessages(
+                messages,
+                userProfile,
+                recommendation,
+                retrieval,
+                chatJourneyContext
+            ),
             temperature: 0.7,
             max_tokens: 800,
         });

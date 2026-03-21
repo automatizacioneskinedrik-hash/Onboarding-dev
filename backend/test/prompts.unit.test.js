@@ -44,4 +44,8 @@ test('chat prompt keeps system role and user messages', () => {
     assert.equal(messages[0].role, 'system');
     assert.equal(messages[1].content, 'Hola');
     assert.match(messages[0].content, /Catalogo relevante/);
+    assert.match(messages[0].content, /CONTEXTO DE EXPERIENCIA DEL USUARIO/);
+    assert.match(messages[0].content, /primera interaccion real del usuario/i);
+    assert.match(messages[0].content, /Markdown simple y limpio/i);
+    assert.match(messages[0].content, /seleccionar MBA, cargar CV en PDF, analizar el perfil/i);
 });
