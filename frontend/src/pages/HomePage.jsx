@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
     AlertCircle,
+    ArrowLeft,
     ArrowRight,
     CheckCircle,
     Clock,
@@ -18,11 +19,11 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import ChatComponent from '../components/ChatComponent';
+import MasterSelectionCard from '../components/MasterSelectionCard';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import {
     findMasterById,
-    getMasterDescription,
     getMasterDisplayName,
     getMasterVisual,
 } from '../utils/masters';
@@ -74,6 +75,7 @@ const HomePage = () => {
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
     const [isChoosingMaster, setIsChoosingMaster] = useState(false);
+    const [showMasterSelectionModal, setShowMasterSelectionModal] = useState(!selectedMaster);
     const [hoverTooltip, setHoverTooltip] = useState(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(
         typeof window !== 'undefined' ? window.innerWidth >= 1280 : false
@@ -165,6 +167,12 @@ const HomePage = () => {
         fetchMasterModules();
     }, [selectedMaster]);
 
+    useEffect(() => {
+        if (selectedMaster?.id && !isChoosingMaster) {
+            setShowMasterSelectionModal(false);
+        }
+    }, [selectedMaster?.id, isChoosingMaster]);
+
     const needsMasterSelection = !selectedMaster || isChoosingMaster;
     const currentStep = analysis ? 3 : needsMasterSelection ? 1 : 2;
     const selectedMasterVisual = getMasterVisual(selectedMaster?.id);
@@ -232,6 +240,7 @@ const HomePage = () => {
             }
 
             setIsChoosingMaster(false);
+            setShowMasterSelectionModal(false);
             setAnalysis(null);
             setFile(null);
 
@@ -272,10 +281,20 @@ const HomePage = () => {
 
     const handleChangeMaster = () => {
         setIsChoosingMaster(true);
+        setShowMasterSelectionModal(true);
         setAnalysis(null);
         setFile(null);
         setChatId(null);
         setError('');
+    };
+
+    const handleCloseMasterSelectionModal = () => {
+        setShowMasterSelectionModal(false);
+        setIsChoosingMaster(false);
+    };
+
+    const handleOpenMasterSelectionModal = () => {
+        setShowMasterSelectionModal(true);
     };
 
     const handleFileChange = (e) => {
@@ -547,6 +566,15 @@ const HomePage = () => {
                                                         El panel derecho se convertira en tu area de apoyo cuando definas el contexto.
                                                     </p>
                                                 </div>
+                                                {!showMasterSelectionModal && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleOpenMasterSelectionModal}
+                                                        className="mt-5 rounded-2xl bg-orange-accent px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:brightness-110"
+                                                    >
+                                                        Abrir seleccion
+                                                    </button>
+                                                )}
                                             </div>
                                         ) : analysisLoading ? (
                                             <div className="flex flex-col items-center justify-center gap-3 py-16">
@@ -700,35 +728,55 @@ const HomePage = () => {
                 </div>
             )}
 
-            {needsMasterSelection && (
-                <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
-                    <div className="w-full max-w-3xl rounded-[2.5rem] border border-orange-accent/25 bg-[#0D0D0D] p-8 sm:p-10 shadow-[0_40px_100px_rgba(0,0,0,0.8)]">
-                        <div className="text-center mb-8">
-                            <p className="text-[10px] tracking-[0.35em] uppercase text-orange-accent font-bold mb-3">
-                                Primer paso
-                            </p>
-                            <h3 className="text-3xl sm:text-4xl font-bold uppercase tracking-tight text-white">
-                                Elige tu <span className="text-orange-accent italic">MBA</span>
-                            </h3>
-                            <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-white/50">
-                                El chat se habilita despues de subir y analizar tu CV.
-                            </p>
+            {needsMasterSelection && showMasterSelectionModal && (
+                <div
+                    className={`fixed inset-0 z-[120] flex items-center justify-center p-5 backdrop-blur-sm sm:p-6 ${
+                        isDarkMode
+                            ? 'bg-[radial-gradient(circle_at_top,#3b160a_0%,#140d0b_34%,#050505_100%)]'
+                            : 'bg-[radial-gradient(circle_at_top,#fff4ee_0%,#f8efe8_36%,#efe8df_100%)]'
+                    }`}
+                    onClick={handleCloseMasterSelectionModal}
+                >
+                    <div
+                        className={`relative w-full max-w-[1360px] overflow-hidden rounded-[2.7rem] border p-4 backdrop-blur-2xl sm:p-6 lg:p-7 ${
+                            isDarkMode
+                                ? 'border-white/10 bg-[#111111]/82 shadow-[0_45px_140px_rgba(0,0,0,0.62)]'
+                                : 'border-white/80 bg-white/64 shadow-[0_35px_110px_rgba(148,163,184,0.3)]'
+                        }`}
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <button
+                            type="button"
+                            onClick={handleCloseMasterSelectionModal}
+                            className={`absolute left-4 top-4 z-[2] inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] transition-all ${
+                                isDarkMode
+                                    ? 'border-white/12 bg-black/25 text-white/78 hover:border-white/25 hover:text-white'
+                                    : 'border-white/70 bg-white/72 text-slate-700 hover:border-slate-300 hover:text-slate-900'
+                            }`}
+                        >
+                            <ArrowLeft size={14} />
+                            Salir
+                        </button>
+
+                        <div className={`pointer-events-none absolute inset-0 ${isDarkMode ? 'opacity-90' : 'opacity-100'}`}>
+                            <div
+                                className={`absolute inset-0 ${
+                                    isDarkMode
+                                        ? 'bg-[radial-gradient(circle_at_top_left,rgba(240,90,40,0.18),transparent_36%),radial-gradient(circle_at_top_right,rgba(132,193,193,0.18),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.02),transparent_38%)]'
+                                        : 'bg-[radial-gradient(circle_at_top_left,rgba(240,90,40,0.12),transparent_34%),radial-gradient(circle_at_top_right,rgba(132,193,193,0.14),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.5),transparent_38%)]'
+                                }`}
+                            />
+                            <div className={`absolute inset-x-0 top-0 h-px ${isDarkMode ? 'bg-white/10' : 'bg-white/90'}`} />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="relative grid grid-cols-1 gap-5 xl:grid-cols-3">
                             {masters.map((master) => (
-                                <button
+                                <MasterSelectionCard
                                     key={master.id}
-                                    onClick={() => handleMasterSelection(master.id)}
-                                    className="rounded-2xl border border-white/10 bg-stone-900 p-5 text-left hover:border-orange-accent/60 transition-all"
-                                >
-                                    <p className="text-lg font-bold italic text-white">
-                                        {getMasterDisplayName(master)}
-                                    </p>
-                                    <p className="text-[10px] uppercase tracking-[0.18em] text-white/50 mt-1">
-                                        {getMasterDescription(master)}
-                                    </p>
-                                </button>
+                                    master={master}
+                                    onSelect={handleMasterSelection}
+                                    isDarkMode={isDarkMode}
+                                />
                             ))}
                         </div>
                     </div>

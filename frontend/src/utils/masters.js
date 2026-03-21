@@ -21,6 +21,36 @@ export const getMasterVisual = (masterId) =>
         accentClass: 'text-orange-accent',
     };
 
+const MASTER_SELECTION_THEMES = {
+    mintear: {
+        panelColor: '#59AE8F',
+        posterFrom: '#F6DB76',
+        posterVia: '#A7C68F',
+        posterTo: '#264B3D',
+        badge: 'IA e innovacion',
+        headline: 'Disena rutas de innovacion con una vision aplicada al negocio.',
+        textureColor: 'rgba(255,255,255,0.22)',
+    },
+    'datalar-mba': {
+        panelColor: '#86C5CD',
+        posterFrom: '#D9EAA6',
+        posterVia: '#9FD5D8',
+        posterTo: '#567484',
+        badge: 'Analitica ejecutiva',
+        headline: 'Convierte datos, criterio y estrategia en decisiones de alto impacto.',
+        textureColor: 'rgba(255,255,255,0.2)',
+    },
+    mtecmba: {
+        panelColor: '#F45A22',
+        posterFrom: '#B9D9EE',
+        posterVia: '#8DB7D9',
+        posterTo: '#3B5776',
+        badge: 'Liderazgo tech',
+        headline: 'Integra tecnologia, producto y direccion para liderar transformacion.',
+        textureColor: 'rgba(255,255,255,0.18)',
+    },
+};
+
 export const getMasterDisplayName = (master) => {
     if (!master) return '';
     if (typeof master === 'string') return master;
@@ -31,6 +61,17 @@ export const getMasterDescription = (master) => {
     if (!master || typeof master === 'string') return '';
     return master.description || '';
 };
+
+export const getMasterSelectionTheme = (masterId) =>
+    MASTER_SELECTION_THEMES[normalizeMasterId(masterId)] || {
+        panelColor: '#F05A28',
+        posterFrom: '#F5D0C5',
+        posterVia: '#EFA78B',
+        posterTo: '#7A3C2D',
+        badge: 'Ruta LAR',
+        headline: 'Explora una experiencia ejecutiva construida para potenciar tu perfil.',
+        textureColor: 'rgba(255,255,255,0.2)',
+    };
 
 export const findMasterById = (masters = [], masterId) =>
     masters.find((master) => normalizeMasterId(master.id) === normalizeMasterId(masterId)) || null;

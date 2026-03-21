@@ -2,6 +2,7 @@ const {
     buildChatJourneyPromptSection,
     resolveChatJourneyContext,
 } = require('./chat-journey-context');
+const { buildChatScopePromptSection } = require('./chat-domain-policy');
 
 const buildProfileExtractionPrompt = (cvText) => `Eres un experto en analisis de CVs y perfiles profesionales.
 Analiza el siguiente CV y extrae la informacion estructurada en formato JSON.
@@ -107,6 +108,8 @@ const buildChatMessages = (
 Tu nombre es "LAR Advisor" y tu mision es ayudar a los profesionales a encontrar la especializacion perfecta para potenciar su carrera.
 
 ${buildChatJourneyPromptSection(resolvedJourneyContext)}
+
+${buildChatScopePromptSection()}
 
 ${userProfile ? `PERFIL DEL USUARIO:
 - Nombre: ${userProfile.name || 'el usuario'}

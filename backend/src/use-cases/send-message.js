@@ -1,5 +1,14 @@
 const { AppError } = require('../services/errors/app-error');
 const { resolveChatJourneyContext } = require('../ai/chat-journey-context');
+const {
+    CHAT_SCOPE_DECISIONS,
+    buildOutOfScopeResponse,
+} = require('../ai/chat-domain-policy');
+const { classifyChatIntent } = require('../ai/chat-intent-classifier');
+const {
+    evaluateChatScope,
+    sanitizeMessagesForModel,
+} = require('../ai/chat-scope-guard');
 
 const createChatUseCases = ({
     chatRepo,
@@ -77,34 +86,65 @@ const createChatUseCases = ({
             }
         }
 
-        try {
-            messageEmbedding = await contextManager.createTextEmbedding(content);
-        } catch (error) {
-            log?.warn('Embedding no generado para mensaje', {
-                userId: user.id,
-                chatId,
-                error: error.message,
-            });
-        }
+        const nextUserMessageCount = chat.messages.filter((message) => message.role === 'user').length + 1;
+        const chatJourneyContext = resolveChatJourneyContext({
+            userName: user?.name,
+            selectedMasterId,
+            cvAnalysisId: analysisId,
+            userProfile,
+            recommendation,
+            userMessageCount: nextUserMessageCount,
+        });
+        const classification = classifyChatIntent({
+            message: content,
+            recentMessages: chat.messages,
+        });
+        const scopeEvaluation = evaluateChatScope({
+            recentMessages: chat.messages,
+            classification,
+        });
+        const scopeMetadata = {
+            intent: classification.intent,
+            decision:
+                scopeEvaluation.state === 'safe'
+                    ? classification.decision
+                    : CHAT_SCOPE_DECISIONS.REJECT,
+            classifierReason: classification.reason,
+            guardState: scopeEvaluation.state,
+            guardReason: scopeEvaluation.reason,
+            topicGroups: Object.keys(classification.topicMatches || {}),
+        };
 
-        try {
-            retrieval = await contextManager.retrieveRelevantCourses({
-                question: content,
-                embeddingResult: messageEmbedding,
-                topK: 4,
-                filters: selectedMasterId
-                    ? {
-                        masterIds: [selectedMasterId, 'shared'],
-                    }
-                    : {},
-            });
-        } catch (error) {
-            log?.warn('Busqueda vectorial omitida en chat', {
-                userId: user.id,
-                chatId,
-                masterId: selectedMasterId,
-                error: error.message,
-            });
+        if (scopeMetadata.decision !== CHAT_SCOPE_DECISIONS.REJECT) {
+            try {
+                messageEmbedding = await contextManager.createTextEmbedding(content);
+            } catch (error) {
+                log?.warn('Embedding no generado para mensaje', {
+                    userId: user.id,
+                    chatId,
+                    error: error.message,
+                });
+            }
+
+            try {
+                retrieval = await contextManager.retrieveRelevantCourses({
+                    question: content,
+                    embeddingResult: messageEmbedding,
+                    topK: 4,
+                    filters: selectedMasterId
+                        ? {
+                            masterIds: [selectedMasterId, 'shared'],
+                        }
+                        : {},
+                });
+            } catch (error) {
+                log?.warn('Busqueda vectorial omitida en chat', {
+                    userId: user.id,
+                    chatId,
+                    masterId: selectedMasterId,
+                    error: error.message,
+                });
+            }
         }
 
         const userMessage = await chatRepo.addMessage(chatId, {
@@ -112,6 +152,7 @@ const createChatUseCases = ({
             content: content.trim(),
             metadata: {
                 type: 'text',
+                scope: scopeMetadata,
                 embedding: messageEmbedding
                     ? {
                         status: 'generated',
@@ -119,7 +160,10 @@ const createChatUseCases = ({
                         dimensions: messageEmbedding.dimensions,
                     }
                     : {
-                        status: 'unavailable',
+                        status:
+                            scopeMetadata.decision === CHAT_SCOPE_DECISIONS.REJECT
+                                ? 'skipped_scope_guard'
+                                : 'unavailable',
                     },
             },
         });
@@ -139,20 +183,55 @@ const createChatUseCases = ({
             await chatRepo.update(chatId, { cvAnalysisId });
         }
 
-        const recentMessages = freshChat.messages.slice(-20).map((message) => ({
-            role: message.role,
-            content: message.content,
-        }));
-        const chatJourneyContext = resolveChatJourneyContext({
-            userName: user?.name,
-            selectedMasterId,
-            cvAnalysisId: analysisId,
-            userProfile,
-            recommendation,
-            userMessageCount,
-        });
-
         onStart?.({ chatId, userMessage, retrieval, messageEmbedding });
+
+        if (scopeMetadata.decision === CHAT_SCOPE_DECISIONS.REJECT) {
+            const rejectionReason =
+                scopeEvaluation.reason === 'prompt_injection'
+                    ? 'prompt_injection'
+                    : scopeEvaluation.reason || classification.intent;
+            const aiContent = buildOutOfScopeResponse({
+                reason: rejectionReason,
+            });
+
+            onToken?.(aiContent);
+
+            const assistantMessage = await chatRepo.addMessage(chatId, {
+                role: 'assistant',
+                content: aiContent,
+                metadata: {
+                    type: 'text',
+                    scope: {
+                        intent: classification.intent,
+                        decision: CHAT_SCOPE_DECISIONS.REJECT,
+                        classifierReason: classification.reason,
+                        guardState: scopeEvaluation.state,
+                        guardReason: scopeEvaluation.reason,
+                        policy: 'lar_only',
+                    },
+                    retrieval: {
+                        status: 'skipped_scope_guard',
+                    },
+                },
+            });
+
+            log?.info('Mensaje bloqueado por scope', {
+                userId: user.id,
+                chatId,
+                intent: classification.intent,
+                guardState: scopeEvaluation.state,
+            });
+
+            onDone?.({ chatId, assistantMessage, retrieval: null, messageEmbedding: null, aiContent });
+            return;
+        }
+
+        const recentMessages = sanitizeMessagesForModel(freshChat.messages)
+            .slice(-20)
+            .map((message) => ({
+                role: message.role,
+                content: message.content,
+            }));
 
         let aiContent = '';
 
@@ -183,6 +262,13 @@ const createChatUseCases = ({
             content: aiContent,
             metadata: {
                 type: 'text',
+                scope: {
+                    intent: classification.intent,
+                    decision: CHAT_SCOPE_DECISIONS.ALLOW,
+                    classifierReason: classification.reason,
+                    guardState: scopeEvaluation.state,
+                    policy: 'lar_only',
+                },
                 retrieval: retrieval
                     ? {
                         status: retrieval.matches.length ? 'used' : 'no_matches',
@@ -207,6 +293,7 @@ const createChatUseCases = ({
             responseLength: aiContent.length,
             matchCount: retrieval?.matches?.length || 0,
             embedding: Boolean(messageEmbedding),
+            intent: classification.intent,
         });
 
         onDone?.({ chatId, assistantMessage, retrieval, messageEmbedding, aiContent });
