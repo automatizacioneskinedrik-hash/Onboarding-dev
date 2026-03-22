@@ -1,5 +1,9 @@
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+const {
+    buildEmptyJourneyContext,
+    normalizeUserJourneyContext,
+} = require('../../services/users/user-journey.service');
 
 const db = new Map();
 
@@ -60,6 +64,7 @@ const users = {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };
+        user.journeyContext = buildEmptyJourneyContext(user.createdAt);
 
         db.set(user.id, user);
         return user;
@@ -82,7 +87,10 @@ const users = {
     safe: (user) => {
         if (!user) return null;
         const { password, ...safe } = user;
-        return safe;
+        return {
+            ...safe,
+            journeyContext: normalizeUserJourneyContext(safe),
+        };
     },
 };
 

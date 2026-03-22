@@ -15,6 +15,8 @@ const chats = {
         const items = all.slice(skip, skip + limit).map((chat) => ({
             id: chat.id,
             title: chat.title,
+            masterId: chat.masterId || null,
+            cvAnalysisId: chat.cvAnalysisId || null,
             messageCount: chat.messages.length,
             finalRecommendation: chat.finalRecommendation,
             createdAt: chat.createdAt,
@@ -31,13 +33,14 @@ const chats = {
         return chat && chat.userId === userId && chat.isActive ? chat : null;
     },
 
-    create: ({ userId, title = 'Nueva conversacion', cvAnalysisId = null }) => {
+    create: ({ userId, title = 'Nueva conversacion', cvAnalysisId = null, masterId = null }) => {
         const chat = {
             id: uuidv4(),
             userId,
             title,
             messages: [],
             cvAnalysisId,
+            masterId,
             linkedinUrl: null,
             finalRecommendation: {
                 specialization: null,

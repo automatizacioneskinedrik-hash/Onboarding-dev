@@ -15,6 +15,9 @@ test('POST /api/auth/login returns token and user', async () => {
     assert.equal(response.body.success, true);
     assert.ok(response.body.data.token);
     assert.equal(response.body.data.user.email, 'user123@gmail.com');
+    assert.equal(response.body.data.user.journeyContext.onboardingStage, 'select_master');
+    assert.equal(response.body.data.user.journeyContext.chatCount, 0);
+    assert.equal(response.body.data.user.journeyContext.analysisCount, 0);
 });
 
 test('GET /api/auth/me returns authenticated user', async () => {
@@ -32,4 +35,5 @@ test('GET /api/auth/me returns authenticated user', async () => {
     assert.equal(response.status, 200);
     assert.equal(response.body.success, true);
     assert.equal(response.body.data.user.email, 'user123@gmail.com');
+    assert.equal(response.body.data.user.journeyContext.onboardingStage, 'select_master');
 });

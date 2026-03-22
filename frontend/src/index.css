@@ -148,6 +148,24 @@
         display: none;
     }
 
+    .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(240, 90, 40, 0.3) transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 3px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(240, 90, 40, 0.3);
+        border-radius: 10px;
+    }
+
     .chat-markdown {
         @apply space-y-3;
     }

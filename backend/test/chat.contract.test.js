@@ -1,10 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { createTestApp, loginDefaultUser } = require('./helpers/test-context');
+const { createTestApp, loginDefaultUser, seedCompletedAnalysis } = require('./helpers/test-context');
 
 test('POST /api/chat creates a chat', async () => {
-    const { request } = createTestApp();
+    const { request, store } = createTestApp();
     const token = await loginDefaultUser(request);
 
     const response = await request
@@ -17,6 +17,63 @@ test('POST /api/chat creates a chat', async () => {
     assert.ok(response.body.data.chat.id);
     assert.equal(response.body.data.chat.title, 'Mi chat de prueba');
     assert.deepEqual(response.body.data.chat.messages, []);
+
+    const user = [...store.users._db.values()].find((item) => item.email === 'user123@gmail.com');
+    assert.equal(user.journeyContext.latestChatId, response.body.data.chat.id);
+    assert.equal(user.journeyContext.chatCount, 1);
+    assert.equal(user.journeyContext.lastChatAt, response.body.data.chat.createdAt);
+});
+
+test('GET /api/chat/:chatId returns the chat analysis and MBA context', async () => {
+    const { request, store } = createTestApp();
+    const token = await loginDefaultUser(request);
+    const user = [...store.users._db.values()].find((item) => item.email === 'user123@gmail.com');
+    const analysis = seedCompletedAnalysis({ store, userId: user.id, masterId: 'datalar-mba' });
+
+    const createResponse = await request
+        .post('/api/chat')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            title: 'Chat con contexto',
+            cvAnalysisId: analysis.id,
+        });
+
+    const response = await request
+        .get(`/api/chat/${createResponse.body.data.chat.id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.success, true);
+    assert.equal(response.body.data.chat.cvAnalysisId, analysis.id);
+    assert.equal(response.body.data.chat.masterId, 'datalar-mba');
+    assert.equal(response.body.data.chat.analysis.id, analysis.id);
+    assert.equal(response.body.data.chat.analysis.masterId, 'datalar-mba');
+});
+
+test('DELETE /api/chat/:chatId updates user chat summary', async () => {
+    const { request, store } = createTestApp();
+    const token = await loginDefaultUser(request);
+
+    const firstChat = await request
+        .post('/api/chat')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'Primer chat' });
+
+    const secondChat = await request
+        .post('/api/chat')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'Segundo chat' });
+
+    const response = await request
+        .delete(`/api/chat/${secondChat.body.data.chat.id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.success, true);
+
+    const user = [...store.users._db.values()].find((item) => item.email === 'user123@gmail.com');
+    assert.equal(user.journeyContext.chatCount, 1);
+    assert.equal(user.journeyContext.latestChatId, firstChat.body.data.chat.id);
 });
 
 test('POST /api/chat/:chatId/message preserves SSE format', async () => {

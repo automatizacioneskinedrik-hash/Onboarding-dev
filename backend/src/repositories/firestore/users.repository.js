@@ -1,5 +1,9 @@
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+const {
+    buildEmptyJourneyContext,
+    normalizeUserJourneyContext,
+} = require('../../services/users/user-journey.service');
 
 const { createFirestoreClient } = require('../../infra/firestore.client');
 const { createLogger } = require('../../services/observability/logger');
@@ -87,6 +91,7 @@ const users = {
             updatedAt: new Date().toISOString(),
             ...userData,
         };
+        user.journeyContext = buildEmptyJourneyContext(user.createdAt);
 
         delete user.id;
 
@@ -113,7 +118,10 @@ const users = {
     safe: (user) => {
         if (!user) return null;
         const { password, ...safe } = user;
-        return safe;
+        return {
+            ...safe,
+            journeyContext: normalizeUserJourneyContext(safe),
+        };
     },
 };
 

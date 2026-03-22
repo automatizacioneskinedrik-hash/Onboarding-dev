@@ -91,6 +91,7 @@ const buildAppContainer = ({ useFirestore } = {}) => {
     const analyzeCvUseCases = createAnalyzeCvUseCases({
         analysisRepo: domainRepositories.analysisRepo,
         userRepo: domainRepositories.userRepo,
+        statsRepo: domainRepositories.statsRepo,
         masterRepo: domainRepositories.masterRepo,
         aiOrchestrator,
         pdfService: { extractTextFromFile },
@@ -99,6 +100,8 @@ const buildAppContainer = ({ useFirestore } = {}) => {
     const chatUseCases = createChatUseCases({
         chatRepo: domainRepositories.chatRepo,
         analysisRepo: domainRepositories.analysisRepo,
+        userRepo: domainRepositories.userRepo,
+        statsRepo: domainRepositories.statsRepo,
         contextManager,
         aiOrchestrator,
     });

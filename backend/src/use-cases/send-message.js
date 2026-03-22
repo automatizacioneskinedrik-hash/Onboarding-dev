@@ -4,6 +4,7 @@ const {
     CHAT_SCOPE_DECISIONS,
     buildOutOfScopeResponse,
 } = require('../ai/chat-domain-policy');
+const { buildUserJourneyUpdate } = require('../services/users/user-journey.service');
 const { classifyChatIntent } = require('../ai/chat-intent-classifier');
 const {
     evaluateChatScope,
@@ -13,19 +14,78 @@ const {
 const createChatUseCases = ({
     chatRepo,
     analysisRepo,
+    userRepo,
+    statsRepo,
     contextManager,
     aiOrchestrator,
 }) => {
     const listUserChats = async ({ userId, page, limit }) => chatRepo.findByUserId(userId, { page, limit });
 
-    const createUserChat = async ({ user, title, cvAnalysisId }) => {
-        const analysisId = cvAnalysisId || user?.cvAnalysisId || null;
+    const syncUserChatJourney = async ({ userId, latestChatId, lastChatAt, lastActivityAt }) => {
+        const currentUser = await userRepo.findById(userId);
+        const chatCount = await statsRepo.chatCountByUser(userId);
 
-        return chatRepo.create({
+        return userRepo.update(
+            userId,
+            buildUserJourneyUpdate({
+                user: currentUser,
+                journeyFields: {
+                    latestChatId,
+                    chatCount,
+                    lastChatAt,
+                    lastActivityAt,
+                },
+            })
+        );
+    };
+
+    const resolveChatContext = async ({ chat, userId }) => {
+        let analysis = null;
+        let masterId = chat.masterId || null;
+
+        if (chat.cvAnalysisId) {
+            const foundAnalysis = await analysisRepo.findById(chat.cvAnalysisId);
+
+            if (foundAnalysis && foundAnalysis.userId === userId && foundAnalysis.status === 'completed') {
+                analysis = foundAnalysis;
+                masterId = foundAnalysis.masterId || masterId;
+            }
+        }
+
+        return {
+            ...chat,
+            masterId,
+            analysis,
+        };
+    };
+
+    const createUserChat = async ({ user, title, cvAnalysisId, masterId }) => {
+        const analysisId = cvAnalysisId || user?.cvAnalysisId || null;
+        let resolvedMasterId = masterId || user?.selectedMasterId || null;
+
+        if (analysisId) {
+            const analysis = await analysisRepo.findById(analysisId);
+
+            if (analysis && analysis.userId === user.id) {
+                resolvedMasterId = analysis.masterId || resolvedMasterId;
+            }
+        }
+
+        const chat = await chatRepo.create({
             userId: user.id,
             title: title || 'Nueva conversacion',
             cvAnalysisId: analysisId,
+            masterId: resolvedMasterId,
         });
+
+        await syncUserChatJourney({
+            userId: user.id,
+            latestChatId: chat.id,
+            lastChatAt: chat.createdAt,
+            lastActivityAt: chat.createdAt,
+        });
+
+        return resolveChatContext({ chat, userId: user.id });
     };
 
     const getUserChatById = async ({ chatId, userId }) => {
@@ -35,7 +95,7 @@ const createChatUseCases = ({
             throw new AppError('Chat no encontrado.', 404);
         }
 
-        return chat;
+        return resolveChatContext({ chat, userId });
     };
 
     const deleteUserChat = async ({ chatId, userId }) => {
@@ -44,6 +104,17 @@ const createChatUseCases = ({
         if (!deleted) {
             throw new AppError('Chat no encontrado.', 404);
         }
+
+        const { items } = await chatRepo.findByUserId(userId, { page: 1, limit: 1 });
+        const latestChat = items[0] || null;
+        const now = new Date().toISOString();
+
+        await syncUserChatJourney({
+            userId,
+            latestChatId: latestChat?.id || null,
+            lastChatAt: latestChat?.updatedAt || null,
+            lastActivityAt: now,
+        });
 
         return true;
     };
@@ -74,7 +145,7 @@ const createChatUseCases = ({
         let recommendation = null;
         let messageEmbedding = null;
         let retrieval = null;
-        let selectedMasterId = user.selectedMasterId || null;
+        let selectedMasterId = chat.masterId || user.selectedMasterId || null;
         const analysisId = cvAnalysisId || chat.cvAnalysisId;
 
         if (analysisId) {
@@ -180,7 +251,10 @@ const createChatUseCases = ({
         }
 
         if (cvAnalysisId && !freshChat.cvAnalysisId) {
-            await chatRepo.update(chatId, { cvAnalysisId });
+            await chatRepo.update(chatId, {
+                cvAnalysisId,
+                masterId: selectedMasterId || freshChat.masterId || null,
+            });
         }
 
         onStart?.({ chatId, userMessage, retrieval, messageEmbedding });

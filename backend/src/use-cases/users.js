@@ -1,4 +1,5 @@
 const { AppError } = require('../services/errors/app-error');
+const { buildUserJourneyUpdate } = require('../services/users/user-journey.service');
 const { learningModules, topics } = require('../utils/seed-learning-content');
 
 const createUserUseCases = ({ userRepo, statsRepo, masterRepo, catalogRepo }) => {
@@ -76,7 +77,22 @@ const createUserUseCases = ({ userRepo, statsRepo, masterRepo, catalogRepo }) =>
             throw new AppError('Master no valido.', 400);
         }
 
-        const user = await userRepo.update(userId, { selectedMasterId: master.id });
+        const currentUser = await userRepo.findById(userId);
+        const now = new Date().toISOString();
+        const user = await userRepo.update(
+            userId,
+            buildUserJourneyUpdate({
+                user: currentUser,
+                userFields: {
+                    selectedMasterId: master.id,
+                    cvAnalysisId: null,
+                    recommendedSpecialization: null,
+                },
+                journeyFields: {
+                    lastActivityAt: now,
+                },
+            })
+        );
         return { user, master };
     };
 

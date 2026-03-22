@@ -32,12 +32,14 @@ const createChat = async (req, res, next) => {
             user: req.user,
             title: req.body.title,
             cvAnalysisId: req.body.cvAnalysisId,
+            masterId: req.body.masterId,
         });
 
         req.log?.info('Chat creado', {
             userId: req.user.id,
             chatId: chat.id,
             cvAnalysisId: req.body.cvAnalysisId || null,
+            masterId: req.body.masterId || null,
         });
 
         return sendSuccess(res, {

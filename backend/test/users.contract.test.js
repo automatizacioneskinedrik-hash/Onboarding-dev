@@ -16,6 +16,8 @@ test('PUT /api/users/master updates selected master', async () => {
     assert.equal(response.body.success, true);
     assert.equal(response.body.data.selectedMaster.id, 'mtecmba');
     assert.equal(response.body.data.user.selectedMasterId, 'mtecmba');
+    assert.equal(response.body.data.user.cvAnalysisId, null);
+    assert.equal(response.body.data.user.journeyContext.onboardingStage, 'upload_cv');
 });
 
 test('GET /api/users/master-modules returns modules for selected MBA', async () => {

@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 
 const { AppError } = require('../services/errors/app-error');
+const { buildUserJourneyUpdate } = require('../services/users/user-journey.service');
 
 const createAuthUseCases = ({ userRepo, tokenService, googleIdentityClient }) => {
     const registerUser = async ({ name, email, password }) => {
@@ -26,7 +27,16 @@ const createAuthUseCases = ({ userRepo, tokenService, googleIdentityClient }) =>
             throw new AppError('Credenciales invalidas. Por favor verifica tu email y contrasena.', 401);
         }
 
-        await userRepo.update(user.id, { lastLogin: new Date().toISOString() });
+        const now = new Date().toISOString();
+
+        await userRepo.update(
+            user.id,
+            buildUserJourneyUpdate({
+                user,
+                userFields: { lastLogin: now },
+                journeyFields: { lastActivityAt: now },
+            })
+        );
         const updatedUser = await userRepo.findById(user.id);
 
         return {
@@ -51,11 +61,20 @@ const createAuthUseCases = ({ userRepo, tokenService, googleIdentityClient }) =>
                 password: null,
             });
         } else {
-            await userRepo.update(user.id, {
-                lastLogin: new Date().toISOString(),
-                avatar: picture || user.avatar,
-                googleId: googleId || user.googleId,
-            });
+            const now = new Date().toISOString();
+
+            await userRepo.update(
+                user.id,
+                buildUserJourneyUpdate({
+                    user,
+                    userFields: {
+                        lastLogin: now,
+                        avatar: picture || user.avatar,
+                        googleId: googleId || user.googleId,
+                    },
+                    journeyFields: { lastActivityAt: now },
+                })
+            );
 
             user = await userRepo.findById(user.id);
         }

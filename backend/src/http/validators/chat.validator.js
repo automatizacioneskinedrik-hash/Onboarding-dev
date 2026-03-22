@@ -13,6 +13,9 @@ const createChatValidation = [
     body('cvAnalysisId')
         .optional()
         .isString().withMessage('cvAnalysisId debe ser texto.'),
+    body('masterId')
+        .optional()
+        .isString().withMessage('masterId debe ser texto.'),
 ];
 
 const sendMessageValidation = [

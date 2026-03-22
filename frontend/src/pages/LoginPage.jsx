@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
-import ConstellationBackground from '../components/ConstellationBackground';
+import { useAuth } from '../features/auth';
+import { useTheme } from '../features/theme';
+import ConstellationBackground from '../shared/ui/ConstellationBackground';
 
 const LoginPage = () => {
     const { login, googleLogin } = useAuth();

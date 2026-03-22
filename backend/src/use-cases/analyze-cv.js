@@ -1,11 +1,13 @@
 const { AppError } = require('../services/errors/app-error');
 const { serializeStoredRecommendation } = require('../services/serialization/recommendation-serializer');
+const { buildUserJourneyUpdate } = require('../services/users/user-journey.service');
 
 const resolveMasterId = ({ bodyMasterId, userMasterId }) => bodyMasterId || userMasterId || null;
 
 const createAnalyzeCvUseCases = ({
     analysisRepo,
     userRepo,
+    statsRepo,
     masterRepo,
     aiOrchestrator,
     pdfService,
@@ -29,6 +31,41 @@ const createAnalyzeCvUseCases = ({
 
         await analysisRepo.update(analysis.id, { status: 'processing' });
         return analysis;
+    };
+
+    const syncUserAnalysisJourney = async ({
+        userId,
+        analysisId,
+        selectedMasterId,
+        recommendedSpecialization,
+        processedAt,
+        linkedinUrl = undefined,
+    }) => {
+        const currentUser = await userRepo.findById(userId);
+        const analysisCount = await statsRepo.analysisCountByUser(userId);
+        const userFields = {
+            cvAnalysisId: analysisId,
+            selectedMasterId,
+            recommendedSpecialization,
+        };
+
+        if (linkedinUrl !== undefined) {
+            userFields.linkedinUrl = linkedinUrl;
+        }
+
+        return userRepo.update(
+            userId,
+            buildUserJourneyUpdate({
+                user: currentUser,
+                userFields,
+                journeyFields: {
+                    latestCompletedAnalysisId: analysisId,
+                    analysisCount,
+                    lastAnalysisAt: processedAt,
+                    lastActivityAt: processedAt,
+                },
+            })
+        );
     };
 
     const uploadCvAnalysis = async ({ user, bodyMasterId, file, log }) => {
@@ -122,18 +159,22 @@ const createAnalyzeCvUseCases = ({
         }
 
         const storedRecommendation = serializeStoredRecommendation(recommendation);
+        const processedAt = new Date().toISOString();
         const updated = await analysisRepo.update(analysis.id, {
             rawText: text.substring(0, 5000),
             extractedProfile,
             recommendation: storedRecommendation,
             status: 'completed',
-            processedAt: new Date().toISOString(),
+            processedAt,
         });
 
-        await userRepo.update(user.id, {
-            cvAnalysisId: analysis.id,
+        await syncUserAnalysisJourney({
+            userId: user.id,
+            analysisId: updated.id,
             selectedMasterId,
-            recommendedSpecialization: recommendation?.specialization?.name || recommendation?.primarySpecialization,
+            recommendedSpecialization:
+                recommendation?.specialization?.name || recommendation?.primarySpecialization,
+            processedAt,
         });
 
         log?.info('CV procesado', {
@@ -199,18 +240,21 @@ const createAnalyzeCvUseCases = ({
             log,
         });
 
+        const processedAt = new Date().toISOString();
         const updated = await analysisRepo.update(analysis.id, {
             extractedProfile,
             recommendation: serializeStoredRecommendation(recommendation),
             status: 'completed',
-            processedAt: new Date().toISOString(),
+            processedAt,
         });
 
-        await userRepo.update(user.id, {
-            cvAnalysisId: analysis.id,
-            linkedinUrl,
+        await syncUserAnalysisJourney({
+            userId: user.id,
+            analysisId: updated.id,
             selectedMasterId,
             recommendedSpecialization: recommendation.specialization?.name,
+            processedAt,
+            linkedinUrl,
         });
 
         log?.info('LinkedIn procesado', {

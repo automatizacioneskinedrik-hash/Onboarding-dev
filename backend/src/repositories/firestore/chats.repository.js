@@ -23,6 +23,8 @@ const chats = {
             const items = allDocs.slice(skip, skip + limit).map((data) => ({
                 id: data.id,
                 title: data.title,
+                masterId: data.masterId || null,
+                cvAnalysisId: data.cvAnalysisId || null,
                 messageCount: data.messageCount || 0,
                 finalRecommendation: data.finalRecommendation,
                 createdAt: data.createdAt,
@@ -67,12 +69,13 @@ const chats = {
         return chat && chat.userId === userId && chat.isActive ? chat : null;
     },
 
-    create: async ({ userId, title = 'Nueva conversacion', cvAnalysisId = null }) => {
+    create: async ({ userId, title = 'Nueva conversacion', cvAnalysisId = null, masterId = null }) => {
         const id = uuidv4();
         const chat = {
             userId,
             title,
             cvAnalysisId,
+            masterId,
             linkedinUrl: null,
             finalRecommendation: {
                 specialization: null,

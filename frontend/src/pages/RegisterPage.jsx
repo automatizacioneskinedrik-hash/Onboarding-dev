@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { Mail, Lock, User, Loader2, Sparkles, ArrowRight } from 'lucide-react';
-import ConstellationBackground from '../components/ConstellationBackground';
+import { Mail, Lock, User, Loader2, ArrowRight } from 'lucide-react';
+import { useAuth } from '../features/auth';
+import { useTheme } from '../features/theme';
+import ConstellationBackground from '../shared/ui/ConstellationBackground';
 
 const RegisterPage = () => {
     const { register } = useAuth();
@@ -25,9 +25,11 @@ const RegisterPage = () => {
         setLoading(true);
         setError('');
         try {
-            const success = await register({ name, email, password });
-            if (success) {
+            const result = await register({ name, email, password });
+            if (result.success) {
                 navigate('/');
+            } else {
+                setError(result.message || 'No se pudo crear la cuenta');
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Error al registrarse');
