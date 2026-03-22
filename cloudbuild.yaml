@@ -1,107 +1,70 @@
-﻿# cloudbuild.yaml
-steps:
-  # ─────────────────────────────────────────────
-  # BACKEND — build en paralelo con frontend
-  # ─────────────────────────────────────────────
+﻿steps:
   - id: build-backend
     name: gcr.io/cloud-builders/docker
-    waitFor: ["-"]   # ← empieza inmediatamente, no espera nada
     args:
       - build
       - --file=backend/Dockerfile
-      - --cache-from=${_BACKEND_IMAGE}:latest   # ← reutiliza layers anteriores
       - --tag=${_BACKEND_IMAGE}:${SHORT_SHA}
       - --tag=${_BACKEND_IMAGE}:latest
       - backend
 
-  - id: push-backend
+  - id: push-backend-short-sha
     name: gcr.io/cloud-builders/docker
-    waitFor: [build-backend]
-    args: ["push", "--all-tags", "${_BACKEND_IMAGE}"]   # ← push de todos los tags en un paso
+    args: ["push", "${_BACKEND_IMAGE}:${SHORT_SHA}"]
 
-  - id: deploy-backend
+  - id: push-backend-latest
+    name: gcr.io/cloud-builders/docker
+    args: ["push", "${_BACKEND_IMAGE}:latest"]
+
+  # DEPLOY BACKEND
+  - id: deploy-backend-dev
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    waitFor: [push-backend]
     entrypoint: gcloud
     args:
       - run
       - deploy
-      - ${_BACKEND_SERVICE}                         # ← parametrizado por env
+      - backend-dev
       - --image=${_BACKEND_IMAGE}:${SHORT_SHA}
-      - --region=${_REGION}
+      - --region=europe-southwest1
       - --platform=managed
-      - --min-instances=1                           # ← evita cold starts
-      - --max-instances=10
-      - --memory=512Mi
       - --quiet
 
-  # Verifica que el backend esté vivo después del deploy
-  - id: verify-backend
-    name: curlimages/curl:latest
-    waitFor: [deploy-backend]
-    entrypoint: sh
-    args:
-      - -c
-      - |
-        echo "Verificando backend..."
-        for i in 1 2 3 4 5; do
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${_BACKEND_URL}/health)
-          echo "Intento $i — HTTP $STATUS"
-          if [ "$STATUS" = "200" ]; then
-            echo "Backend OK"
-            exit 0
-          fi
-          sleep 5
-        done
-        echo "Backend no respondio despues de 5 intentos"
-        exit 1
-
-  # ─────────────────────────────────────────────
-  # FRONTEND — corre en paralelo con el backend
-  # ─────────────────────────────────────────────
   - id: build-frontend
     name: gcr.io/cloud-builders/docker
-    waitFor: ["-"]   # ← también empieza de inmediato, en paralelo con build-backend
     args:
       - build
       - --file=frontend/Dockerfile
-      - --cache-from=${_FRONTEND_IMAGE}:latest   # ← cache
       - --build-arg
       - VITE_API_URL=${_VITE_API_URL}
       - --tag=${_FRONTEND_IMAGE}:${SHORT_SHA}
       - --tag=${_FRONTEND_IMAGE}:latest
       - frontend
 
-  - id: push-frontend
+  - id: push-frontend-short-sha
     name: gcr.io/cloud-builders/docker
-    waitFor: [build-frontend]
-    args: ["push", "--all-tags", "${_FRONTEND_IMAGE}"]
+    args: ["push", "${_FRONTEND_IMAGE}:${SHORT_SHA}"]
 
-  - id: deploy-frontend
+  - id: push-frontend-latest
+    name: gcr.io/cloud-builders/docker
+    args: ["push", "${_FRONTEND_IMAGE}:latest"]
+
+  # DEPLOY FRONTEND
+  - id: deploy-frontend-dev
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    waitFor: [push-frontend, verify-backend]   # ← frontend espera que el backend esté sano
     entrypoint: gcloud
     args:
       - run
       - deploy
-      - ${_FRONTEND_SERVICE}
+      - frontend-dev
       - --image=${_FRONTEND_IMAGE}:${SHORT_SHA}
-      - --region=${_REGION}
+      - --region=europe-southwest1
       - --platform=managed
-      - --min-instances=1
-      - --max-instances=5
-      - --memory=256Mi
       - --quiet
 
 substitutions:
-  _REGION: europe-southwest1
   _AR_REPO: europe-southwest1-docker.pkg.dev/onboarding-dev-487716/repo-onboarding-dev
   _BACKEND_IMAGE: ${_AR_REPO}/backend
   _FRONTEND_IMAGE: ${_AR_REPO}/frontend
-  # Estos tres se sobreescriben por trigger según el ambiente
-  _BACKEND_SERVICE: backend-dev
-  _FRONTEND_SERVICE: frontend-dev
-  _BACKEND_URL: https://backend-dev-866351374703.europe-southwest1.run.app
   _VITE_API_URL: https://backend-dev-866351374703.europe-southwest1.run.app
 
 images:
@@ -112,20 +75,3 @@ images:
 
 options:
   logging: CLOUD_LOGGING_ONLY
-  machineType: E2_HIGHCPU_8   # ← más CPU = builds más rápidos (mismo costo aprox)
-
-timeout: 1200s   # ← 20 min máximo — falla limpio si algo se cuelga
-```
-
----
-
-## Los tres cambios que más impactan
-
-**Paralelización con `waitFor`** es el que más tiempo ahorra. Con el archivo original, el pipeline es completamente secuencial: termina el build del backend, luego push, luego deploy, luego empieza el build del frontend. Con `waitFor: ["-"]` en ambos builds, corren al mismo tiempo. En un pipeline típico esto reduce el tiempo total de ~12 minutos a ~6-7 minutos.
-
-**Cache de Docker con `--cache-from`** es el segundo más impactante. Sin cache, cada build descarga e instala todos los `node_modules` desde cero. Con `--cache-from :latest`, si el `package.json` no cambió, Docker reutiliza el layer de `npm ci` de la imagen anterior y lo salta completamente. Un build que tarda 5 minutos pasa a tardar 90 segundos cuando solo cambia código de la aplicación.
-
-**Health check post-deploy** es el más importante para la confiabilidad. Cloud Build marca un deploy como exitoso en cuanto Cloud Run acepta la imagen, no en cuanto el servicio está respondiendo peticiones. Hay una ventana de 5-15 segundos donde el servicio anterior ya dejó de recibir tráfico pero el nuevo aún está iniciando. El step `verify-backend` con reintentos cubre exactamente esa ventana.
-
----
-
