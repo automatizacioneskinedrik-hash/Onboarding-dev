@@ -60,8 +60,10 @@ const createChatUseCases = ({
     };
 
     const createUserChat = async ({ user, title, cvAnalysisId, masterId }) => {
-        const analysisId = cvAnalysisId || user?.cvAnalysisId || null;
-        let resolvedMasterId = masterId || user?.selectedMasterId || null;
+        const normalizedAnalysisId = typeof cvAnalysisId === 'string' ? cvAnalysisId.trim() : '';
+        const normalizedMasterId = typeof masterId === 'string' ? masterId.trim() : '';
+        const analysisId = normalizedAnalysisId || null;
+        let resolvedMasterId = normalizedMasterId || null;
 
         if (analysisId) {
             const analysis = await analysisRepo.findById(analysisId);
@@ -145,7 +147,7 @@ const createChatUseCases = ({
         let recommendation = null;
         let messageEmbedding = null;
         let retrieval = null;
-        let selectedMasterId = chat.masterId || user.selectedMasterId || null;
+        let selectedMasterId = chat.masterId || null;
         const analysisId = cvAnalysisId || chat.cvAnalysisId;
 
         if (analysisId) {

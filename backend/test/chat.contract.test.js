@@ -24,6 +24,30 @@ test('POST /api/chat creates a chat', async () => {
     assert.equal(user.journeyContext.lastChatAt, response.body.data.chat.createdAt);
 });
 
+test('POST /api/chat creates a clean chat without inheriting user master or analysis', async () => {
+    const { request, store } = createTestApp();
+    const token = await loginDefaultUser(request);
+    const user = [...store.users._db.values()].find((item) => item.email === 'user123@gmail.com');
+    const analysis = seedCompletedAnalysis({ store, userId: user.id, masterId: 'mtecmba' });
+
+    store.users.update(user.id, {
+        selectedMasterId: 'mtecmba',
+        cvAnalysisId: analysis.id,
+        recommendedSpecialization: 'Tecnologia',
+    });
+
+    const response = await request
+        .post('/api/chat')
+        .set('Authorization', `Bearer ${token}`)
+        .send({});
+
+    assert.equal(response.status, 201);
+    assert.equal(response.body.success, true);
+    assert.equal(response.body.data.chat.masterId, null);
+    assert.equal(response.body.data.chat.cvAnalysisId, null);
+    assert.equal(response.body.data.chat.analysis, null);
+});
+
 test('GET /api/chat/:chatId returns the chat analysis and MBA context', async () => {
     const { request, store } = createTestApp();
     const token = await loginDefaultUser(request);

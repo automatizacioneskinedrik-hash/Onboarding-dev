@@ -39,8 +39,9 @@ export const useHomeDashboard = () => {
         selectedMaster,
     });
 
-    const activeMaster =
-        findMasterById(masters, activeChatContext?.masterId) || selectedMaster || null;
+    const activeMaster = chatId
+        ? findMasterById(masters, activeChatContext?.masterId) || null
+        : selectedMaster || null;
     const activeAnalysis = chatId
         ? activeChatContext?.analysis
             ? normalizeAnalysis(activeChatContext.analysis, masters)
@@ -105,7 +106,7 @@ export const useHomeDashboard = () => {
             setChatId(response.data.chat.id);
             setActiveChatContext({
                 chatId: response.data.chat.id,
-                masterId: response.data.chat.masterId || payload.masterId || activeMaster?.id || null,
+                masterId: response.data.chat.masterId || payload.masterId || null,
                 cvAnalysisId: response.data.chat.cvAnalysisId || payload.cvAnalysisId || null,
                 analysis:
                     payload.cvAnalysisId && activeAnalysis?.id === payload.cvAnalysisId
@@ -141,17 +142,8 @@ export const useHomeDashboard = () => {
     };
 
     const handleNewChat = async () => {
-        if (!activeMaster) {
-            setError('Selecciona un master antes de iniciar una conversacion.');
-            return;
-        }
-
         try {
-            await createContextChat({
-                title: `Consulta ${getMasterDisplayName(activeMaster)}`,
-                masterId: activeMaster.id,
-                cvAnalysisId: analysisForChat || undefined,
-            });
+            await createContextChat({});
         } catch (chatError) {
             console.error('Error creating chat:', chatError);
             setError('No se pudo crear un nuevo chat.');
