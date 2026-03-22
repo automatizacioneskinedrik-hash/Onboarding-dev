@@ -603,7 +603,7 @@ const ChatComponent = ({
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder={!chatEnabled ? lockedMessage : !chatId ? 'Preparando chat...' : emptyStateCopy.placeholder}
-                        className={`input-field h-12 rounded-2xl border pr-12 text-[10px] font-black uppercase tracking-[0.1em] transition-all ${!isDarkMode ? 'border-slate-200 bg-white text-slate-900 placeholder:text-slate-400' : 'border-white/10 bg-[#181818] text-white placeholder:text-white/35 focus:border-orange-accent/30'} disabled:cursor-not-allowed disabled:opacity-40`}
+                        className={`input-field h-12 rounded-2xl border pr-12 text-[13px] font-semibold normal-case tracking-normal transition-all ${!isDarkMode ? 'border-slate-200 bg-white text-slate-900 placeholder:text-slate-400' : 'border-white/10 bg-[#181818] text-white placeholder:text-white/35 focus:border-orange-accent/30'} disabled:cursor-not-allowed disabled:opacity-40`}
                         disabled={sending || !chatId || !chatEnabled}
                     />
                     <button
