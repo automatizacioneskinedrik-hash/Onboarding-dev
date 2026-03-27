@@ -41,7 +41,10 @@ export const getChatById = async (chatId) => {
 };
 
 export const createChat = async (payload) => {
-    const response = await api.post('/chat', payload);
+    const requestPayload = Object.fromEntries(
+        Object.entries(payload || {}).filter(([, value]) => value !== null && value !== undefined)
+    );
+    const response = await api.post('/chat', requestPayload);
     return response.data;
 };
 

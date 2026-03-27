@@ -11,10 +11,10 @@ const createChatValidation = [
         .optional()
         .isString().withMessage('El titulo debe ser texto.'),
     body('cvAnalysisId')
-        .optional()
+        .optional({ nullable: true })
         .isString().withMessage('cvAnalysisId debe ser texto.'),
     body('masterId')
-        .optional()
+        .optional({ nullable: true })
         .isString().withMessage('masterId debe ser texto.'),
 ];
 
@@ -24,7 +24,7 @@ const sendMessageValidation = [
         .trim()
         .notEmpty().withMessage('El mensaje no puede estar vacio.'),
     body('cvAnalysisId')
-        .optional()
+        .optional({ nullable: true })
         .isString().withMessage('cvAnalysisId debe ser texto.'),
 ];
 

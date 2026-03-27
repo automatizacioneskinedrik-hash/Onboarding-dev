@@ -117,6 +117,12 @@ export const useHomeDashboard = () => {
         return null;
     };
 
+    const buildChatPayload = ({ title, masterId, cvAnalysisId } = {}) => ({
+        ...(title ? { title } : {}),
+        ...(masterId ? { masterId } : {}),
+        ...(cvAnalysisId ? { cvAnalysisId } : {}),
+    });
+
     const handleMasterSelection = async (masterId) => {
         setError('');
 
@@ -140,10 +146,12 @@ export const useHomeDashboard = () => {
 
     const handleNewChat = async () => {
         try {
-            await createContextChat({
-                masterId: selectedMaster?.id || null,
-                cvAnalysisId: analysis?.id || null,
-            });
+            await createContextChat(
+                buildChatPayload({
+                    masterId: selectedMaster?.id,
+                    cvAnalysisId: analysis?.id,
+                })
+            );
         } catch (chatError) {
             console.error('Error creating chat:', chatError);
             setError('No se pudo crear un nuevo chat.');
@@ -155,10 +163,12 @@ export const useHomeDashboard = () => {
             return chatId;
         }
 
-        return createContextChat({
-            masterId: selectedMaster?.id || null,
-            cvAnalysisId: analysis?.id || null,
-        });
+        return createContextChat(
+            buildChatPayload({
+                masterId: selectedMaster?.id,
+                cvAnalysisId: analysis?.id,
+            })
+        );
     }, [analysis?.id, chatId, selectedMaster?.id]);
 
     const handleChangeMaster = () => {
@@ -212,9 +222,11 @@ export const useHomeDashboard = () => {
             if (result?.response?.success) {
                 if (!chatId) {
                     await createContextChat({
-                        title: `Consulta ${getMasterDisplayName(activeMaster)}: ${file.name}`,
-                        masterId: activeMaster.id,
-                        cvAnalysisId: result.response.data.cvAnalysisId,
+                        ...buildChatPayload({
+                            title: `Consulta ${getMasterDisplayName(activeMaster)}: ${file.name}`,
+                            masterId: activeMaster.id,
+                            cvAnalysisId: result.response.data.cvAnalysisId,
+                        }),
                     });
                 } else {
                     setActiveChatContext((previousContext) => ({
