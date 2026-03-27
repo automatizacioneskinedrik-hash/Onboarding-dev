@@ -63,7 +63,7 @@ export const useHomeDashboard = () => {
     const selectedMasterVisual = getMasterVisual(activeMaster?.id);
     const lockedMessage = activeMaster
         ? 'Sube tu CV para habilitar recomendaciones personalizadas en el chat.'
-        : 'Selecciona un master para comenzar.';
+        : 'Selecciona un MBA para comenzar.';
     const analysisForChat = chatId ? activeChatContext?.cvAnalysisId || null : analysis?.id || null;
 
     const handleLogout = () => {
@@ -127,7 +127,7 @@ export const useHomeDashboard = () => {
             const response = await selectMaster(masterId);
 
             if (!response.success) {
-                setError(response.message || 'No se pudo seleccionar el master.');
+                setError(response.message || 'No se pudo seleccionar el MBA.');
                 return;
             }
 
@@ -135,15 +135,27 @@ export const useHomeDashboard = () => {
             setShowMasterSelectionModal(false);
             setAnalysis(null);
             setFile(null);
+
+            if (!chatId) {
+                await createContextChat({ masterId });
+            }
         } catch (selectionError) {
             console.error('Error selecting master:', selectionError);
-            setError(selectionError.response?.data?.message || 'No se pudo seleccionar el master.');
+            setError(selectionError.response?.data?.message || 'No se pudo seleccionar el MBA.');
         }
     };
 
     const handleNewChat = async () => {
         try {
-            await createContextChat({});
+            if (!selectedMaster?.id) {
+                setIsChoosingMaster(true);
+                setShowMasterSelectionModal(true);
+                setActiveChatContext(null);
+                setChatId(null);
+                return;
+            }
+
+            await createContextChat({ masterId: selectedMaster.id });
         } catch (chatError) {
             console.error('Error creating chat:', chatError);
             setError('No se pudo crear un nuevo chat.');

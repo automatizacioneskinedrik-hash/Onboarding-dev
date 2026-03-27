@@ -37,7 +37,7 @@ const STAGE_QUESTIONS = {
         'Por que me recomendaron esta ruta?',
         'Que bloque deberia priorizar primero?',
         'Que cursos encajan mejor con mi perfil?',
-        'Como aprovecho este master en mi trabajo actual?',
+        'Como aprovecho este MBA en mi trabajo actual?',
     ],
 };
 

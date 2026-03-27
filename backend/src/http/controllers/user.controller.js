@@ -78,7 +78,7 @@ const selectMaster = async (req, res, next) => {
         });
 
         return sendSuccess(res, {
-            message: 'Master seleccionado exitosamente.',
+            message: 'MBA seleccionado exitosamente.',
             data: serializeMasterSelection({
                 usersRepository: getUsersRepository(),
                 user: result.user,

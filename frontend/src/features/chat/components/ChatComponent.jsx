@@ -19,7 +19,7 @@ const ChatComponent = ({
     suggestedSubjects = [],
     routeBlocks = [],
     chatEnabled = true,
-    lockedMessage = 'Selecciona un master y sube tu CV para habilitar el chat.',
+    lockedMessage = 'Selecciona un MBA y sube tu CV para habilitar el chat.',
     onChatContextChange,
 }) => {
     const { isDarkMode } = useTheme();
