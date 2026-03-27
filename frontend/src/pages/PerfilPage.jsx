@@ -50,7 +50,7 @@ const PerfilPage = () => {
                 <div>
                     <h1 className="mb-2 text-3xl font-bold">Mi Perfil Profesional</h1>
                     <p className="text-sm text-muted">
-                        Informacion extraida de tu ultimo CV analizado y ajustada al master seleccionado.
+                        Informacion extraida de tu ultimo CV analizado y ajustada al MBA seleccionado.
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-3">

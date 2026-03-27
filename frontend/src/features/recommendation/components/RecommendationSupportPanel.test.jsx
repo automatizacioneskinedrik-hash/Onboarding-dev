@@ -24,7 +24,7 @@ describe('RecommendationSupportPanel', () => {
     it('shows selection guidance before a master is fully defined', () => {
         render(<RecommendationSupportPanel {...baseProps} />);
 
-        expect(screen.getByText('Selecciona tu master')).toBeInTheDocument();
+        expect(screen.getByText('Selecciona tu MBA')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Abrir seleccion/i })).toBeInTheDocument();
     });
 

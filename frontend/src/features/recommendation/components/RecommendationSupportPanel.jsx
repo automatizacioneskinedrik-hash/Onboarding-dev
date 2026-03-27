@@ -29,7 +29,7 @@ const RecommendationSupportPanel = ({
                 </div>
                 <div className="mt-5 max-w-[240px] space-y-2">
                     <h3 className={`text-[1.05rem] font-black uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
-                        Selecciona tu master
+                        Selecciona tu MBA
                     </h3>
                     <p className={`text-[11px] uppercase tracking-[0.16em] leading-relaxed ${isDarkMode ? 'text-white/45' : 'text-stone-500'}`}>
                         El panel derecho se convertira en tu area de apoyo cuando definas el contexto.
@@ -67,7 +67,7 @@ const RecommendationSupportPanel = ({
                         onClick={onChangeMaster}
                         className={`text-[9px] font-bold uppercase tracking-[0.16em] transition-all ${isDarkMode ? 'text-white/55 hover:text-orange-accent' : 'text-stone-500 hover:text-orange-accent'}`}
                     >
-                        Cambiar master
+                        Cambiar MBA
                     </button>
                     <span
                         className="rounded-full px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white"
@@ -143,7 +143,7 @@ const RecommendationSupportPanel = ({
                         onClick={onChangeMaster}
                         className={`text-[9px] font-bold uppercase tracking-[0.16em] transition-all ${isDarkMode ? 'text-white/45 hover:text-orange-accent' : 'text-stone-500 hover:text-orange-accent'}`}
                     >
-                        Cambiar master
+                        Cambiar MBA
                     </button>
                 </div>
                 <div className={`mt-3.5 space-y-2.5 text-[11px] ${isDarkMode ? 'text-white/80' : 'text-stone-700'}`}>
