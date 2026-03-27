@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { AUTH_BACKGROUND_URL } from '../lib/config/env';
 import ConstellationBackground from './ConstellationBackground';
+
+const HARDCODED_AUTH_BACKGROUND_URL =
+    'https://storage.cloud.google.com/assets_onboarding/Auth/Image_Login.webp';
 
 const BrandMark = () => (
     <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-accent/10">
@@ -13,17 +15,17 @@ const BrandMark = () => (
 );
 
 const AuthShell = ({ isDarkMode, cardTitle, heroSubtitle, children, footer = null }) => {
-    const [backgroundState, setBackgroundState] = useState(AUTH_BACKGROUND_URL ? 'loading' : 'idle');
+    const [backgroundState, setBackgroundState] = useState(HARDCODED_AUTH_BACKGROUND_URL ? 'loading' : 'idle');
 
     useEffect(() => {
-        if (!AUTH_BACKGROUND_URL) {
+        if (!HARDCODED_AUTH_BACKGROUND_URL) {
             return undefined;
         }
 
         let isActive = true;
         const image = new Image();
         image.decoding = 'async';
-        image.src = AUTH_BACKGROUND_URL;
+        image.src = HARDCODED_AUTH_BACKGROUND_URL;
 
         image.onload = () => {
             if (isActive) {
@@ -33,7 +35,7 @@ const AuthShell = ({ isDarkMode, cardTitle, heroSubtitle, children, footer = nul
 
         image.onerror = () => {
             if (isActive) {
-                console.warn('No se pudo cargar la imagen de autenticacion:', AUTH_BACKGROUND_URL);
+                console.warn('No se pudo cargar la imagen de autenticacion:', HARDCODED_AUTH_BACKGROUND_URL);
                 setBackgroundState('error');
             }
         };
@@ -43,7 +45,7 @@ const AuthShell = ({ isDarkMode, cardTitle, heroSubtitle, children, footer = nul
         };
     }, []);
 
-    const showRemoteBackground = AUTH_BACKGROUND_URL && backgroundState !== 'error';
+    const showRemoteBackground = HARDCODED_AUTH_BACKGROUND_URL && backgroundState !== 'error';
     const showFallbackBackground = !showRemoteBackground;
 
     return (
@@ -52,7 +54,7 @@ const AuthShell = ({ isDarkMode, cardTitle, heroSubtitle, children, footer = nul
                 <section className="relative hidden min-h-screen overflow-hidden bg-[#ECE7E1] lg:flex">
                     {showRemoteBackground ? (
                         <img
-                            src={AUTH_BACKGROUND_URL}
+                            src={HARDCODED_AUTH_BACKGROUND_URL}
                             alt=""
                             className={`h-full w-full transition-opacity duration-700 ${
                                 backgroundState === 'loaded' ? 'opacity-100' : 'opacity-0'
