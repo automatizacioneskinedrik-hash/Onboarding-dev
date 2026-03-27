@@ -1,28 +1,65 @@
 const trimTrailingSlash = (value = '') => value.replace(/\/+$/, '');
 const trimLeadingSlash = (value = '') => value.replace(/^\/+/, '');
+const normalizePathSlashes = (value = '') => value.replace(/\\/g, '/');
 
-export const API_URL = import.meta.env.VITE_API_URL || '/api';
+const readEnvString = (value = '') => String(value || '').trim().replace(/^['"]|['"]$/g, '');
 
-export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const normalizeGoogleCloudUrl = (value = '') => {
+    const normalizedValue = readEnvString(value);
 
-export const PUBLIC_ASSETS_BASE_URL = trimTrailingSlash(import.meta.env.VITE_PUBLIC_ASSETS_BASE_URL || '');
-
-export const buildAssetUrl = (path = '') => {
-    if (!path) {
+    if (!normalizedValue) {
         return '';
     }
 
-    if (/^https?:\/\//i.test(path)) {
-        return path;
+    if (normalizedValue.startsWith('gs://')) {
+        return `https://storage.googleapis.com/${trimLeadingSlash(normalizedValue.replace('gs://', ''))}`;
+    }
+
+    if (normalizedValue.startsWith('https://storage.cloud.google.com/')) {
+        return normalizedValue.replace('https://storage.cloud.google.com/', 'https://storage.googleapis.com/');
+    }
+
+    if (normalizedValue.startsWith('https://console.cloud.google.com/storage/browser/')) {
+        return normalizedValue.replace('https://console.cloud.google.com/storage/browser/', 'https://storage.googleapis.com/');
+    }
+
+    return normalizedValue;
+};
+
+const safeEncodeUrl = (value = '') => {
+    try {
+        return encodeURI(value);
+    } catch {
+        return value;
+    }
+};
+
+export const API_URL = readEnvString(import.meta.env.VITE_API_URL) || '/api';
+
+export const GOOGLE_CLIENT_ID = readEnvString(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+
+export const PUBLIC_ASSETS_BASE_URL = trimTrailingSlash(
+    normalizeGoogleCloudUrl(import.meta.env.VITE_PUBLIC_ASSETS_BASE_URL)
+);
+
+export const buildAssetUrl = (path = '') => {
+    const normalizedPath = normalizePathSlashes(readEnvString(path));
+
+    if (!normalizedPath) {
+        return '';
+    }
+
+    if (/^(https?:\/\/|gs:\/\/)/i.test(normalizedPath)) {
+        return safeEncodeUrl(normalizeGoogleCloudUrl(normalizedPath));
     }
 
     if (!PUBLIC_ASSETS_BASE_URL) {
-        return path.startsWith('/') ? path : `/${path}`;
+        return safeEncodeUrl(normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`);
     }
 
-    return `${PUBLIC_ASSETS_BASE_URL}/${trimLeadingSlash(path)}`;
+    return safeEncodeUrl(`${PUBLIC_ASSETS_BASE_URL}/${trimLeadingSlash(normalizedPath)}`);
 };
 
-export const AUTH_BACKGROUND_URL =
-    import.meta.env.VITE_AUTH_BACKGROUND_URL ||
-    buildAssetUrl(import.meta.env.VITE_AUTH_BACKGROUND_PATH || '');
+export const AUTH_BACKGROUND_URL = buildAssetUrl(
+    import.meta.env.VITE_AUTH_BACKGROUND_URL || import.meta.env.VITE_AUTH_BACKGROUND_PATH
+);
