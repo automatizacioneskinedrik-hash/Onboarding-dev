@@ -18,7 +18,6 @@ const HomePage = () => {
         improvementTips,
         isDarkMode,
         isSidebarOpen,
-        lockedMessage,
         masters,
         needsMasterSelection,
         recommendation,
@@ -73,9 +72,9 @@ const HomePage = () => {
                                     recommendation={recommendation}
                                     suggestedSubjects={suggestedSubjects}
                                     routeBlocks={routeBlocks}
-                                    chatEnabled={Boolean(selectedMaster && chatId)}
-                                    lockedMessage={lockedMessage}
+                                    chatEnabled
                                     onChatContextChange={actions.handleChatContextChange}
+                                    onEnsureChat={actions.ensureActiveChat}
                                 />
                             </div>
 

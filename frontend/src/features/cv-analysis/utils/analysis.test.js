@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildCvSummary, normalizeAnalysis } from './analysis';
 
 describe('analysis utils', () => {
-    const masters = [{ id: 'mtecmba', code: 'Master Tech MBA' }];
+    const masters = [{ id: 'mtecmba', code: 'TECH-MBA' }];
 
     it('normalizes backend payload into frontend analysis shape', () => {
         const analysis = normalizeAnalysis(
@@ -19,7 +19,7 @@ describe('analysis utils', () => {
             masters
         );
 
-        expect(analysis.master.code).toBe('Master Tech MBA');
+        expect(analysis.master.code).toBe('TECH-MBA');
         expect(analysis.extractedProfile.currentRole).toBe('Product Manager');
         expect(analysis.recommendation.primarySpecialization).toBe('Strategy');
     });

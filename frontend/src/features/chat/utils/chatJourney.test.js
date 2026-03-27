@@ -31,8 +31,8 @@ describe('chatJourney', () => {
         expect(
             getChatEmptyStateCopy({
                 stage: CHAT_JOURNEY_STAGES.UPLOAD_CV,
-                selectedMasterDisplayName: 'Master Tech MBA',
+                selectedMasterDisplayName: 'TECH-MBA',
             }).placeholder
-        ).toContain('Master Tech MBA');
+        ).toContain('TECH-MBA');
     });
 });

@@ -61,9 +61,6 @@ export const useHomeDashboard = () => {
     );
     const needsMasterSelection = !activeMaster || isChoosingMaster;
     const selectedMasterVisual = getMasterVisual(activeMaster?.id);
-    const lockedMessage = activeMaster
-        ? 'Sube tu CV para habilitar recomendaciones personalizadas en el chat.'
-        : 'Selecciona un MBA para comenzar.';
     const analysisForChat = chatId ? activeChatContext?.cvAnalysisId || null : analysis?.id || null;
 
     const handleLogout = () => {
@@ -135,10 +132,6 @@ export const useHomeDashboard = () => {
             setShowMasterSelectionModal(false);
             setAnalysis(null);
             setFile(null);
-
-            if (!chatId) {
-                await createContextChat({ masterId });
-            }
         } catch (selectionError) {
             console.error('Error selecting master:', selectionError);
             setError(selectionError.response?.data?.message || 'No se pudo seleccionar el MBA.');
@@ -147,20 +140,26 @@ export const useHomeDashboard = () => {
 
     const handleNewChat = async () => {
         try {
-            if (!selectedMaster?.id) {
-                setIsChoosingMaster(true);
-                setShowMasterSelectionModal(true);
-                setActiveChatContext(null);
-                setChatId(null);
-                return;
-            }
-
-            await createContextChat({ masterId: selectedMaster.id });
+            await createContextChat({
+                masterId: selectedMaster?.id || null,
+                cvAnalysisId: analysis?.id || null,
+            });
         } catch (chatError) {
             console.error('Error creating chat:', chatError);
             setError('No se pudo crear un nuevo chat.');
         }
     };
+
+    const ensureActiveChat = useCallback(async () => {
+        if (chatId) {
+            return chatId;
+        }
+
+        return createContextChat({
+            masterId: selectedMaster?.id || null,
+            cvAnalysisId: analysis?.id || null,
+        });
+    }, [analysis?.id, chatId, selectedMaster?.id]);
 
     const handleChangeMaster = () => {
         setIsChoosingMaster(true);
@@ -281,7 +280,6 @@ export const useHomeDashboard = () => {
         improvementTips,
         isDarkMode,
         isSidebarOpen,
-        lockedMessage,
         masters,
         needsMasterSelection,
         recommendation,
@@ -305,6 +303,7 @@ export const useHomeDashboard = () => {
             handleUpload,
             handleChatContextChange,
             openChat,
+            ensureActiveChat,
             setIsSidebarOpen,
             showSidebarTooltip,
             hideSidebarTooltip,

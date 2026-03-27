@@ -15,7 +15,7 @@ describe('RecommendationSupportPanel', () => {
         onFileChange: vi.fn(),
         onOpenMasterSelection: vi.fn(),
         onUpload: vi.fn(),
-        selectedMaster: { id: 'mtecmba', code: 'Master Tech MBA' },
+        selectedMaster: { id: 'mtecmba', code: 'TECH-MBA' },
         selectedMasterVisual: { color: '#F05A28' },
         showMasterSelectionModal: false,
         uploading: false,

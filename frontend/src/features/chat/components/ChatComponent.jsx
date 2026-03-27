@@ -19,14 +19,15 @@ const ChatComponent = ({
     suggestedSubjects = [],
     routeBlocks = [],
     chatEnabled = true,
-    lockedMessage = 'Selecciona un MBA y sube tu CV para habilitar el chat.',
     onChatContextChange,
+    onEnsureChat,
 }) => {
     const { isDarkMode } = useTheme();
     const { chatDetails, input, loading, messages, sending, sendMessage, setInput } = useChatSession({
         chatEnabled,
         chatId,
         cvAnalysisId,
+        onEnsureChat,
     });
     const { moduleItems, moduleListLoading } = useMasterModules(selectedMaster?.id);
     const messagesEndRef = useRef(null);
@@ -58,16 +59,16 @@ const ChatComponent = ({
             return undefined;
         }
 
-        onChatContextChange(
-            chatDetails
-                ? {
-                      chatId: chatDetails.id,
-                      masterId: chatDetails.masterId || null,
-                      cvAnalysisId: chatDetails.cvAnalysisId || null,
-                      analysis: chatDetails.analysis || null,
-                  }
-                : null
-        );
+        if (!chatDetails) {
+            return undefined;
+        }
+
+        onChatContextChange({
+            chatId: chatDetails.id,
+            masterId: chatDetails.masterId || null,
+            cvAnalysisId: chatDetails.cvAnalysisId || null,
+            analysis: chatDetails.analysis || null,
+        });
 
         return undefined;
     }, [chatDetails, chatId, onChatContextChange]);
@@ -130,8 +131,8 @@ const ChatComponent = ({
         );
     }
 
-    const emptyStateTitle = chatEnabled ? emptyStateCopy.title : 'Chat bloqueado';
-    const emptyStateText = chatEnabled ? emptyStateCopy.text : lockedMessage;
+    const emptyStateTitle = emptyStateCopy.title;
+    const emptyStateText = emptyStateCopy.text;
     const visibleRouteBlocks = routeBlocks.length
         ? routeBlocks
         : suggestedSubjects.map((subject, index) => ({
@@ -363,7 +364,7 @@ const ChatComponent = ({
                     isDarkMode ? 'border-white/10 bg-[#111111]/92' : 'border-stone-200 bg-white/92'
                 } backdrop-blur-xl`}
             >
-                {chatEnabled && chatId && !sending && (
+                {!sending && (
                     <div className="chat-suggestions animate-in fade-in duration-300 flex flex-wrap gap-2">
                         {suggestedQuestions.map((question) => (
                             <button
@@ -392,17 +393,17 @@ const ChatComponent = ({
                         type="text"
                         value={input}
                         onChange={(event) => setInput(event.target.value)}
-                        placeholder={!chatEnabled ? lockedMessage : !chatId ? 'Preparando chat...' : emptyStateCopy.placeholder}
+                        placeholder={emptyStateCopy.placeholder}
                         className={`input-field h-12 rounded-2xl border pr-12 text-[13px] font-semibold normal-case tracking-normal transition-all ${
                             !isDarkMode
                                 ? 'border-slate-200 bg-white text-slate-900 placeholder:text-slate-400'
                                 : 'border-white/10 bg-[#181818] text-white placeholder:text-white/35 focus:border-orange-accent/30'
                         } disabled:cursor-not-allowed disabled:opacity-40`}
-                        disabled={sending || !chatId || !chatEnabled}
+                        disabled={sending || !chatEnabled}
                     />
                     <button
                         type="submit"
-                        disabled={!input.trim() || sending || !chatId || !chatEnabled}
+                        disabled={!input.trim() || sending || !chatEnabled}
                         className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-orange-accent p-2 text-white transition-all hover:opacity-90 disabled:opacity-50"
                     >
                         <Send size={14} />

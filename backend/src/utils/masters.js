@@ -1,8 +1,8 @@
 const MASTERS = [
     {
         id: 'mtecmba',
-        code: 'MTECMBA',
-        name: 'MTECMBA',
+        code: 'TECH-MBA',
+        name: 'TECH-MBA',
         description: 'MBA orientado a liderazgo, tecnologia y gestion empresarial.',
         isActive: true,
     },

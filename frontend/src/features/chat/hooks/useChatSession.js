@@ -1,17 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getChatById, sendChatMessageStream } from '../services/chatService';
 
-export const useChatSession = ({ chatId, cvAnalysisId, chatEnabled = true }) => {
+export const useChatSession = ({ chatId, cvAnalysisId, chatEnabled = true, onEnsureChat }) => {
     const [chatDetails, setChatDetails] = useState(null);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
     const [loading, setLoading] = useState(false);
+    const skipNextChatBootstrapRef = useRef(false);
 
     useEffect(() => {
         if (!chatId) {
             setChatDetails(null);
             setMessages([]);
+            return;
+        }
+
+        if (skipNextChatBootstrapRef.current) {
+            skipNextChatBootstrapRef.current = false;
             return;
         }
 
@@ -38,8 +44,18 @@ export const useChatSession = ({ chatId, cvAnalysisId, chatEnabled = true }) => 
 
     const sendMessage = async (textOverride = null) => {
         const content = String(textOverride || input || '').trim();
+        let resolvedChatId = chatId;
 
-        if (!content || sending || !chatId || !chatEnabled) {
+        if (!content || sending || !chatEnabled) {
+            return;
+        }
+
+        if (!resolvedChatId && onEnsureChat) {
+            skipNextChatBootstrapRef.current = true;
+            resolvedChatId = await onEnsureChat();
+        }
+
+        if (!resolvedChatId) {
             return;
         }
 
@@ -54,7 +70,7 @@ export const useChatSession = ({ chatId, cvAnalysisId, chatEnabled = true }) => 
 
         try {
             await sendChatMessageStream({
-                chatId,
+                chatId: resolvedChatId,
                 content,
                 cvAnalysisId,
                 onEvent: (event) => {
