@@ -25,6 +25,14 @@ Frontend React/Vite organizado para crecer de forma incremental hacia una arquit
 - Los contexts globales expuestos son `auth` y `theme`.
 - Las referencias del proyecto deben salir de `app`, `features` o `shared`.
 
+## Variables de entorno
+
+- `VITE_API_URL`: base URL del backend.
+- `VITE_GOOGLE_CLIENT_ID`: client id para Google OAuth.
+- `VITE_PUBLIC_ASSETS_BASE_URL`: base publica del bucket o CDN para assets del frontend.
+- `VITE_AUTH_BACKGROUND_PATH`: path relativo del fondo de autenticacion dentro del bucket.
+- `VITE_AUTH_BACKGROUND_URL`: URL completa del fondo. Tiene prioridad sobre `VITE_AUTH_BACKGROUND_PATH`.
+
 Consulta mas detalle en:
 
 - `docs/architecture.md`
