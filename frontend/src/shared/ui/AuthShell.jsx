@@ -33,6 +33,7 @@ const AuthShell = ({ isDarkMode, cardTitle, heroSubtitle, children, footer = nul
 
         image.onerror = () => {
             if (isActive) {
+                console.warn('No se pudo cargar la imagen de autenticacion:', AUTH_BACKGROUND_URL);
                 setBackgroundState('error');
             }
         };
