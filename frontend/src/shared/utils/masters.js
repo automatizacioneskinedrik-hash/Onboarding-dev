@@ -21,12 +21,20 @@ export const getMasterVisual = (masterId) =>
         accentClass: 'text-orange-accent',
     };
 
+const HARDCODED_MASTER_POSTERS = {
+    mtecmba: 'https://storage.cloud.google.com/assets_onboarding/MBAS/MBA_Mtec.png',
+    mintear: 'https://storage.cloud.google.com/assets_onboarding/MBAS/MBA_Mintear.png',
+    'datalar-mba': 'https://storage.cloud.google.com/assets_onboarding/MBAS/MBA_Datalar.png',
+};
+
 const MASTER_SELECTION_THEMES = {
     mintear: {
         panelColor: '#59AE8F',
         posterFrom: '#F6DB76',
         posterVia: '#A7C68F',
         posterTo: '#264B3D',
+        posterFallbackColor: '#95BC88',
+        posterImageUrl: HARDCODED_MASTER_POSTERS.mintear,
         badge: 'IA e innovacion',
         headline: 'Disena rutas de innovacion con una vision aplicada al negocio.',
         textureColor: 'rgba(255,255,255,0.22)',
@@ -36,6 +44,8 @@ const MASTER_SELECTION_THEMES = {
         posterFrom: '#D9EAA6',
         posterVia: '#9FD5D8',
         posterTo: '#567484',
+        posterFallbackColor: '#9FD5D8',
+        posterImageUrl: HARDCODED_MASTER_POSTERS['datalar-mba'],
         badge: 'Analitica ejecutiva',
         headline: 'Convierte datos, criterio y estrategia en decisiones de alto impacto.',
         textureColor: 'rgba(255,255,255,0.2)',
@@ -45,6 +55,8 @@ const MASTER_SELECTION_THEMES = {
         posterFrom: '#B9D9EE',
         posterVia: '#8DB7D9',
         posterTo: '#3B5776',
+        posterFallbackColor: '#8DB7D9',
+        posterImageUrl: HARDCODED_MASTER_POSTERS.mtecmba,
         badge: 'Liderazgo tech',
         headline: 'Integra tecnologia, producto y direccion para liderar transformacion.',
         textureColor: 'rgba(255,255,255,0.18)',
@@ -68,6 +80,8 @@ export const getMasterSelectionTheme = (masterId) =>
         posterFrom: '#F5D0C5',
         posterVia: '#EFA78B',
         posterTo: '#7A3C2D',
+        posterFallbackColor: '#EFA78B',
+        posterImageUrl: '',
         badge: 'Ruta LAR',
         headline: 'Explora una experiencia ejecutiva construida para potenciar tu perfil.',
         textureColor: 'rgba(255,255,255,0.2)',

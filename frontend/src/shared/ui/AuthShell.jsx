@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ConstellationBackground from './ConstellationBackground';
 
 const HARDCODED_AUTH_BACKGROUND_URL =
-    'https://storage.cloud.google.com/assets_onboarding/Auth/Image_Login.webp';
+    'https://storage.cloud.google.com/assets_onboarding/Auth/Image_Login.png';
 
 const BrandMark = () => (
     <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-accent/10">
