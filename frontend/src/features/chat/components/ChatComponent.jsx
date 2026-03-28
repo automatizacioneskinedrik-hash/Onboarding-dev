@@ -46,7 +46,9 @@ const ChatComponent = ({
     });
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (typeof messagesEndRef.current?.scrollIntoView === 'function') {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
     }, [messages, sending]);
 
     useEffect(() => {
@@ -244,12 +246,18 @@ const ChatComponent = ({
             </div>
         </div>
     ) : null;
+    const emptyStateLayoutClassName = recommendationPanel
+        ? 'min-h-full justify-start'
+        : 'h-full justify-center';
 
     return (
         <div className="chat-container relative flex h-full min-h-[600px] flex-col overflow-hidden bg-transparent transition-all duration-500">
             <div className="no-scrollbar flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-4">
                 {messages.length === 0 ? (
-                    <div className="flex h-full flex-col items-center justify-center space-y-5 px-6 py-8 text-center">
+                    <div
+                        data-testid="chat-empty-state"
+                        className={`flex flex-col items-center space-y-5 px-6 py-8 text-center ${emptyStateLayoutClassName}`}
+                    >
                         <div className="relative">
                             <div className="absolute inset-0 bg-orange-accent opacity-5 blur-2xl" />
                             <div className="relative rounded-[2rem] border border-orange-accent/20 bg-orange-accent/10 p-8 shadow-[0_0_50px_rgba(240,90,40,0.1)]">
