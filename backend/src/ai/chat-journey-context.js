@@ -41,13 +41,13 @@ const STAGE_CONFIG = {
         assistantGoals: [
             'Dar una bienvenida breve y profesional cuando el usuario lo necesite.',
             'Explicar la logica de la ruta recomendada y como se relaciona con el perfil del usuario.',
-            'Aterrizar el valor de los bloques sugeridos a objetivos laborales concretos.',
+            'Aterrizar el valor de los sprints sugeridos a objetivos laborales concretos.',
             'Proponer el siguiente paso mas util dentro del sistema.',
         ],
-        nextStep: 'Invita al usuario a explorar por que se eligieron sus bloques, que priorizar y como aplicar la ruta en su trabajo.',
+        nextStep: 'Invita al usuario a explorar por que se eligieron sus sprints, que priorizar y como aplicar la ruta en su trabajo.',
         starterQuestions: [
             'Por que me recomendaron esta ruta?',
-            'Que bloque deberia priorizar primero?',
+            'Que sprint deberia priorizar primero?',
             'Como aplico esta recomendacion en mi trabajo actual?',
         ],
     },

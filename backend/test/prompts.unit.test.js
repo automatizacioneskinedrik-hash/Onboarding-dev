@@ -14,7 +14,7 @@ test('profile extraction prompt includes CV text', () => {
     assert.match(prompt, /JSON valido/);
 });
 
-test('recommendation prompt enforces a 6-block route inside the selected MBA', () => {
+test('recommendation prompt enforces a 6-sprint route inside the selected MBA', () => {
     const prompt = buildRecommendationPrompt({
         profile: {
             name: 'Ana',
@@ -28,8 +28,8 @@ test('recommendation prompt enforces a 6-block route inside the selected MBA', (
         specializationsList: 'tecnologia',
     });
 
-    assert.match(prompt, /exactamente 6 bloques/);
-    assert.match(prompt, /maximo 1 bloque por especializacion/);
+    assert.match(prompt, /exactamente 6 sprints/);
+    assert.match(prompt, /maximo 1 sprint por especializacion/);
     assert.match(prompt, /Master seleccionado: mtecmba/);
 });
 

@@ -106,7 +106,7 @@ const buildSprint = ({
         title:
             providedSprint?.title ||
             recommendation.sprintTitle ||
-            'Ruta personalizada de 6 bloques',
+            'Ruta personalizada de 6 sprints',
         url: providedSprint?.url || providedSprint?.sprintUrl || providedSprint?.springUrl || sprintUrl,
         blocks,
         courses,

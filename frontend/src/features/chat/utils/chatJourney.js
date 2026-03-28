@@ -35,7 +35,7 @@ const STAGE_QUESTIONS = {
     ],
     [CHAT_JOURNEY_STAGES.REVIEW_RECOMMENDATION]: [
         'Por que me recomendaron esta ruta?',
-        'Que bloque deberia priorizar primero?',
+        'Que sprint deberia priorizar primero?',
         'Que cursos encajan mejor con mi perfil?',
         'Como aprovecho este MBA en mi trabajo actual?',
     ],
@@ -55,13 +55,13 @@ export const getChatEmptyStateCopy = ({ stage, selectedMasterDisplayName }) => {
     case CHAT_JOURNEY_STAGES.UPLOAD_CV:
         return {
             title: 'Sistema listo para analizar tu perfil',
-            text: `Ya puedes explorar ${selectedMasterDisplayName || 'tu MBA'}. Cuando cargues tu CV, la IA generara recomendaciones y una ruta personalizada.`,
+            text: `Paso a paso: 1. Explora ${selectedMasterDisplayName || 'tu MBA'}. 2. Carga tu CV. 3. Recibe recomendaciones y tu ruta personalizada.`,
             placeholder: `Pregunta por ${selectedMasterDisplayName || 'tu MBA'} o carga tu CV...`,
         };
     case CHAT_JOURNEY_STAGES.REVIEW_RECOMMENDATION:
         return {
             title: 'Sistema listo para conversar',
-            text: `Pregunta por tu recomendacion, los bloques sugeridos o el contenido de ${selectedMasterDisplayName || 'tu MBA'}.`,
+            text: `Pregunta por tu recomendacion, los sprints sugeridos o el contenido de ${selectedMasterDisplayName || 'tu MBA'}.`,
             placeholder: `Pregunta sobre ${selectedMasterDisplayName || 'tu ruta'}...`,
         };
     default:

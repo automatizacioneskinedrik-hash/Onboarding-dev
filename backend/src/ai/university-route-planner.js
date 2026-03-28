@@ -97,10 +97,10 @@ const buildBlockReason = ({ block, specialization, profile }) => {
     const role = profile.currentRole || 'tu perfil actual';
 
     if (topSkills) {
-        return `Este bloque de ${specialization.name} refuerza ${role} y potencia habilidades como ${topSkills}.`;
+        return `Este sprint de ${specialization.name} refuerza ${role} y potencia habilidades como ${topSkills}.`;
     }
 
-    return `Este bloque de ${specialization.name} complementa ${role} con una perspectiva aplicada a tu desarrollo ejecutivo.`;
+    return `Este sprint de ${specialization.name} complementa ${role} con una perspectiva aplicada a tu desarrollo ejecutivo.`;
 };
 
 const buildFallbackCandidates = ({ profile, masterId }) => {
@@ -242,7 +242,7 @@ const buildReasoning = ({ aiReasoning, primarySpecialization, planBlocks }) => {
     }
 
     const visibleBlocks = planBlocks.slice(0, 3).map((block) => block.blockTitle).join(', ');
-    return `Se recomienda una ruta personalizada de 6 bloques con foco principal en ${primarySpecialization.name}. La seleccion combina especializaciones del MBA para fortalecer tu perfil con un plan equilibrado y accionable. Los primeros bloques destacados son ${visibleBlocks}.`;
+    return `Se recomienda una ruta personalizada de 6 sprints con foco principal en ${primarySpecialization.name}. La seleccion combina especializaciones del MBA para fortalecer tu perfil con un plan equilibrado y accionable. Los primeros sprints destacados son ${visibleBlocks}.`;
 };
 
 const resolveUniversityRecommendation = ({ profile, masterId, aiRecommendation = {} }) => {
@@ -287,7 +287,7 @@ const resolveUniversityRecommendation = ({ profile, masterId, aiRecommendation =
         planBlocks,
         sprint: {
             id: 'ruta-personalizada',
-            title: 'Ruta personalizada de 6 bloques',
+            title: 'Ruta personalizada de 6 sprints',
             url: primarySpecialization?.sprintUrl || '#',
             blocks: planBlocks,
             courses: planBlocks,

@@ -8,8 +8,8 @@ const MASTERS = [
     },
     {
         id: 'mintear',
-        code: 'MINTEAR',
-        name: 'MINTEAR',
+        code: 'MINTEAR-MBA',
+        name: 'MINTEAR-MBA',
         description: 'MBA enfocado en innovacion, tecnologia emergente e inteligencia artificial.',
         isActive: true,
     },

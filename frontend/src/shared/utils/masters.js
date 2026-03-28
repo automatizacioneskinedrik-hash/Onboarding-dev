@@ -1,11 +1,11 @@
 export const normalizeMasterId = (value) => String(value || '').trim().toLowerCase();
 
 const MASTER_ACCENTS = {
-    mtecmba: {
+    'mtecmba': {
         color: 'rgb(132, 193, 193)',
         accentClass: 'text-[#84c1c1]',
     },
-    mintear: {
+    'mintear': {
         color: 'rgb(255, 107, 53)',
         accentClass: 'text-orange-accent',
     },
@@ -22,19 +22,19 @@ export const getMasterVisual = (masterId) =>
     };
 
 const HARDCODED_MASTER_POSTERS = {
-    mtecmba: 'https://storage.cloud.google.com/assets_onboarding/MBAS/MBA_Mtec.png',
-    mintear: 'https://storage.cloud.google.com/assets_onboarding/MBAS/MBA_Mintear.png',
-    'datalar-mba': 'https://storage.cloud.google.com/assets_onboarding/MBAS/MBA_Datalar.png',
+    'mtecmba': 'https://storage.googleapis.com/assets_onboarding/MBAS/MBA_Mtec.png',
+    'mintear': 'https://storage.googleapis.com/assets_onboarding/MBAS/MBA_Mintear.png',
+    'datalar-mba': 'https://storage.googleapis.com/assets_onboarding/MBAS/MBA_Datalar.png',
 };
 
 const MASTER_SELECTION_THEMES = {
-    mintear: {
+    'mintear': {
         panelColor: '#59AE8F',
         posterFrom: '#F6DB76',
         posterVia: '#A7C68F',
         posterTo: '#264B3D',
         posterFallbackColor: '#95BC88',
-        posterImageUrl: HARDCODED_MASTER_POSTERS.mintear,
+        posterImageUrl: HARDCODED_MASTER_POSTERS['mintear'],
         badge: 'IA e innovacion',
         headline: 'Disena rutas de innovacion con una vision aplicada al negocio.',
         textureColor: 'rgba(255,255,255,0.22)',
@@ -50,13 +50,13 @@ const MASTER_SELECTION_THEMES = {
         headline: 'Convierte datos, criterio y estrategia en decisiones de alto impacto.',
         textureColor: 'rgba(255,255,255,0.2)',
     },
-    mtecmba: {
+    'mtecmba': {
         panelColor: '#F45A22',
         posterFrom: '#B9D9EE',
         posterVia: '#8DB7D9',
         posterTo: '#3B5776',
         posterFallbackColor: '#8DB7D9',
-        posterImageUrl: HARDCODED_MASTER_POSTERS.mtecmba,
+        posterImageUrl: HARDCODED_MASTER_POSTERS['mtecmba'],
         badge: 'Liderazgo tech',
         headline: 'Integra tecnologia, producto y direccion para liderar transformacion.',
         textureColor: 'rgba(255,255,255,0.18)',

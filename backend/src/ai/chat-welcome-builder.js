@@ -28,9 +28,9 @@ Si quieres, tambien puedo explicarte que tipo de informacion tomamos en cuenta a
     case CHAT_JOURNEY_STAGES.REVIEW_RECOMMENDATION:
         return `Bienvenido a LAR University, ${namePrefix}ya contamos con el contexto de tu perfil para ${selectedMaster}.
 
-En este chat puedo ayudarte a entender como funciona tu recomendacion, por que se eligieron ciertos bloques y como aprovechar esta ruta en tu trabajo actual.
+En este chat puedo ayudarte a entender como funciona tu recomendacion, por que se eligieron ciertos sprints y como aprovechar esta ruta en tu trabajo actual.
 
-Si quieres empezar, preguntame por la logica de tu ruta o por el bloque que deberias priorizar primero.`;
+Si quieres empezar, preguntame por la logica de tu ruta o por el sprint que deberias priorizar primero.`;
 
     default:
         return `Bienvenido a LAR University. Estoy aqui para guiarte en el flujo de seleccion de MBA, analisis de CV y generacion de recomendaciones personalizadas.`;

@@ -47,8 +47,8 @@ const buildRecommendationPrompt = ({
 }) => `Eres un asesor academico experto de LAR University, una institucion de educacion ejecutiva de elite.
 
 Tu tarea es analizar la hoja de vida de un candidato y construir una ruta academica personalizada.
-La ruta debe tener exactamente 6 bloques y cada bloque debe salir del catalogo oficial del MBA seleccionado.
-Regla critica: usa como maximo 1 bloque por especializacion para construir una ruta balanceada.
+La ruta debe tener exactamente 6 sprints y cada sprint debe salir del catalogo oficial del MBA seleccionado.
+Regla critica: usa como maximo 1 sprint por especializacion para construir una ruta balanceada.
 No uses modulos externos ni inventes cursos.
 
 PERFIL DEL CANDIDATO:
@@ -64,10 +64,10 @@ CATALOGO VALIDO PARA ESTE MBA:
 ${specializationsList}
 
 INSTRUCCIONES:
-1. Construye una ruta personalizada de exactamente 6 bloques.
-2. Cada bloque debe pertenecer al MBA seleccionado.
-3. Debe haber como maximo 1 bloque por especializacion.
-4. Selecciona bloques que complementen el perfil actual y cubran vacios relevantes.
+1. Construye una ruta personalizada de exactamente 6 sprints.
+2. Cada sprint debe pertenecer al MBA seleccionado.
+3. Debe haber como maximo 1 sprint por especializacion.
+4. Selecciona sprints que complementen el perfil actual y cubran vacios relevantes.
 5. No inventes titulos: usa los nombres exactos del catalogo.
 6. Identifica una especializacion principal, pero la ruta puede mezclar varias especializaciones.
 7. Proporciona un score de compatibilidad del 0 al 100.
@@ -85,8 +85,8 @@ Responde unicamente con un JSON valido:
   "planBlocks": [
     {
       "specializationId": "id-especializacion",
-      "blockTitle": "titulo exacto del bloque",
-      "rationale": "por que este bloque aporta al perfil"
+      "blockTitle": "titulo exacto del sprint",
+      "rationale": "por que este sprint aporta al perfil"
     }
   ]
 }
@@ -121,7 +121,7 @@ ${userProfile ? `PERFIL DEL USUARIO:
 ${recommendation ? `RECOMENDACION ACTUAL:
 - Especializacion principal: ${recommendation.specialization?.name || recommendation.primarySpecialization}
 - Score de compatibilidad: ${recommendation.matchScore}%
-- Ruta de 6 bloques: ${(recommendation.subjects || []).join(', ')}
+- Ruta de 6 sprints: ${(recommendation.subjects || []).join(', ')}
 ` : ''}
 
 ${retrieval?.matches?.length ? `CONTEXTO RECUPERADO DEL CATALOGO:
@@ -135,9 +135,9 @@ INSTRUCCIONES:
 - Usa Markdown simple y limpio cuando ayude a la lectura, por ejemplo parrafos, listas y negritas puntuales.
 - No uses tablas, HTML ni formatos complejos.
 - Explica de forma breve como funciona la plataforma cuando el usuario aun no haya subido su CV o pregunte por el proceso.
-- Si el usuario pregunta por la ruta, explica por que se eligieron esos 6 bloques y como se complementan.
+- Si el usuario pregunta por la ruta, explica por que se eligieron esos 6 sprints y como se complementan.
 - Si el usuario quiere explorar otras opciones, muestrate abierto y explica las alternativas.
-- Cuando cites bloques o especializaciones, usa los titulos exactos del catalogo del MBA.
+- Cuando cites sprints o especializaciones, usa los titulos exactos del catalogo del MBA.
 - Si el contexto recuperado no alcanza para responder algo con certeza, dilo explicitamente y no inventes contenido.
 - Manten respuestas concisas pero informativas, maximo 3-4 parrafos.
 - Siempre invita al usuario a dar el siguiente paso.`;

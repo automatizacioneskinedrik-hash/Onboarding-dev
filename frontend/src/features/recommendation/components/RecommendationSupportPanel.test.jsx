@@ -41,12 +41,12 @@ describe('RecommendationSupportPanel', () => {
                         skills: ['Liderazgo', 'Producto'],
                     },
                 }}
-                improvementTips={['Prioriza los bloques de estrategia.']}
+                improvementTips={['Prioriza los sprints de estrategia.']}
             />
         );
 
         expect(screen.getByText(/Resumen del perfil/i)).toBeInTheDocument();
         expect(screen.getByText(/Consultor/i)).toBeInTheDocument();
-        expect(screen.getByText(/Prioriza los bloques de estrategia/i)).toBeInTheDocument();
+        expect(screen.getByText(/Prioriza los sprints de estrategia/i)).toBeInTheDocument();
     });
 });

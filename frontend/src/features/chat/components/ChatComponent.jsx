@@ -193,7 +193,7 @@ const ChatComponent = ({
                                     {block.blockTitle || block.title}
                                 </p>
                                 <p className={`mt-1 text-[10px] ${isDarkMode ? 'text-white/60' : 'text-stone-500'}`}>
-                                    Bloque {index + 1} {block.specializationName ? `- ${block.specializationName}` : ''}
+                                    Sprint {index + 1} {block.specializationName ? `- ${block.specializationName}` : ''}
                                 </p>
                             </div>
                         ))}

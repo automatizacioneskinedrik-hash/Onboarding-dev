@@ -173,7 +173,7 @@ const buildChatResponseFallback = (
         return `Recibido. Ya tengo tu mensaje: "${lastUserMessage}". Para darte una ruta personalizada, adjunta tu hoja de vida en PDF y continuare con el analisis.`;
     }
 
-    return `Gracias por tu mensaje. Con base en tu perfil, tu ruta academica actual combina bloques con foco principal en ${recommendation.primarySpecialization || recommendation.specialization?.name}. Si quieres, te explico por que se eligieron esos 6 bloques y como aplicarlos en tu trabajo.`;
+    return `Gracias por tu mensaje. Con base en tu perfil, tu ruta academica actual combina sprints con foco principal en ${recommendation.primarySpecialization || recommendation.specialization?.name}. Si quieres, te explico por que se eligieron esos 6 sprints y como aplicarlos en tu trabajo.`;
 };
 
 module.exports = {

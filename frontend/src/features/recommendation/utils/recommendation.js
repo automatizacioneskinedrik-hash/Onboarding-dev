@@ -22,7 +22,7 @@ export const buildImprovementTips = ({ recommendation, suggestedSubjects = [], r
 
     if (routeBlocks.length) {
         tips.push(
-            `Bloques principales de la ruta: ${routeBlocks
+            `Sprints principales de la ruta: ${routeBlocks
                 .slice(0, 2)
                 .map((block) => block.blockTitle || block.title)
                 .join(', ')}.`
