@@ -40,7 +40,7 @@ export const useHomeDashboard = () => {
     });
 
     const activeMaster = chatId
-        ? findMasterById(masters, activeChatContext?.masterId) || null
+        ? findMasterById(masters, activeChatContext?.masterId) || selectedMaster || null
         : selectedMaster || null;
     const activeAnalysis = chatId
         ? activeChatContext?.analysis
@@ -136,6 +136,16 @@ export const useHomeDashboard = () => {
 
             setIsChoosingMaster(false);
             setShowMasterSelectionModal(false);
+            setActiveChatContext((previousContext) => {
+                if (!previousContext || previousContext.masterId) {
+                    return previousContext;
+                }
+
+                return {
+                    ...previousContext,
+                    masterId,
+                };
+            });
             setAnalysis(null);
             setFile(null);
         } catch (selectionError) {

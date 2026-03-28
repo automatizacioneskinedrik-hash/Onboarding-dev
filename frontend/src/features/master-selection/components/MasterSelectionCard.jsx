@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ArrowRight } from 'lucide-react';
+import LazyImage from '../../../shared/ui/LazyImage';
 import {
     getMasterDescription,
     getMasterDisplayName,
@@ -8,8 +9,7 @@ import {
 
 const MasterSelectionCard = ({ master, onSelect, isDarkMode = true }) => {
     const theme = getMasterSelectionTheme(master?.id);
-    const [imageFailed, setImageFailed] = useState(false);
-    const hasPosterImage = Boolean(theme.posterImageUrl) && !imageFailed;
+    const hasPosterImage = Boolean(theme.posterImageUrl);
 
     const shellClass = isDarkMode
         ? 'border-white/10 bg-[#161616] hover:border-white/25 hover:shadow-[0_35px_90px_rgba(0,0,0,0.38)]'
@@ -18,14 +18,26 @@ const MasterSelectionCard = ({ master, onSelect, isDarkMode = true }) => {
         ? 'border-white/30 bg-white/12 text-white'
         : 'border-white/80 bg-white/68 text-slate-800';
     const watermarkClass = isDarkMode ? 'text-white/16' : 'text-slate-900/12';
-    const posterKickerClass = isDarkMode ? 'text-white/72' : 'text-slate-800/65';
-    const posterHeadlineClass = isDarkMode ? 'text-white' : 'text-slate-900';
     const codeClass = isDarkMode ? 'text-white/70' : 'text-white/82';
     const descriptionClass = isDarkMode ? 'text-white/88' : 'text-white/92';
     const footerClass = isDarkMode ? 'text-white/72' : 'text-white/82';
     const arrowClass = isDarkMode
         ? 'border-white/20 bg-white/10 text-white'
         : 'border-white/40 bg-white/26 text-white';
+    const posterFallback = (
+        <>
+            <div
+                className="absolute inset-0 opacity-70"
+                style={{
+                    backgroundImage: `linear-gradient(${theme.textureColor} 1px, transparent 1px), linear-gradient(90deg, ${theme.textureColor} 1px, transparent 1px)`,
+                    backgroundSize: '54px 54px',
+                }}
+            />
+            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/10 to-transparent" />
+            <div className="absolute -right-8 top-10 h-28 w-28 rounded-full bg-white/12 blur-2xl" />
+            <div className="absolute -left-8 bottom-4 h-24 w-24 rounded-full bg-black/12 blur-2xl" />
+        </>
+    );
 
     return (
         <button
@@ -45,27 +57,20 @@ const MasterSelectionCard = ({ master, onSelect, isDarkMode = true }) => {
             >
                 {hasPosterImage ? (
                     <>
-                        <img
+                        <LazyImage
                             src={theme.posterImageUrl}
                             alt=""
+                            rootMargin="220px"
+                            keepFallbackUntilLoaded
+                            fallback={posterFallback}
                             className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                            onError={() => setImageFailed(true)}
+                            pendingClassName="opacity-0"
+                            loadedClassName="opacity-100"
                         />
                         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,14,24,0.12)_0%,rgba(9,14,24,0.18)_100%)]" />
                     </>
                 ) : (
-                    <>
-                        <div
-                            className="absolute inset-0 opacity-70"
-                            style={{
-                                backgroundImage: `linear-gradient(${theme.textureColor} 1px, transparent 1px), linear-gradient(90deg, ${theme.textureColor} 1px, transparent 1px)`,
-                                backgroundSize: '54px 54px',
-                            }}
-                        />
-                        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/10 to-transparent" />
-                        <div className="absolute -right-8 top-10 h-28 w-28 rounded-full bg-white/12 blur-2xl" />
-                        <div className="absolute -left-8 bottom-4 h-24 w-24 rounded-full bg-black/12 blur-2xl" />
-                    </>
+                    posterFallback
                 )}
 
                 <div className="relative flex h-full flex-col justify-between p-6">

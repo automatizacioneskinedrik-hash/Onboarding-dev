@@ -147,7 +147,7 @@ const createChatUseCases = ({
         let recommendation = null;
         let messageEmbedding = null;
         let retrieval = null;
-        let selectedMasterId = chat.masterId || null;
+        let selectedMasterId = chat.masterId || user.selectedMasterId || null;
         const analysisId = cvAnalysisId || chat.cvAnalysisId;
 
         if (analysisId) {
@@ -256,6 +256,10 @@ const createChatUseCases = ({
             await chatRepo.update(chatId, {
                 cvAnalysisId,
                 masterId: selectedMasterId || freshChat.masterId || null,
+            });
+        } else if (!freshChat.masterId && selectedMasterId) {
+            await chatRepo.update(chatId, {
+                masterId: selectedMasterId,
             });
         }
 

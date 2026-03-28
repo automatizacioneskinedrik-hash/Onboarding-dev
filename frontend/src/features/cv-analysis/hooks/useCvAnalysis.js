@@ -7,6 +7,8 @@ export const useCvAnalysis = ({ enabled, masters, selectedMaster } = {}) => {
     const [analysisLoading, setAnalysisLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
 
+    const isAnalysisMissingError = (error) => error?.response?.status === 404;
+
     const refreshAnalysis = useCallback(async () => {
         if (!enabled) {
             setAnalysis(null);
@@ -25,7 +27,9 @@ export const useCvAnalysis = ({ enabled, masters, selectedMaster } = {}) => {
                 return normalizedAnalysis;
             }
         } catch (error) {
-            console.error('Error fetching analysis:', error);
+            if (!isAnalysisMissingError(error)) {
+                console.error('Error fetching analysis:', error);
+            }
         } finally {
             setAnalysisLoading(false);
         }

@@ -163,3 +163,41 @@ test('POST /api/chat/:chatId/message rejects out of scope prompts before reachin
     assert.match(ssePayload, /LAR University/);
     assert.doesNotMatch(ssePayload, /"token":"Hola"/);
 });
+
+test('POST /api/chat/:chatId/message uses the selected master for a clean chat after onboarding advances', async () => {
+    const { request } = createTestApp();
+    const token = await loginDefaultUser(request);
+
+    const createResponse = await request
+        .post('/api/chat')
+        .set('Authorization', `Bearer ${token}`)
+        .send({});
+
+    await request
+        .put('/api/users/master')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ masterId: 'mtecmba' });
+
+    const messageResponse = await request
+        .post(`/api/chat/${createResponse.body.data.chat.id}/message`)
+        .set('Authorization', `Bearer ${token}`)
+        .set('Accept', 'text/event-stream')
+        .buffer(true)
+        .parse((res, callback) => {
+            let payload = '';
+            res.setEncoding('utf8');
+            res.on('data', (chunk) => {
+                payload += chunk;
+            });
+            res.on('end', () => callback(null, payload));
+        })
+        .send({ content: 'Quiero conocer el enfoque del MBA en tecnologia.' });
+
+    const updatedChatResponse = await request
+        .get(`/api/chat/${createResponse.body.data.chat.id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+    assert.equal(messageResponse.status, 200);
+    assert.equal(updatedChatResponse.status, 200);
+    assert.equal(updatedChatResponse.body.data.chat.masterId, 'mtecmba');
+});

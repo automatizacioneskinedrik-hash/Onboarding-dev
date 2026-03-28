@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import ConstellationBackground from './ConstellationBackground';
+import LazyImage from './LazyImage';
 
 const HARDCODED_AUTH_BACKGROUND_URL =
     'https://storage.cloud.google.com/assets_onboarding/Auth/Image_Login.png';
@@ -14,65 +15,33 @@ const BrandMark = () => (
     </div>
 );
 
+const AuthShellFallback = () => (
+    <>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#fff7f2_0%,#f7f4ef_42%,#eef2f6_100%)]" />
+        <ConstellationBackground theme="light" />
+    </>
+);
+
 const AuthShell = ({ isDarkMode, cardTitle, heroSubtitle, children, footer = null }) => {
-    const [backgroundState, setBackgroundState] = useState(HARDCODED_AUTH_BACKGROUND_URL ? 'loading' : 'idle');
-
-    useEffect(() => {
-        if (!HARDCODED_AUTH_BACKGROUND_URL) {
-            return undefined;
-        }
-
-        let isActive = true;
-        const image = new Image();
-        image.decoding = 'async';
-        image.src = HARDCODED_AUTH_BACKGROUND_URL;
-
-        image.onload = () => {
-            if (isActive) {
-                setBackgroundState('loaded');
-            }
-        };
-
-        image.onerror = () => {
-            if (isActive) {
-                console.warn('No se pudo cargar la imagen de autenticacion:', HARDCODED_AUTH_BACKGROUND_URL);
-                setBackgroundState('error');
-            }
-        };
-
-        return () => {
-            isActive = false;
-        };
-    }, []);
-
-    const showRemoteBackground = HARDCODED_AUTH_BACKGROUND_URL && backgroundState !== 'error';
-    const showFallbackBackground = !showRemoteBackground;
-
     return (
         <div className={`min-h-screen ${isDarkMode ? 'bg-[#161311]' : 'bg-[#F4F1EC]'}`}>
             <div className="mx-auto grid min-h-screen max-w-[1600px] grid-cols-1 lg:grid-cols-[minmax(0,1.25fr)_minmax(440px,500px)]">
                 <section className="relative hidden min-h-screen overflow-hidden bg-[#ECE7E1] lg:flex">
-                    {showRemoteBackground ? (
-                        <img
-                            src={HARDCODED_AUTH_BACKGROUND_URL}
-                            alt=""
-                            className={`h-full w-full transition-opacity duration-700 ${
-                                backgroundState === 'loaded' ? 'opacity-100' : 'opacity-0'
-                            }`}
-                            style={{
-                                objectFit: 'cover',
-                                objectPosition: 'center center',
-                                backgroundColor: '#ECE7E1',
-                            }}
-                        />
-                    ) : null}
-
-                    {showFallbackBackground ? (
-                        <>
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#fff7f2_0%,#f7f4ef_42%,#eef2f6_100%)]" />
-                            <ConstellationBackground theme="light" />
-                        </>
-                    ) : null}
+                    <LazyImage
+                        src={HARDCODED_AUTH_BACKGROUND_URL}
+                        alt=""
+                        rootMargin="240px"
+                        keepFallbackUntilLoaded
+                        fallback={<AuthShellFallback />}
+                        className="h-full w-full transition-opacity duration-700"
+                        pendingClassName="opacity-0"
+                        loadedClassName="opacity-100"
+                        style={{
+                            objectFit: 'cover',
+                            objectPosition: 'center center',
+                            backgroundColor: '#ECE7E1',
+                        }}
+                    />
                 </section>
 
                 <section
