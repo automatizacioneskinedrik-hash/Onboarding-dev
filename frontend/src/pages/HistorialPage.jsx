@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar, ChevronRight, GraduationCap, Loader2, MessageSquare, Search, Trash2 } from 'lucide-react';
 import { useTheme } from '../features/theme';
 import { useChatHistory } from '../features/chat';
+import ConfirmDialog from '../shared/ui/ConfirmDialog';
 
 const HistorialPage = () => {
     const { history: chats, historyLoading: loading, deleteChat } = useChatHistory({ enabled: true });
     const { isDarkMode } = useTheme();
+    const [chatPendingDelete, setChatPendingDelete] = useState(null);
+    const [isDeletingChat, setIsDeletingChat] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
 
@@ -15,17 +18,36 @@ const HistorialPage = () => {
         [chats, searchTerm]
     );
 
-    const handleDeleteChat = async (event, chatId) => {
+    const handleDeleteChat = (event, chatId, chatTitle) => {
         event.stopPropagation();
+        setChatPendingDelete({
+            id: chatId,
+            title: chatTitle,
+        });
+    };
 
-        if (!window.confirm('Estas seguro de que deseas eliminar este chat?')) {
+    const handleCancelDeleteChat = () => {
+        if (isDeletingChat) {
             return;
         }
 
+        setChatPendingDelete(null);
+    };
+
+    const handleConfirmDeleteChat = async () => {
+        if (!chatPendingDelete?.id || isDeletingChat) {
+            return;
+        }
+
+        setIsDeletingChat(true);
+
         try {
-            await deleteChat(chatId);
+            await deleteChat(chatPendingDelete.id);
+            setChatPendingDelete(null);
         } catch (error) {
             console.error('Error deleting chat:', error);
+        } finally {
+            setIsDeletingChat(false);
         }
     };
 
@@ -124,7 +146,7 @@ const HistorialPage = () => {
 
                             <div className="flex items-center gap-3">
                                 <button
-                                    onClick={(event) => handleDeleteChat(event, chat.id)}
+                                    onClick={(event) => handleDeleteChat(event, chat.id, chat.title)}
                                     className={`rounded-lg p-2 transition-all ${
                                         isDarkMode
                                             ? 'text-dark-muted hover:bg-red-500/10 hover:text-red-500'
@@ -143,6 +165,18 @@ const HistorialPage = () => {
                     ))}
                 </div>
             )}
+
+            <ConfirmDialog
+                open={Boolean(chatPendingDelete)}
+                isDarkMode={isDarkMode}
+                title="Eliminar conversacion"
+                description={`Se eliminara "${chatPendingDelete?.title || 'este chat'}" de tu historial. Esta accion no se puede deshacer.`}
+                confirmLabel="Eliminar chat"
+                cancelLabel="Conservar"
+                loading={isDeletingChat}
+                onCancel={handleCancelDeleteChat}
+                onConfirm={handleConfirmDeleteChat}
+            />
         </div>
     );
 };

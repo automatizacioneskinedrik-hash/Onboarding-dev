@@ -25,6 +25,8 @@ export const useHomeDashboard = () => {
     const [isChoosingMaster, setIsChoosingMaster] = useState(false);
     const [showMasterSelectionModal, setShowMasterSelectionModal] = useState(!selectedMaster);
     const [activeChatContext, setActiveChatContext] = useState(null);
+    const [chatPendingDelete, setChatPendingDelete] = useState(null);
+    const [isDeletingChat, setIsDeletingChat] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(
         typeof window !== 'undefined' ? window.innerWidth >= 1280 : false
     );
@@ -77,22 +79,41 @@ export const useHomeDashboard = () => {
         setActiveChatContext(null);
     };
 
-    const handleDeleteChat = async (event, chatToDeleteId) => {
+    const handleDeleteChat = (event, chatToDeleteId, chatTitle = 'esta conversacion') => {
         event.stopPropagation();
+        setChatPendingDelete({
+            id: chatToDeleteId,
+            title: chatTitle,
+        });
+    };
 
-        if (!window.confirm('Eliminar esta conversacion?')) {
+    const handleCancelDeleteChat = () => {
+        if (isDeletingChat) {
             return;
         }
 
+        setChatPendingDelete(null);
+    };
+
+    const handleConfirmDeleteChat = async () => {
+        if (!chatPendingDelete?.id || isDeletingChat) {
+            return;
+        }
+
+        setIsDeletingChat(true);
+
         try {
-            await deleteChat(chatToDeleteId);
-            if (chatId === chatToDeleteId) {
+            await deleteChat(chatPendingDelete.id);
+            if (chatId === chatPendingDelete.id) {
                 setChatId(null);
                 setActiveChatContext(null);
             }
+            setChatPendingDelete(null);
         } catch (deleteError) {
             console.error('Error deleting chat:', deleteError);
             setError('No se pudo eliminar la conversacion.');
+        } finally {
+            setIsDeletingChat(false);
         }
     };
 
@@ -294,12 +315,14 @@ export const useHomeDashboard = () => {
         analysisForChat,
         analysisLoading,
         chatId,
+        chatPendingDelete,
         error,
         file,
         history,
         historyLoading,
         hoverTooltip,
         improvementTips,
+        isDeletingChat,
         isDarkMode,
         isSidebarOpen,
         masters,
@@ -313,8 +336,10 @@ export const useHomeDashboard = () => {
         toggleTheme,
         uploading,
         actions: {
+            handleCancelDeleteChat,
             handleChangeMaster,
             handleCloseMasterSelectionModal,
+            handleConfirmDeleteChat,
             handleDeleteChat,
             handleFileChange,
             handleLogout,

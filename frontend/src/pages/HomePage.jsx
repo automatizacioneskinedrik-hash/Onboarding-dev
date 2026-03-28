@@ -3,6 +3,7 @@ import { ChatComponent } from '../features/chat';
 import { ErrorToast, HomeSidebar, SidebarTooltip, useHomeDashboard } from '../features/home-dashboard';
 import { MasterSelectionModal } from '../features/master-selection';
 import { RecommendationSupportPanel } from '../features/recommendation';
+import ConfirmDialog from '../shared/ui/ConfirmDialog';
 
 const HomePage = () => {
     const {
@@ -10,12 +11,14 @@ const HomePage = () => {
         analysisForChat,
         analysisLoading,
         chatId,
+        chatPendingDelete,
         error,
         file,
         history,
         historyLoading,
         hoverTooltip,
         improvementTips,
+        isDeletingChat,
         isDarkMode,
         isSidebarOpen,
         masters,
@@ -112,6 +115,17 @@ const HomePage = () => {
             </div>
 
             <SidebarTooltip hoverTooltip={hoverTooltip} isDarkMode={isDarkMode} />
+            <ConfirmDialog
+                open={Boolean(chatPendingDelete)}
+                isDarkMode={isDarkMode}
+                title="Eliminar conversacion"
+                description={`Se eliminara "${chatPendingDelete?.title || 'este chat'}" de tu historial. Esta accion no se puede deshacer.`}
+                confirmLabel="Eliminar chat"
+                cancelLabel="Conservar"
+                loading={isDeletingChat}
+                onCancel={actions.handleCancelDeleteChat}
+                onConfirm={actions.handleConfirmDeleteChat}
+            />
             <ErrorToast error={error} />
 
             {needsMasterSelection && showMasterSelectionModal && (

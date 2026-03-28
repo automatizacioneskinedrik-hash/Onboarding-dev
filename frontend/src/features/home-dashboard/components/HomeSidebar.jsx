@@ -152,7 +152,7 @@ const HomeSidebar = ({
                                                 </div>
                                             </button>
                                             <button
-                                                onClick={(event) => onDeleteChat(event, chat.id)}
+                                                onClick={(event) => onDeleteChat(event, chat.id, chat.title)}
                                                 className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-stone-400 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
                                             >
                                                 <Trash2 size={12} />
