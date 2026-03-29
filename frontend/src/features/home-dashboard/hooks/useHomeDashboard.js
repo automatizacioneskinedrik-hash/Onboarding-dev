@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth';
 import { useTheme } from '../../theme';
@@ -11,25 +11,46 @@ import {
     getRouteBlocks,
     getSuggestedSubjects,
 } from '../../recommendation';
-import { findMasterById, getMasterDisplayName, getMasterVisual } from '../../../shared/utils/masters';
+import { getMasterDisplayName, getMasterVisual } from '../../../shared/utils/masters';
+import { useHomeDashboardState } from './useHomeDashboardState';
+import {
+    buildChatPayload,
+    buildSidebarTooltip,
+    resolveActiveAnalysis,
+    resolveActiveMaster,
+    resolveAnalysisForChat,
+} from '../utils/homeDashboard';
 
 export const useHomeDashboard = () => {
     const { logout, masters, selectedMaster, selectMaster, user } = useAuth();
     const { isDarkMode, toggleTheme } = useTheme();
     const location = useLocation();
     const navigate = useNavigate();
-    const [chatId, setChatId] = useState(location.state?.openChatId || null);
-    const [error, setError] = useState('');
-    const [file, setFile] = useState(null);
-    const [hoverTooltip, setHoverTooltip] = useState(null);
-    const [isChoosingMaster, setIsChoosingMaster] = useState(false);
-    const [showMasterSelectionModal, setShowMasterSelectionModal] = useState(!selectedMaster);
-    const [activeChatContext, setActiveChatContext] = useState(null);
-    const [chatPendingDelete, setChatPendingDelete] = useState(null);
-    const [isDeletingChat, setIsDeletingChat] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(
-        typeof window !== 'undefined' ? window.innerWidth >= 1280 : false
-    );
+    const {
+        activeChatContext,
+        chatId,
+        chatPendingDelete,
+        error,
+        file,
+        hoverTooltip,
+        isChoosingMaster,
+        isDeletingChat,
+        isSidebarOpen,
+        setActiveChatContext,
+        setChatId,
+        setChatPendingDelete,
+        setError,
+        setFile,
+        setHoverTooltip,
+        setIsChoosingMaster,
+        setIsDeletingChat,
+        setIsSidebarOpen,
+        setShowMasterSelectionModal,
+        showMasterSelectionModal,
+    } = useHomeDashboardState({
+        initialChatId: location.state?.openChatId,
+        showMasterSelectionInitially: !selectedMaster,
+    });
 
     const { history, historyLoading, refreshHistory, deleteChat } = useChatHistory({
         enabled: Boolean(user),
@@ -41,14 +62,18 @@ export const useHomeDashboard = () => {
         selectedMaster,
     });
 
-    const activeMaster = chatId
-        ? findMasterById(masters, activeChatContext?.masterId) || selectedMaster || null
-        : selectedMaster || null;
-    const activeAnalysis = chatId
-        ? activeChatContext?.analysis
-            ? normalizeAnalysis(activeChatContext.analysis, masters)
-            : null
-        : analysis;
+    const activeMaster = resolveActiveMaster({
+        chatId,
+        masters,
+        activeChatContext,
+        selectedMaster,
+    });
+    const activeAnalysis = resolveActiveAnalysis({
+        chatId,
+        activeChatContext,
+        analysis,
+        masters,
+    });
     const recommendation = getRecommendation(activeAnalysis);
     const routeBlocks = getRouteBlocks(recommendation);
     const suggestedSubjects = getSuggestedSubjects(recommendation);
@@ -63,7 +88,16 @@ export const useHomeDashboard = () => {
     );
     const needsMasterSelection = !activeMaster || isChoosingMaster;
     const selectedMasterVisual = getMasterVisual(activeMaster?.id);
-    const analysisForChat = chatId ? activeChatContext?.cvAnalysisId || null : analysis?.id || null;
+    const analysisForChat = resolveAnalysisForChat({
+        chatId,
+        activeChatContext,
+        analysis,
+    });
+
+    const clearCurrentAnalysis = useCallback(() => {
+        setAnalysis(null);
+        setFile(null);
+    }, [setAnalysis, setFile]);
 
     const handleLogout = () => {
         logout();
@@ -117,7 +151,7 @@ export const useHomeDashboard = () => {
         }
     };
 
-    const createContextChat = async (payload) => {
+    const createContextChat = useCallback(async (payload) => {
         const response = await createChat(payload);
 
         if (response.success) {
@@ -136,13 +170,7 @@ export const useHomeDashboard = () => {
         }
 
         return null;
-    };
-
-    const buildChatPayload = ({ title, masterId, cvAnalysisId } = {}) => ({
-        ...(title ? { title } : {}),
-        ...(masterId ? { masterId } : {}),
-        ...(cvAnalysisId ? { cvAnalysisId } : {}),
-    });
+    }, [activeAnalysis, refreshHistory, setActiveChatContext, setChatId]);
 
     const handleMasterSelection = async (masterId) => {
         setError('');
@@ -167,8 +195,7 @@ export const useHomeDashboard = () => {
                     masterId,
                 };
             });
-            setAnalysis(null);
-            setFile(null);
+            clearCurrentAnalysis();
         } catch (selectionError) {
             console.error('Error selecting master:', selectionError);
             setError(selectionError.response?.data?.message || 'No se pudo seleccionar el MBA.');
@@ -200,13 +227,12 @@ export const useHomeDashboard = () => {
                 cvAnalysisId: analysis?.id,
             })
         );
-    }, [analysis?.id, chatId, selectedMaster?.id]);
+    }, [analysis?.id, chatId, createContextChat, selectedMaster?.id]);
 
     const handleChangeMaster = () => {
         setIsChoosingMaster(true);
         setShowMasterSelectionModal(true);
-        setAnalysis(null);
-        setFile(null);
+        clearCurrentAnalysis();
         setChatId(null);
         setActiveChatContext(null);
         setError('');
@@ -280,12 +306,7 @@ export const useHomeDashboard = () => {
             return;
         }
 
-        const rect = event.currentTarget.getBoundingClientRect();
-        setHoverTooltip({
-            text,
-            left: rect.right + 12,
-            top: rect.top + rect.height / 2,
-        });
+        setHoverTooltip(buildSidebarTooltip(event.currentTarget, text));
     };
 
     const hideSidebarTooltip = () => {
@@ -308,7 +329,7 @@ export const useHomeDashboard = () => {
                 analysis: normalizedAnalysis,
             };
         });
-    }, [masters]);
+    }, [masters, setActiveChatContext]);
 
     return {
         analysis: activeAnalysis,

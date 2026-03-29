@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildCvSummary, normalizeAnalysis } from './analysis';
+import { buildCvSummary, normalizeAnalysis } from '../../../src/features/cv-analysis/utils/analysis';
 
 describe('analysis utils', () => {
     const masters = [{ id: 'mtecmba', code: 'TECH-MBA' }];
