@@ -13,8 +13,12 @@ const createContextManager = ({
     catalogRepo,
     logger = createLogger({ component: 'ai.context-manager' }),
 }) => {
+    // Compacta espacios para estabilizar embeddings y evitar que saltos de linea o pegados
+    // con formato irregular alteren innecesariamente la vectorizacion.
     const normalizeTextForEmbedding = (text = '') => String(text).replace(/\s+/g, ' ').trim();
 
+    // Devuelve metadata junto al vector porque el resto del pipeline la reutiliza en logs
+    // y para no recalcular embeddings ya generados.
     const createTextEmbedding = async (text) => {
         const normalizedText = normalizeTextForEmbedding(text);
 
@@ -46,6 +50,8 @@ const createContextManager = ({
         };
     };
 
+    // Une la busqueda vectorial con el catalogo interno: Vertex encuentra vecinos y el
+    // repositorio reconstruye el contenido enriquecido que luego consumen prompts y respuestas.
     const retrieveRelevantCourses = async ({
         question,
         embeddingResult = null,
@@ -104,6 +110,8 @@ const createContextManager = ({
         };
     };
 
+    // Reutiliza el mismo retrieval, pero construyendo antes una query orientada al perfil
+    // del usuario en vez de una pregunta libre.
     const retrieveRelevantCoursesForProfile = async (profile, options = {}) => {
         const profileQuery = buildProfileRetrievalQuery(profile);
         const retrieval = await retrieveRelevantCourses({
@@ -118,6 +126,8 @@ const createContextManager = ({
         };
     };
 
+    // Este fallback evita dejar sin contexto al recomendador cuando Vertex no esta disponible
+    // o aun no existe indice para el master solicitado.
     const buildMasterCatalogFallbackRetrieval = async (profile, { masterId, topK = 6 } = {}) => {
         const profileQuery = buildProfileRetrievalQuery(profile);
         const profileTerms = extractSearchTerms(profileQuery);
@@ -152,6 +162,8 @@ const createContextManager = ({
 
         const rankedMatches = modulesWithTopics
             .map((module) => {
+                // Generamos una distancia sintetica para conservar el mismo contrato que el
+                // retrieval vectorial y no ramificar consumidores aguas abajo.
                 const fallbackScore = scoreModuleAgainstProfile(module, profileTerms);
 
                 return {

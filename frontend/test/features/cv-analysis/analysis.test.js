@@ -5,6 +5,8 @@ describe('analysis utils', () => {
     const masters = [{ id: 'mtecmba', code: 'TECH-MBA' }];
 
     it('normalizes backend payload into frontend analysis shape', () => {
+        // Protege el adapter que traduce el contrato backend al shape estable que usan
+        // dashboard, chat y panel de recomendacion.
         const analysis = normalizeAnalysis(
             {
                 id: 'analysis-1',
@@ -25,6 +27,8 @@ describe('analysis utils', () => {
     });
 
     it('builds a readable cv summary with fallbacks', () => {
+        // El resumen se usa en tarjetas compactas, por eso esperamos valores listos para UI
+        // y no el perfil crudo.
         expect(
             buildCvSummary({
                 extractedProfile: {

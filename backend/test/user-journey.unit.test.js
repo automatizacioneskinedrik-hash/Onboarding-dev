@@ -24,6 +24,7 @@ test('buildEmptyJourneyContext creates a scalable default summary', () => {
 });
 
 test('normalizeUserJourneyContext resolves onboarding stage from active user state', () => {
+    // La etapa activa depende del estado util del usuario hoy, no solo del historial acumulado.
     const uploadContext = normalizeUserJourneyContext({
         selectedMasterId: 'mtecmba',
         cvAnalysisId: null,
@@ -40,6 +41,8 @@ test('normalizeUserJourneyContext resolves onboarding stage from active user sta
 });
 
 test('buildUserJourneyUpdate preserves history while recalculating active stage', () => {
+    // Cambiar de master no debe borrar el historial; solo recalcular la etapa visible desde
+    // la nueva combinacion de campos activos.
     const update = buildUserJourneyUpdate({
         user: {
             id: 'user-1',

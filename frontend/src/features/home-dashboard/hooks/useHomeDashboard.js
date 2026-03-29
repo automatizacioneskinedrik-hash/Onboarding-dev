@@ -62,6 +62,8 @@ export const useHomeDashboard = () => {
         selectedMaster,
     });
 
+    // La vista activa puede venir del perfil global del usuario o del chat abierto. Estas
+    // resoluciones mantienen ambos contextos sincronizados sin mezclar masters/analisis.
     const activeMaster = resolveActiveMaster({
         chatId,
         masters,
@@ -94,6 +96,8 @@ export const useHomeDashboard = () => {
         analysis,
     });
 
+    // Cambiar de master invalida el archivo seleccionado y el analisis visible porque ambos
+    // dependen del MBA activo.
     const clearCurrentAnalysis = useCallback(() => {
         setAnalysis(null);
         setFile(null);
@@ -151,6 +155,8 @@ export const useHomeDashboard = () => {
         }
     };
 
+    // Centraliza la creacion de chats para que historial, contexto activo y fallback de
+    // analisis se actualicen siempre con la misma logica.
     const createContextChat = useCallback(async (payload) => {
         const response = await createChat(payload);
 
@@ -186,6 +192,7 @@ export const useHomeDashboard = () => {
             setIsChoosingMaster(false);
             setShowMasterSelectionModal(false);
             setActiveChatContext((previousContext) => {
+                // Si el chat ya trae un master propio, no lo pisamos desde la seleccion global.
                 if (!previousContext || previousContext.masterId) {
                     return previousContext;
                 }
@@ -221,6 +228,8 @@ export const useHomeDashboard = () => {
             return chatId;
         }
 
+        // El primer mensaje puede disparar la creacion perezosa del chat; este helper evita
+        // duplicar esa decision entre dashboard y hook de sesion.
         return createContextChat(
             buildChatPayload({
                 masterId: selectedMaster?.id,
@@ -277,6 +286,8 @@ export const useHomeDashboard = () => {
             const result = await uploadAnalysis(file, activeMaster.id);
 
             if (result?.response?.success) {
+                // Si aun no existe chat, abrimos uno asociado al analisis recien creado para
+                // que la conversacion nazca ya contextualizada.
                 if (!chatId) {
                     await createContextChat({
                         ...buildChatPayload({
@@ -319,6 +330,8 @@ export const useHomeDashboard = () => {
                 return null;
             }
 
+            // El backend puede devolver analisis con shape distinto al cache local; lo
+            // normalizamos antes de mezclarlo con el contexto del chat.
             const normalizedAnalysis = chatContext.analysis
                 ? normalizeAnalysis(chatContext.analysis, masters)
                 : null;

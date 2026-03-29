@@ -6,6 +6,8 @@ export const fetchMyAnalysis = async () => {
 };
 
 export const uploadCv = async ({ file, masterId }) => {
+    // El backend espera multipart porque el archivo y el master viajan juntos en el mismo
+    // paso de analisis.
     const formData = new FormData();
     formData.append('cv', file);
     formData.append('masterId', masterId);

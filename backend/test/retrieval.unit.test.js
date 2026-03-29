@@ -23,6 +23,8 @@ test('profile query builder composes a searchable query', () => {
 });
 
 test('retrieval ranking scores relevant modules higher', () => {
+    // Esta puntuacion es la base del fallback sin Vertex: si deja de priorizar terminos
+    // relevantes, la recomendacion pierde una jerarquia minima.
     const terms = extractSearchTerms('producto analitica liderazgo');
     const score = scoreModuleAgainstProfile(
         {
@@ -38,6 +40,8 @@ test('retrieval ranking scores relevant modules higher', () => {
 });
 
 test('module ranking groups matches by module', () => {
+    // Aunque el retrieval devuelva topics y modulos por separado, para el prompt conviene
+    // resumirlos en una sola vista por modulo.
     const ranking = buildModuleRanking([
         { moduleId: 'module-1', moduleTitle: 'Producto', specializationId: 'tecnologia', contentType: 'learning_module' },
         { moduleId: 'module-1', moduleTitle: 'Producto', specializationId: 'tecnologia', contentType: 'topic' },
@@ -48,6 +52,8 @@ test('module ranking groups matches by module', () => {
 });
 
 test('context builder formats course metadata', () => {
+    // El texto formateado es el que termina consumiendo el LLM, por eso comprobamos que no
+    // se pierdan titulo, topics ni metadata importante del curso.
     const context = formatRetrievedCoursesContext([
         {
             contentType: 'learning_module',

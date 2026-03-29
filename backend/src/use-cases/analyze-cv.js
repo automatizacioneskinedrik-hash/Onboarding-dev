@@ -2,6 +2,8 @@ const { AppError } = require('../services/errors/app-error');
 const { serializeStoredRecommendation } = require('../services/serialization/recommendation-serializer');
 const { buildUserJourneyUpdate } = require('../services/users/user-journey.service');
 
+// Prioriza el master enviado en la peticion, pero reutiliza el ya elegido por el usuario
+// cuando el frontend vuelve a ejecutar el flujo sin reenviar esa seleccion.
 const resolveMasterId = ({ bodyMasterId, userMasterId }) => bodyMasterId || userMasterId || null;
 
 const createAnalyzeCvUseCases = ({
@@ -13,12 +15,15 @@ const createAnalyzeCvUseCases = ({
     pdfService,
     generateRecommendationForProfile,
 }) => {
+    // CV y LinkedIn dependen del mismo prerequisito: no se analiza nada sin un master valido.
     const ensureValidMasterId = (masterId, message) => {
         if (!masterId || !masterRepo.isValid(masterId)) {
             throw new AppError(message, 400);
         }
     };
 
+    // Creamos el analisis antes de procesar el archivo para dejar trazabilidad incluso si
+    // el error sucede a mitad del pipeline.
     const createAnalysisRecord = async ({ userId, selectedMasterId, file, sourceType, linkedinUrl, rawText }) => {
         const analysis = await analysisRepo.create({
             userId,
@@ -68,6 +73,8 @@ const createAnalyzeCvUseCases = ({
         );
     };
 
+    // El pipeline del CV persiste cada cambio de estado para que soporte pueda ver con
+    // precision si fallo la extraccion, el perfilado o la recomendacion.
     const uploadCvAnalysis = async ({ user, bodyMasterId, file, log }) => {
         const selectedMasterId = resolveMasterId({
             bodyMasterId,
@@ -193,6 +200,8 @@ const createAnalyzeCvUseCases = ({
         };
     };
 
+    // LinkedIn tiene dos caminos: si solo llega la URL pedimos resumen manual; si llega
+    // contenido suficiente, reutilizamos el mismo pipeline de recomendacion.
     const analyzeLinkedinProfile = async ({ user, bodyMasterId, linkedinUrl, linkedinSummary, log }) => {
         const selectedMasterId = resolveMasterId({
             bodyMasterId,

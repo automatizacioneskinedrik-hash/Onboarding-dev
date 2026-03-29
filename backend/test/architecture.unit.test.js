@@ -17,6 +17,8 @@ test('prompt builder keeps centralized AI prompts available', () => {
 });
 
 test('context manager retrieves courses through injected infra dependencies', async () => {
+    // Esta prueba protege la inversion de dependencias: el context manager no deberia
+    // acoplarse a implementaciones concretas de OpenAI, Vertex o Firestore.
     const contextManager = createContextManager({
         openAiClient: {
             ensureConfigured: () => {},
@@ -60,6 +62,8 @@ test('context manager retrieves courses through injected infra dependencies', as
 });
 
 test('ai orchestrator falls back cleanly when OpenAI is unavailable', async () => {
+    // Sin proveedor externo la aplicacion aun debe poder recomendar algo coherente para
+    // entornos locales, demos y pruebas de contrato.
     const orchestrator = createAiOrchestrator({
         openAiClient: {
             isConfigured: () => false,
@@ -154,12 +158,16 @@ test('regenerate recommendation use case normalizes and persists recommendation 
         user: { id: 'user-1', selectedMasterId: 'mtecmba' },
     });
 
+    // Verificamos la compatibilidad entre el modelo canonico y el alias legacy que todavia
+    // consumen algunos clientes.
     assert.equal(recommendation.primarySpecializationId, 'tecnologia');
     assert.equal(updates[0].id, 'analysis-1');
     assert.equal(updates[0].payload.recommendation.springUrl, 'https://lar.dev/sprints/tecnologia');
 });
 
 test('composition root wires modular dependencies in memory mode', () => {
+    // Configuramos solo lo imprescindible para comprobar que el contenedor puede arrancar
+    // sin tocar servicios externos.
     process.env.USE_FIRESTORE = 'false';
     process.env.GOOGLE_CLIENT_ID = 'test-google-client';
     process.env.JWT_SECRET = 'test-secret';

@@ -14,6 +14,8 @@ export const useMasterModules = (masterId) => {
 
         let isMounted = true;
 
+        // Evita actualizar estado si el usuario cambia rapido de master o desmonta el panel
+        // antes de que termine la request.
         const loadModules = async () => {
             setModuleListLoading(true);
 

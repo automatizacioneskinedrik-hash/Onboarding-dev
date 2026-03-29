@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
     const [masters, setMasters] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Rehidrata el usuario desde el token ya persistido sin obligar a reloguear al recargar.
     const refreshUser = async () => {
         const response = await fetchCurrentUser();
 
@@ -41,6 +42,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     useEffect(() => {
+        // El arranque valida el token actual y solo carga catalogos si la sesion sigue viva.
         const checkLogin = async () => {
             const token = getAuthToken();
 
@@ -67,6 +69,8 @@ export const AuthProvider = ({ children }) => {
         checkLogin();
     }, []);
 
+    // Centraliza login/register/google para que todas las entradas actualicen token, usuario
+    // y catalogo de masters con la misma secuencia.
     const authenticate = async (request) => {
         const response = await request;
 
@@ -100,6 +104,7 @@ export const AuthProvider = ({ children }) => {
         setMasters([]);
     };
 
+    // Derivamos el master seleccionado una sola vez para que la UI no tenga que resolver ids.
     const selectedMaster = useMemo(
         () => findMasterById(masters, user?.selectedMasterId),
         [masters, user?.selectedMasterId]

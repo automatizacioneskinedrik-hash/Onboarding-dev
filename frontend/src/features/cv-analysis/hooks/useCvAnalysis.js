@@ -7,6 +7,8 @@ export const useCvAnalysis = ({ enabled, masters, selectedMaster } = {}) => {
     const [analysisLoading, setAnalysisLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
 
+    // Un 404 en este endpoint no es un error operativo: simplemente significa que el usuario
+    // aun no tiene analisis completado.
     const isAnalysisMissingError = (error) => error?.response?.status === 404;
 
     const refreshAnalysis = useCallback(async () => {
@@ -22,6 +24,8 @@ export const useCvAnalysis = ({ enabled, masters, selectedMaster } = {}) => {
             const response = await fetchMyAnalysis();
 
             if (response.success) {
+                // Normalizamos aqui para que el resto de la UI trabaje siempre con el mismo
+                // shape, independientemente del contrato puntual del backend.
                 const normalizedAnalysis = normalizeAnalysis(response.data.analysis, masters);
                 setAnalysis(normalizedAnalysis);
                 return normalizedAnalysis;
@@ -47,6 +51,8 @@ export const useCvAnalysis = ({ enabled, masters, selectedMaster } = {}) => {
             return;
         }
 
+        // Si el usuario cambia de master, invalidamos el analisis visible para no mostrar
+        // recomendaciones de un MBA distinto como si siguieran activas.
         if (analysis.masterId !== selectedMaster.id) {
             setAnalysis(null);
         }
@@ -60,6 +66,8 @@ export const useCvAnalysis = ({ enabled, masters, selectedMaster } = {}) => {
                 const response = await uploadCv({ file, masterId });
 
                 if (response.success) {
+                    // El upload devuelve una forma reducida; la completamos para reutilizar
+                    // el mismo contrato interno que `fetchMyAnalysis`.
                     const normalizedAnalysis = normalizeAnalysis(
                         {
                             id: response.data.cvAnalysisId,

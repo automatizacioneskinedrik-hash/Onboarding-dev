@@ -24,6 +24,7 @@ describe('RecommendationSupportPanel', () => {
     it('shows selection guidance before a master is fully defined', () => {
         render(<RecommendationSupportPanel {...baseProps} />);
 
+        // Sin master activo, el panel debe guiar al siguiente paso en vez de fingir contenido.
         expect(screen.getByText('Selecciona tu MBA')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Abrir seleccion/i })).toBeInTheDocument();
     });
@@ -45,6 +46,7 @@ describe('RecommendationSupportPanel', () => {
             />
         );
 
+        // Cuando ya existe analisis, el panel cambia de modo y pasa a resumir perfil + apoyo.
         expect(screen.getByText(/Resumen del perfil/i)).toBeInTheDocument();
         expect(screen.getByText(/Consultor/i)).toBeInTheDocument();
         expect(screen.getByText(/Prioriza los sprints de estrategia/i)).toBeInTheDocument();

@@ -2,7 +2,8 @@ const { createLogger, sanitizeForLogging } = require('../../services/observabili
 
 const logger = createLogger({ component: 'middleware.http' });
 
-// Solo deja metadatos seguros y utiles del request para no contaminar los logs.
+// Serializa un resumen seguro del request sin exponer payloads sensibles ni binarios
+// completos, pero manteniendo contexto suficiente para soporte y auditoria.
 const buildRequestPayload = (req) => sanitizeForLogging({
     params: req.params,
     query: req.query,
@@ -23,7 +24,7 @@ const buildRequestPayload = (req) => sanitizeForLogging({
         : undefined,
 });
 
-// Traduce el request/response de Express al formato httpRequest esperado por GCP.
+// Traduce el ciclo de Express al shape `httpRequest` reconocido por Cloud Logging.
 const buildHttpMetadata = (req, res, durationMs) => ({
     requestMethod: req.method,
     requestUrl: req.originalUrl,
@@ -36,7 +37,8 @@ const buildHttpMetadata = (req, res, durationMs) => ({
     protocol: req.protocol,
 });
 
-// Registra una sola linea por request completado o abortado.
+// Registra exactamente un evento final por request para distinguir respuestas abortadas
+// de respuestas completadas sin duplicar logs entre `finish` y `close`.
 const requestLogger = (req, res, next) => {
     const startedAt = process.hrtime.bigint();
 

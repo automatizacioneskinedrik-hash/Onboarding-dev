@@ -40,6 +40,8 @@ test('chat intent classifier rejects prompt injection attempts', () => {
 });
 
 test('chat intent classifier allows ambiguous follow up when recent context is valid', () => {
+    // Permitimos preguntas elipticas solo cuando el contexto reciente ya quedo validado
+    // dentro del dominio de LAR.
     const result = classifyChatIntent({
         message: 'Y cual recomiendas?',
         recentMessages: [
@@ -60,6 +62,7 @@ test('chat intent classifier allows ambiguous follow up when recent context is v
 });
 
 test('chat scope guard blocks repeated drift outside the domain', () => {
+    // El guard endurece la politica si el usuario insiste varias veces fuera de alcance.
     const evaluation = evaluateChatScope({
         recentMessages: [
             { metadata: { scope: { decision: CHAT_SCOPE_DECISIONS.REJECT } } },
@@ -76,6 +79,7 @@ test('chat scope guard blocks repeated drift outside the domain', () => {
 });
 
 test('sanitizeMessagesForModel removes rejected scope messages from history', () => {
+    // Si reinyectamos mensajes rechazados en el prompt, anulamos la decision del guard.
     const sanitized = sanitizeMessagesForModel([
         { role: 'user', content: 'Valido', metadata: { scope: { decision: CHAT_SCOPE_DECISIONS.ALLOW } } },
         { role: 'user', content: 'Fuera de alcance', metadata: { scope: { decision: CHAT_SCOPE_DECISIONS.REJECT } } },

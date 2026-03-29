@@ -15,9 +15,10 @@ test('resolveChatJourneyContext identifies upload CV stage when master is select
         userMessageCount: 1,
     });
 
+    // El saludo usa el primer nombre para sonar cercano sin inventar tratamiento ni apellidos.
     assert.equal(journey.key, CHAT_JOURNEY_STAGES.UPLOAD_CV);
     assert.equal(journey.userName, 'Ana');
-    assert.equal(journey.selectedMasterName, 'MTECMBA');
+    assert.equal(journey.selectedMasterName, 'TECH-MBA');
     assert.equal(journey.shouldSendWelcome, true);
     assert.match(journey.nextStep, /cargar su CV/i);
 });
@@ -43,6 +44,8 @@ test('buildWelcomeAssistantMessage explains the platform flow before CV upload',
 
     const message = buildWelcomeAssistantMessage({ journeyContext: journey });
 
+    // El primer mensaje explica el flujo, pero no debe adelantarse a una recomendacion
+    // personalizada todavia inexistente.
     assert.match(message, /Bienvenido a LAR University/);
     assert.match(message, /carga tu CV en PDF/i);
     assert.match(message, /analizamos tu perfil/i);
@@ -56,6 +59,8 @@ test('buildChatJourneyPromptSection includes stage, flow and behavior rules', ()
 
     const promptSection = buildChatJourneyPromptSection(journey);
 
+    // Este texto termina dentro del prompt del chat; si cambia sin control, cambia tambien
+    // el comportamiento del asistente.
     assert.match(promptSection, /Etapa actual: MBA seleccionado, CV pendiente/);
     assert.match(promptSection, /Primera interaccion real del usuario: Si/);
     assert.match(promptSection, /seleccionar MBA, cargar CV en PDF, analizar el perfil/i);

@@ -12,6 +12,8 @@ const createAiOrchestrator = ({
     promptBuilder,
     logger = createLogger({ component: 'ai.orchestrator' }),
 }) => {
+    // Si OpenAI no esta disponible, el sistema aun debe producir un perfil util para no
+    // bloquear onboarding, demos ni tests locales.
     const extractProfile = async ({ cvText, log = logger }) => {
         if (!openAiClient.isConfigured()) {
             log?.info('Perfil CV con fallback local', {
@@ -36,6 +38,8 @@ const createAiOrchestrator = ({
         return JSON.parse(response.choices[0].message.content);
     };
 
+    // La recomendacion siempre se resuelve con el planner interno para normalizar ids,
+    // bloques y enlaces aunque la salida del modelo venga incompleta o con nombres variables.
     const generateRecommendation = async ({ profile, sourceType = 'pdf', options = {}, log = logger }) => {
         if (!openAiClient.isConfigured()) {
             const fallbackRecommendation = resolveUniversityRecommendation({
@@ -84,6 +88,8 @@ const createAiOrchestrator = ({
 
             return resolvedRecommendation;
         } catch (error) {
+            // Ante JSON invalido o respuesta inesperada preferimos degradar a una recomendacion
+            // deterministica antes que propagar datos parciales al usuario.
             log?.warn('Respuesta IA invalida, usando fallback', {
                 masterId: options.masterId,
                 error: error.message,
@@ -104,6 +110,8 @@ const createAiOrchestrator = ({
         }
     };
 
+    // El fallback local reutiliza recommendation y retrieval para que el chat siga siendo
+    // contextual incluso cuando el proveedor externo no responde.
     const generateChatResponse = async ({
         messages,
         userProfile = null,
@@ -145,6 +153,8 @@ const createAiOrchestrator = ({
         return response.choices[0].message.content;
     };
 
+    // La version streaming comparte el mismo prompt de la version no streaming para evitar
+    // divergencias entre lo que probamos y lo que recibe el cliente por SSE.
     const streamChatResponse = async function* ({
         messages,
         userProfile = null,
@@ -183,6 +193,8 @@ const createAiOrchestrator = ({
         }
     };
 
+    // LinkedIn no se consulta directamente: esta funcion solo genera la guia para pedir
+    // al usuario un resumen manual o una alternativa en PDF.
     const analyzeLinkedIn = async ({ linkedinUrl, log = logger }) => {
         if (!openAiClient.isConfigured()) {
             return {

@@ -11,6 +11,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
     (config) => {
+        // Adjunta el token en cada request autenticado sin duplicar logica en cada servicio.
         const token = getAuthToken();
 
         if (token) {

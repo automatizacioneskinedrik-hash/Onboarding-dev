@@ -1,5 +1,6 @@
 export const getRecommendation = (analysis) => analysis?.recommendation || null;
 
+// El frontend convive con contratos nuevos (`sprint.blocks`) y legacy (`planBlocks`).
 export const getRouteBlocks = (recommendation) =>
     recommendation?.sprint?.blocks || recommendation?.planBlocks || [];
 
@@ -10,6 +11,8 @@ export const buildImprovementTips = ({ recommendation, suggestedSubjects = [], r
         return [];
     }
 
+    // Genera mensajes cortos y reutilizables para paneles de apoyo sin duplicar la narracion
+    // completa de la recomendacion.
     const tips = [];
 
     if (recommendation.reasoning) {

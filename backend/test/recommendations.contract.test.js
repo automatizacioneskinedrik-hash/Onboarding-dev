@@ -10,6 +10,8 @@ test('GET /api/recommendations/specializations filters catalog by masterId', asy
 
     assert.equal(response.status, 200);
     assert.equal(response.body.success, true);
+    // Validamos un item concreto para asegurarnos de que el filtro devuelve el catalogo
+    // correcto y no una lista generica mezclada entre masters.
     const iaSpecialization = response.body.data.specializations.find((item) => item.id === 'ia-automatizacion');
     assert.ok(iaSpecialization);
     assert.match(iaSpecialization.subjects[1], /RPA/);
@@ -28,6 +30,8 @@ test('GET /api/recommendations/my-recommendation returns latest recommendation',
 
     assert.equal(response.status, 200);
     assert.equal(response.body.success, true);
+    // Este endpoint es el contrato de lectura del frontend: comprobamos ids, master y la
+    // estructura completa del sprint ya serializado.
     assert.equal(response.body.data.recommendation.specialization.id, 'tecnologia');
     assert.equal(response.body.data.masterId, 'mtecmba');
     assert.equal(response.body.data.recommendation.sprint.courses.length, 6);
@@ -48,6 +52,8 @@ test('POST /api/recommendations/regenerate keeps response contract', async () =>
 
     assert.equal(response.status, 200);
     assert.equal(response.body.success, true);
+    // Mantenemos `springUrl` por compatibilidad retroactiva mientras el cliente termina de
+    // migrar completamente a `sprintUrl`.
     assert.equal(response.body.data.recommendation.springUrl, 'https://lar.dev/sprints/tecnologia');
     assert.equal(response.body.data.recommendation.sprintUrl, 'https://lar.dev/sprints/tecnologia');
     assert.equal(response.body.data.recommendation.specialization.id, 'tecnologia');

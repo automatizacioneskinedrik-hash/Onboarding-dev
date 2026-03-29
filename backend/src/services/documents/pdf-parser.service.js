@@ -1,8 +1,3 @@
-/**
- * File Service
- * Handles PDF and CSV file parsing/extraction
- */
-
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
@@ -11,10 +6,9 @@ const { createLogger } = require('../observability/logger');
 const logger = createLogger({ component: 'service.pdf' });
 
 /**
- * Extract text from a PDF or CSV buffer or file path
- * @param {Buffer|string} input - File buffer or file path
- * @param {string} filename - Optional original filename to help with extension detection
- * @returns {Object} Extracted data
+ * Extrae texto normalizado desde un PDF o un CSV aceptando buffer o path.
+ * Se usa antes del perfilado con IA, asi que prioriza legibilidad del texto por
+ * encima de preservar el formato original del documento.
  */
 const extractTextFromFile = async (input, filename = '') => {
     try {
@@ -38,14 +32,14 @@ const extractTextFromFile = async (input, filename = '') => {
         let pages = 1;
 
         if (isCSV) {
-            // Normalize CSV content for easier AI extraction
+            // Los CSV llegan con separadores variados; los aplanamos para que la IA reciba
+            // texto continuo y mas facil de resumir.
             text = buffer.toString('utf-8')
                 .replace(/;/g, ' ')
                 .replace(/\t/g, ' ')
                 .trim();
             info = { type: 'csv' };
         } else {
-            // Assume PDF
             try {
                 const data = await pdfParse(buffer);
                 text = data.text;
@@ -56,20 +50,21 @@ const extractTextFromFile = async (input, filename = '') => {
                     filename,
                     error: pdfErr.message,
                 });
-                // If PDF parsing fails, try reading as raw text as fallback
+                // Algunos archivos etiquetados como PDF son texto plano o llegan corruptos;
+                // este fallback intenta rescatar contenido util antes de fallar.
                 text = buffer.toString('utf-8');
                 info = { type: 'unknown_raw' };
             }
         }
 
         if (!text || text.trim().length === 0) {
-            throw new Error('No se pudo extraer texto del archivo o el contenido está vacío. Asegúrate de que sea un archivo PDF o CSV válido.');
+            throw new Error('No se pudo extraer texto del archivo o el contenido esta vacio. Asegurate de que sea un archivo PDF o CSV valido.');
         }
 
-        // Clean up the extracted text
+        // Compactamos el texto para no desperdiciar tokens en ruido de formato.
         const cleanedText = text
-            .replace(/\s+/g, ' ')           // Normalize whitespace
-            .replace(/\n{3,}/g, '\n\n')     // Max 2 consecutive newlines
+            .replace(/\s+/g, ' ')
+            .replace(/\n{3,}/g, '\n\n')
             .trim();
 
         return {
@@ -87,8 +82,7 @@ const extractTextFromFile = async (input, filename = '') => {
 };
 
 /**
- * Delete a file from the filesystem
- * @param {string} filePath - Path to the file
+ * Intenta borrar archivos temporales sin convertir la limpieza en un error fatal.
  */
 const deleteFile = (filePath) => {
     try {

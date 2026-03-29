@@ -21,6 +21,7 @@ describe('home dashboard helpers', () => {
     });
 
     it('resolves the active master from the chat context when a chat is open', () => {
+        // Con un chat abierto, su contexto debe mandar sobre la seleccion global del perfil.
         const masters = [{ id: 'mtecmba', code: 'TECH-MBA' }];
         const selectedMaster = { id: 'fallback', code: 'GENERAL' };
 
@@ -35,6 +36,7 @@ describe('home dashboard helpers', () => {
     });
 
     it('normalizes the active analysis from the chat context', () => {
+        // El dashboard consume analisis del chat y del perfil con el mismo contrato interno.
         const masters = [{ id: 'mtecmba', code: 'TECH-MBA' }];
 
         const activeAnalysis = resolveActiveAnalysis({
@@ -55,6 +57,8 @@ describe('home dashboard helpers', () => {
     });
 
     it('returns the current analysis id when there is no active chat yet', () => {
+        // Antes de crear un chat, la UI debe seguir pudiendo anclar el primer mensaje al
+        // analisis global mas reciente.
         expect(
             resolveAnalysisForChat({
                 chatId: null,

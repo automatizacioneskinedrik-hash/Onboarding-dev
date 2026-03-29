@@ -10,6 +10,8 @@ export const useHomeDashboardState = ({ initialChatId, showMasterSelectionInitia
     const [activeChatContext, setActiveChatContext] = useState(null);
     const [chatPendingDelete, setChatPendingDelete] = useState(null);
     const [isDeletingChat, setIsDeletingChat] = useState(false);
+    // En desktop dejamos la sidebar abierta por defecto; en mobile nace cerrada para no
+    // tapar el panel principal.
     const [isSidebarOpen, setIsSidebarOpen] = useState(
         typeof window !== 'undefined' ? window.innerWidth >= 1280 : false
     );

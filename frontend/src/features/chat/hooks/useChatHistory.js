@@ -6,6 +6,8 @@ export const useChatHistory = ({ enabled = true } = {}) => {
     const [historyLoading, setHistoryLoading] = useState(false);
 
     const refreshHistory = useCallback(async () => {
+        // Cuando no hay usuario autenticado, reseteamos el historial local para no arrastrar
+        // conversaciones de una sesion anterior.
         if (!enabled) {
             setHistory([]);
             return [];
@@ -36,6 +38,8 @@ export const useChatHistory = ({ enabled = true } = {}) => {
     }, [refreshHistory]);
 
     const deleteChat = useCallback(async (chatId) => {
+        // Optimizamos la UX removiendo el chat localmente despues del delete remoto, sin
+        // forzar una recarga completa del listado.
         await removeChat(chatId);
         setHistory((previousHistory) => previousHistory.filter((chat) => chat.id !== chatId));
     }, []);

@@ -4,6 +4,8 @@ import { getAuthToken } from '../../../shared/lib/storage/auth-token';
 
 const buildApiUrl = (path) => `${String(API_URL || '').replace(/\/$/, '')}${path}`;
 
+// El backend responde via SSE manual; este parser consume eventos completos y devuelve el
+// resto del buffer para reusarlo cuando llega el siguiente chunk.
 const consumeSseBuffer = (buffer, onEvent) => {
     let remaining = buffer;
     let separatorIndex = remaining.indexOf('\n\n');
@@ -41,6 +43,7 @@ export const getChatById = async (chatId) => {
 };
 
 export const createChat = async (payload) => {
+    // Evita enviar null/undefined al backend para no contaminar el contrato con campos vacios.
     const requestPayload = Object.fromEntries(
         Object.entries(payload || {}).filter(([, value]) => value !== null && value !== undefined)
     );
@@ -74,7 +77,7 @@ export const sendChatMessageStream = async ({ chatId, content, cvAnalysisId, onE
             const errorBody = await response.json();
             errorMessage = errorBody.message || errorMessage;
         } catch {
-            // noop
+            // Si la respuesta de error no viene en JSON, conservamos el mensaje generico.
         }
 
         throw new Error(errorMessage);
@@ -89,6 +92,8 @@ export const sendChatMessageStream = async ({ chatId, content, cvAnalysisId, onE
     let buffer = '';
     let streamCompleted = false;
 
+    // Seguimos leyendo hasta recibir el evento `done`; no basta con que el reader cierre
+    // porque puede quedar un ultimo evento parcial pendiente en el buffer.
     while (!streamCompleted) {
         const { value, done } = await reader.read();
 

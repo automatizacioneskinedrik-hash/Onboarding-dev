@@ -21,6 +21,8 @@ const createChatUseCases = ({
 }) => {
     const listUserChats = async ({ userId, page, limit }) => chatRepo.findByUserId(userId, { page, limit });
 
+    // Mantiene el "journey" del usuario alineado con la actividad real del chat para que
+    // onboarding y analitica lean una sola fuente de verdad.
     const syncUserChatJourney = async ({ userId, latestChatId, lastChatAt, lastActivityAt }) => {
         const currentUser = await userRepo.findById(userId);
         const chatCount = await statsRepo.chatCountByUser(userId);
@@ -39,6 +41,8 @@ const createChatUseCases = ({
         );
     };
 
+    // Solo adjunta analisis cuando pertenece al mismo usuario y ya esta completado; asi
+    // evitamos inyectar contexto ajeno o incompleto en la conversacion.
     const resolveChatContext = async ({ chat, userId }) => {
         let analysis = null;
         let masterId = chat.masterId || null;
@@ -59,6 +63,8 @@ const createChatUseCases = ({
         };
     };
 
+    // Si el chat nace desde un analisis, heredamos su master para no perder el anclaje con
+    // el sprint y con el retrieval contextual.
     const createUserChat = async ({ user, title, cvAnalysisId, masterId }) => {
         const normalizedAnalysisId = typeof cvAnalysisId === 'string' ? cvAnalysisId.trim() : '';
         const normalizedMasterId = typeof masterId === 'string' ? masterId.trim() : '';
@@ -126,6 +132,11 @@ const createChatUseCases = ({
         return chatRepo.update(chatId, { title });
     };
 
+    // Este flujo concentra varias responsabilidades no obvias:
+    // 1. resuelve contexto de analisis,
+    // 2. aplica guardrails de dominio,
+    // 3. intenta retrieval semantico sin volver fatal un fallo auxiliar,
+    // 4. persiste metadata suficiente para auditoria del chat.
     const streamUserChatMessage = async ({
         chatId,
         user,
@@ -188,6 +199,8 @@ const createChatUseCases = ({
             topicGroups: Object.keys(classification.topicMatches || {}),
         };
 
+        // Embeddings y retrieval enriquecen la respuesta, pero si fallan el chat sigue
+        // operando con el contexto conversacional ya disponible.
         if (scopeMetadata.decision !== CHAT_SCOPE_DECISIONS.REJECT) {
             try {
                 messageEmbedding = await contextManager.createTextEmbedding(content);
@@ -245,6 +258,7 @@ const createChatUseCases = ({
 
         const userMessageCount = freshChat.messages.filter((message) => message.role === 'user').length;
 
+        // Solo autogeneramos el titulo una vez para no sobrescribir nombres puestos por el usuario.
         if (!freshChat.titleGenerated && userMessageCount === 1) {
             await chatRepo.update(chatId, {
                 title: content.substring(0, 60) + (content.length > 60 ? '...' : ''),
@@ -265,6 +279,8 @@ const createChatUseCases = ({
 
         onStart?.({ chatId, userMessage, retrieval, messageEmbedding });
 
+        // Incluso cuando bloqueamos por scope, dejamos el intento y la respuesta controlada
+        // guardados para mantener el historial consistente.
         if (scopeMetadata.decision === CHAT_SCOPE_DECISIONS.REJECT) {
             const rejectionReason =
                 scopeEvaluation.reason === 'prompt_injection'
@@ -306,6 +322,8 @@ const createChatUseCases = ({
             return;
         }
 
+        // Antes de llamar al modelo filtramos mensajes rechazados para no reinyectar
+        // contenido que ya habiamos decidido excluir del dominio.
         const recentMessages = sanitizeMessagesForModel(freshChat.messages)
             .slice(-20)
             .map((message) => ({
