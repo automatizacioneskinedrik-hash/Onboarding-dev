@@ -11,7 +11,7 @@ const formatRetrievedCoursesContext = (courses = []) => {
                 `Categoria: ${course.catalogType === 'master' ? 'Master' : 'Sprint'}`,
                 `Titulo: ${course.title}`,
                 `Modulo relacionado: ${course.moduleTitle}`,
-                `Distancia vectorial: ${course.distance ?? 'n/a'}`,
+                `Distancia estimada: ${course.distance ?? 'n/a'}`,
             ];
 
             if (course.description) {

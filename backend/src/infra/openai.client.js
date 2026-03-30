@@ -6,7 +6,6 @@ const { createLogger } = require('../services/observability/logger');
 
 const logger = createLogger({ component: 'infra.openai' });
 const chatModel = process.env.OPENAI_MODEL || 'gpt-4o';
-const embeddingModel = process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-large';
 const openaiApiKey = process.env.OPENAI_API_KEY?.trim();
 const client = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey }) : null;
 
@@ -19,7 +18,6 @@ const createConfigurationError = () => {
 const createOpenAiClient = () => ({
     getClient: () => client,
     getChatModel: () => chatModel,
-    getEmbeddingModel: () => embeddingModel,
     isConfigured: () => Boolean(client),
     ensureConfigured: () => {
         if (!client) {
@@ -46,16 +44,6 @@ const createOpenAiClient = () => ({
             model: chatModel,
             stream: true,
             ...payload,
-        });
-    },
-    createEmbedding: async (input) => {
-        if (!client) {
-            throw createConfigurationError();
-        }
-
-        return client.embeddings.create({
-            model: embeddingModel,
-            input,
         });
     },
 });

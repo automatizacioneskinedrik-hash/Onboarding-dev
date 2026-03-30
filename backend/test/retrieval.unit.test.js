@@ -23,7 +23,7 @@ test('profile query builder composes a searchable query', () => {
 });
 
 test('retrieval ranking scores relevant modules higher', () => {
-    // Esta puntuacion es la base del fallback sin Vertex: si deja de priorizar terminos
+    // Esta puntuacion es la base del retrieval local: si deja de priorizar terminos
     // relevantes, la recomendacion pierde una jerarquia minima.
     const terms = extractSearchTerms('producto analitica liderazgo');
     const score = scoreModuleAgainstProfile(

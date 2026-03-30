@@ -135,7 +135,7 @@ const createChatUseCases = ({
     // Este flujo concentra varias responsabilidades no obvias:
     // 1. resuelve contexto de analisis,
     // 2. aplica guardrails de dominio,
-    // 3. intenta retrieval semantico sin volver fatal un fallo auxiliar,
+    // 3. intenta retrieval local sin volver fatal un fallo auxiliar,
     // 4. persiste metadata suficiente para auditoria del chat.
     const streamUserChatMessage = async ({
         chatId,
@@ -156,7 +156,6 @@ const createChatUseCases = ({
 
         let userProfile = null;
         let recommendation = null;
-        let messageEmbedding = null;
         let retrieval = null;
         let selectedMasterId = chat.masterId || user.selectedMasterId || null;
         const analysisId = cvAnalysisId || chat.cvAnalysisId;
@@ -199,32 +198,17 @@ const createChatUseCases = ({
             topicGroups: Object.keys(classification.topicMatches || {}),
         };
 
-        // Embeddings y retrieval enriquecen la respuesta, pero si fallan el chat sigue
-        // operando con el contexto conversacional ya disponible.
+        // El retrieval local enriquece la respuesta, pero si falla el chat sigue operando
+        // con el contexto conversacional ya disponible.
         if (scopeMetadata.decision !== CHAT_SCOPE_DECISIONS.REJECT) {
-            try {
-                messageEmbedding = await contextManager.createTextEmbedding(content);
-            } catch (error) {
-                log?.warn('Embedding no generado para mensaje', {
-                    userId: user.id,
-                    chatId,
-                    error: error.message,
-                });
-            }
-
             try {
                 retrieval = await contextManager.retrieveRelevantCourses({
                     question: content,
-                    embeddingResult: messageEmbedding,
+                    masterId: selectedMasterId || null,
                     topK: 4,
-                    filters: selectedMasterId
-                        ? {
-                            masterIds: [selectedMasterId, 'shared'],
-                        }
-                        : {},
                 });
             } catch (error) {
-                log?.warn('Busqueda vectorial omitida en chat', {
+                log?.warn('Retrieval local omitido en chat', {
                     userId: user.id,
                     chatId,
                     masterId: selectedMasterId,
@@ -239,18 +223,6 @@ const createChatUseCases = ({
             metadata: {
                 type: 'text',
                 scope: scopeMetadata,
-                embedding: messageEmbedding
-                    ? {
-                        status: 'generated',
-                        model: messageEmbedding.model,
-                        dimensions: messageEmbedding.dimensions,
-                    }
-                    : {
-                        status:
-                            scopeMetadata.decision === CHAT_SCOPE_DECISIONS.REJECT
-                                ? 'skipped_scope_guard'
-                                : 'unavailable',
-                    },
             },
         });
 
@@ -277,7 +249,7 @@ const createChatUseCases = ({
             });
         }
 
-        onStart?.({ chatId, userMessage, retrieval, messageEmbedding });
+        onStart?.({ chatId, userMessage, retrieval });
 
         // Incluso cuando bloqueamos por scope, dejamos el intento y la respuesta controlada
         // guardados para mantener el historial consistente.
@@ -318,7 +290,7 @@ const createChatUseCases = ({
                 guardState: scopeEvaluation.state,
             });
 
-            onDone?.({ chatId, assistantMessage, retrieval: null, messageEmbedding: null, aiContent });
+            onDone?.({ chatId, assistantMessage, retrieval: null, aiContent });
             return;
         }
 
@@ -390,11 +362,10 @@ const createChatUseCases = ({
             contentLength: content.trim().length,
             responseLength: aiContent.length,
             matchCount: retrieval?.matches?.length || 0,
-            embedding: Boolean(messageEmbedding),
             intent: classification.intent,
         });
 
-        onDone?.({ chatId, assistantMessage, retrieval, messageEmbedding, aiContent });
+        onDone?.({ chatId, assistantMessage, retrieval, aiContent });
     };
 
     return {

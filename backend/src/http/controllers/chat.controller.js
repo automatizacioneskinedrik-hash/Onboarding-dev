@@ -83,13 +83,13 @@ const sendMessage = async (req, res, next) => {
             content: req.body.content,
             cvAnalysisId: req.body.cvAnalysisId,
             log: req.log || logger,
-            onStart: ({ chatId, userMessage, retrieval, messageEmbedding }) => {
+            onStart: ({ chatId, userMessage, retrieval }) => {
                 ensureSse();
                 writeSseEvent(res, {
                     type: 'start',
                     chatId,
                     userMessage,
-                    retrieval: serializeRetrieval(retrieval, messageEmbedding),
+                    retrieval: serializeRetrieval(retrieval),
                 });
             },
             onToken: (token) => {
@@ -104,13 +104,13 @@ const sendMessage = async (req, res, next) => {
                 });
                 res.end();
             },
-            onDone: ({ chatId, assistantMessage, retrieval, messageEmbedding }) => {
+            onDone: ({ chatId, assistantMessage, retrieval }) => {
                 ensureSse();
                 writeSseEvent(res, {
                     type: 'done',
                     chatId,
                     assistantMessage,
-                    retrieval: serializeRetrieval(retrieval, messageEmbedding),
+                    retrieval: serializeRetrieval(retrieval),
                 });
                 res.end();
             },

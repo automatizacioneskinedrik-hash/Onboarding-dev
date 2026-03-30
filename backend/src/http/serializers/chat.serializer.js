@@ -8,11 +8,9 @@ const serializeChatList = ({ items, total, page, limit }) => ({
     },
 });
 
-const serializeRetrieval = (retrieval, messageEmbedding) => ({
-    embeddingGenerated: Boolean(messageEmbedding),
-    embeddingModel: messageEmbedding?.model || null,
-    embeddingDimensions: messageEmbedding?.dimensions || null,
+const serializeRetrieval = (retrieval) => ({
     vectorSearchUsed: Boolean(retrieval),
+    retrievalSource: retrieval?.vectorSearch?.source || null,
     matches:
         retrieval?.matches.slice(0, 3).map((match) => ({
             id: match.id,

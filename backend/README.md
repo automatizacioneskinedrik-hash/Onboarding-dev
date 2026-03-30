@@ -8,8 +8,7 @@ Backend Node.js/Express para analisis de CV, recomendacion de sprints y chat asi
 - Framework: Express.js
 - Base de datos: Firebase Firestore
 - IA: OpenAI (`gpt-4o` por defecto)
-- Embeddings: OpenAI `text-embedding-3-large`
-- Busqueda semantica: Vertex AI Vector Search
+- Retrieval de catalogo: ranking lexico local sobre Firestore (sin embeddings)
 - Autenticacion: JWT
 - Upload: Multer
 - Parsing de PDF: `pdf-parse`
@@ -20,8 +19,6 @@ Backend Node.js/Express para analisis de CV, recomendacion de sprints y chat asi
 backend/
 |-- server.js
 |-- seed-learning-content.js
-|-- sync-courses-to-vector-index.js
-|-- diagnose-vector-index.js
 `-- src/
     |-- app.js
     |-- composition-root.js
@@ -47,14 +44,9 @@ backend/
     |   |-- observability/
     |   |   |-- logger.js
     |   |   `-- request-context.service.js
-    |   |-- search/
-    |   |   |-- embedding.service.js
-    |   |   `-- vertex-vector-search.service.js
     |   `-- serialization/
     |       |-- analysis-serializer.js
     |       `-- recommendation-serializer.js
-    |-- tooling/
-    |   `-- vector-index/
     |-- use-cases/
     `-- utils/
 |-- test/
@@ -67,10 +59,10 @@ Arquitectura runtime:
 
 - `http/`: capa HTTP completa (`routes`, `controllers`, `middleware`, `validators`, `serializers`, `respond`, `sse`).
 - `use-cases/`: logica de negocio.
-- `ai/`: orquestacion de prompts, contexto y fallback RAG.
+- `ai/`: orquestacion de prompts, contexto y retrieval local de catalogo.
 - `repositories/`: acceso de dominio a persistencia.
-- `services/`: servicios auxiliares agrupados por responsabilidad (`auth`, `documents`, `errors`, `observability`, `search`, `serialization`).
-- `infra/`: adaptadores externos (Firestore, OpenAI, Vertex).
+- `services/`: servicios auxiliares agrupados por responsabilidad (`auth`, `documents`, `errors`, `observability`, `serialization`).
+- `infra/`: adaptadores externos (Firestore, OpenAI).
 
 ### 1. Instalar dependencias
 
@@ -85,23 +77,15 @@ Configura `.env` con al menos:
 ```env
 OPENAI_API_KEY=tu_api_key
 OPENAI_MODEL=gpt-4o
-OPENAI_EMBEDDING_MODEL=text-embedding-3-large
 
 GOOGLE_APPLICATION_CREDENTIALS=./service-account.json
 FIREBASE_PROJECT_ID=tu_proyecto_firebase
-
-VERTEX_AI_GCS_BUCKET=tu_bucket
-VERTEX_AI_INDEX_ID=tu_index_id
-VERTEX_AI_LOCATION=us-central1
-VERTEX_AI_INDEX_ENDPOINT_ID=tu_index_endpoint_id
-VERTEX_AI_DEPLOYED_INDEX_ID=tu_deployed_index_id
-VERTEX_AI_GCS_PREFIX=vectors/courses
 ```
 
 Notas:
 
-- Si `OPENAI_API_KEY` no esta configurada, el backend sigue funcionando con un modo de respaldo para extraccion y recomendacion.
-- Si Vertex AI no devuelve resultados para un master valido, el backend usa un fallback desde Firestore para no dejar la recomendacion vacia.
+- Si `OPENAI_API_KEY` no esta configurada, el backend sigue funcionando con un modo de respaldo para extraccion, recomendacion y chat.
+- El retrieval del chat usa ranking lexico local sobre modulos y topics del master seleccionado.
 
 ### 3. Ejecutar el servidor
 
@@ -119,16 +103,12 @@ npm start
 
 ```bash
 npm run seed:learning-content
-npm run sync:vector-index
-npm run diagnose:vector-index
 npm test
 ```
 
 Que hace cada uno:
 
 - `seed:learning-content`: sincroniza masters, modulos y topics en Firestore.
-- `sync:vector-index`: genera embeddings y publica el catalogo en Vertex AI Vector Search.
-- `diagnose:vector-index`: revisa el estado del indice desplegado.
 - `test`: corre la suite de contratos HTTP y pruebas unitarias del backend.
 
 ## Flujo de recomendacion
@@ -136,10 +116,9 @@ Que hace cada uno:
 1. El usuario selecciona un master.
 2. Sube su CV o comparte resumen de LinkedIn.
 3. El backend extrae un perfil estructurado.
-4. Se consulta Vertex AI Vector Search filtrando por el master seleccionado y `catalog_type = sprint`.
+4. El sistema obtiene contexto del catalogo del master con ranking lexico local sobre Firestore.
 5. OpenAI genera la recomendacion usando el perfil y el contexto recuperado.
-6. Si no hay resultados vectoriales para ese master, se construye una recuperacion de respaldo desde Firestore.
-7. Se guardan perfil, recomendacion, materias sugeridas y cursos recomendados en `analyses`.
+6. Se guardan perfil, recomendacion, materias sugeridas y cursos recomendados en `analyses`.
 
 ## Masters disponibles
 
@@ -205,8 +184,6 @@ Que hace cada uno:
 ## Recomendaciones operativas
 
 - Ejecuta `npm run seed:learning-content` cuando agregues o cambies masters, modulos o topics.
-- Ejecuta `npm run sync:vector-index` despues de actualizar el catalogo para que Vertex AI conozca el contenido nuevo.
-- Si un master devuelve recomendacion generica o sin cursos sugeridos, revisa primero el indice con `npm run diagnose:vector-index`.
 
 ## Despliegue
 

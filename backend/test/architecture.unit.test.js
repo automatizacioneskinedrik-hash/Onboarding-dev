@@ -18,47 +18,33 @@ test('prompt builder keeps centralized AI prompts available', () => {
 
 test('context manager retrieves courses through injected infra dependencies', async () => {
     // Esta prueba protege la inversion de dependencias: el context manager no deberia
-    // acoplarse a implementaciones concretas de OpenAI, Vertex o Firestore.
+    // acoplarse a implementaciones concretas de Firestore.
     const contextManager = createContextManager({
-        openAiClient: {
-            ensureConfigured: () => {},
-            createEmbedding: async () => ({
-                data: [{ embedding: [0.1, 0.2, 0.3] }],
-            }),
-            getEmbeddingModel: () => 'test-embedding',
-        },
-        vertexClient: {
-            findNeighbors: async () => ({
-                endpointName: 'vertex-endpoint',
-                deployedIndexId: 'index-1',
-                publicEndpointDomain: 'example.test',
-                neighbors: [{ datapointId: 'course-1', distance: 0.12 }],
-            }),
-        },
         catalogRepo: {
-            loadCourseByDatapointId: async () => ({
-                id: 'course-1',
+            readSprintModulesByMasterId: async () => [{
+                id: 'module-1',
                 title: 'Arquitectura de Producto',
-                contentType: 'learning_module',
-                moduleId: 'module-1',
-                moduleTitle: 'Producto',
-                specializationId: 'tecnologia',
+                catalog_type: 'sprint',
+                master_id: 'mtecmba',
+                specialization_id: 'tecnologia',
                 description: 'Descripcion',
-                topics: ['Discovery'],
-            }),
-            readSprintModulesByMasterId: async () => [],
-            readTopicsByModuleId: async () => [],
+                difficulty: 3,
+                estimated_hours: 12,
+                order: 1,
+            }],
+            readTopicsByModuleId: async () => [{ title: 'Discovery' }],
             loadSprintCatalogForSpecialization: async () => null,
         },
     });
 
     const retrieval = await contextManager.retrieveRelevantCourses({
         question: 'Producto digital',
+        masterId: 'mtecmba',
     });
 
-    assert.equal(retrieval.queryEmbedding.model, 'test-embedding');
-    assert.equal(retrieval.matches[0].id, 'course-1');
+    assert.equal(retrieval.matches[0].id, 'module-1');
     assert.match(retrieval.contextText, /Arquitectura de Producto/);
+    assert.equal(retrieval.vectorSearch.source, 'catalog_ranking');
 });
 
 test('ai orchestrator falls back cleanly when OpenAI is unavailable', async () => {

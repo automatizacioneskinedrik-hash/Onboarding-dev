@@ -12,7 +12,6 @@ const { createStatsRepository } = require('./repositories/stats.repo');
 const { createCatalogRepository } = require('./repositories/catalog.repo');
 const { createFirestoreClient } = require('./infra/firestore.client');
 const { createOpenAiClient } = require('./infra/openai.client');
-const { createVertexClient } = require('./infra/vertex.client');
 const { createPromptBuilder } = require('./ai/prompt-builder');
 const { createContextManager } = require('./ai/context-manager');
 const { createAiOrchestrator } = require('./ai/orchestrator');
@@ -56,7 +55,6 @@ const buildAppContainer = ({ useFirestore } = {}) => {
     const legacyRepositories = buildRepositories({ useFirestore: resolvedUseFirestore });
     const firestoreClient = createFirestoreClient();
     const openAiClient = createOpenAiClient();
-    const vertexClient = createVertexClient();
     const domainRepositories = {
         chatRepo: createChatRepository({ implementation: legacyRepositories.chats }),
         analysisRepo: createAnalysisRepository({ implementation: legacyRepositories.analyses }),
@@ -69,8 +67,6 @@ const buildAppContainer = ({ useFirestore } = {}) => {
     };
     const promptBuilder = createPromptBuilder();
     const contextManager = createContextManager({
-        openAiClient,
-        vertexClient,
         catalogRepo: domainRepositories.catalogRepo,
         logger: logger.child({ component: 'ai.context-manager' }),
     });
@@ -122,7 +118,6 @@ const buildAppContainer = ({ useFirestore } = {}) => {
         infra: {
             firestoreClient,
             openAiClient,
-            vertexClient,
         },
         ai: {
             promptBuilder,

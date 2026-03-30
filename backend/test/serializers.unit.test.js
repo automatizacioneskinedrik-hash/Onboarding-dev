@@ -7,7 +7,7 @@ const {
     serializeStoredRecommendation,
 } = require('../src/services/serialization/recommendation-serializer');
 const { serializeAnalysisHistoryItem } = require('../src/services/serialization/analysis-serializer');
-const { serializeChatList } = require('../src/http/serializers/chat.serializer');
+const { serializeChatList, serializeRetrieval } = require('../src/http/serializers/chat.serializer');
 
 test('recommendation serializer normalizes sprintUrl and springUrl', () => {
     const normalized = normalizeRecommendation({
@@ -56,4 +56,23 @@ test('chat serializer keeps pagination contract', () => {
 
     assert.equal(serialized.chats.length, 1);
     assert.equal(serialized.pagination.pages, 1);
+});
+
+test('chat retrieval serializer keeps non-vector contract', () => {
+    const serialized = serializeRetrieval({
+        vectorSearch: { source: 'catalog_ranking' },
+        matches: [
+            {
+                id: 'module-1',
+                title: 'Arquitectura de Producto',
+                contentType: 'learning_module',
+                moduleTitle: 'Producto',
+                distance: 0.25,
+            },
+        ],
+    });
+
+    assert.equal(serialized.vectorSearchUsed, true);
+    assert.equal(serialized.retrievalSource, 'catalog_ranking');
+    assert.equal(serialized.matches.length, 1);
 });
