@@ -36,7 +36,7 @@ const STAGE_QUESTIONS = {
     [CHAT_JOURNEY_STAGES.REVIEW_RECOMMENDATION]: [
         'Por que me recomendaron esta ruta?',
         'Que sprint deberia priorizar primero?',
-        'Que cursos encajan mejor con mi perfil?',
+        'Que sprints encajan mejor con mi perfil?',
         'Como aprovecho este MBA en mi trabajo actual?',
     ],
 };
