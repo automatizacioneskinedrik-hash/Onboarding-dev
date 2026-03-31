@@ -12,7 +12,9 @@ const PerfilPage = () => {
         masters,
         selectedMaster: null,
     });
-    const { moduleItems: availableModules } = useMasterModules(analysis?.masterId);
+    const resolvedMasterId = analysis?.masterId || user?.selectedMasterId || null;
+    const selectedMaster = findMasterById(masters, resolvedMasterId);
+    const { moduleItems: availableModules } = useMasterModules(selectedMaster?.id || resolvedMasterId);
 
     if (loading) {
         return (
@@ -40,9 +42,16 @@ const PerfilPage = () => {
     }
 
     const { extractedProfile = {}, recommendation = {}, masterId } = analysis;
-    const selectedMaster = findMasterById(masters, masterId || user?.selectedMasterId);
     const routeBlocks = recommendation.sprint?.blocks || recommendation.planBlocks || [];
     const subjects = recommendation.subjects || [];
+    const recommendedRoute = (routeBlocks.length
+        ? routeBlocks
+        : subjects.map((subject, index) => ({
+              id: `subject-${index + 1}`,
+              blockTitle: subject,
+              specializationName: recommendation.primarySpecialization || '',
+          }))
+    ).slice(0, 6);
 
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-700">
@@ -81,19 +90,6 @@ const PerfilPage = () => {
                         </div>
                     </div>
 
-                    <div className="card space-y-4">
-                        <h3 className="flex items-center gap-2 font-bold">
-                            <Award className="text-orange-accent" size={18} />
-                            Sprint recomendado
-                        </h3>
-                        <div className="rounded-lg border border-dark-border bg-dark-bg p-4">
-                            <p className="mb-1 font-bold text-orange-accent">{recommendation.primarySpecialization || 'Sin recomendacion'}</p>
-                            <p className="text-xs leading-relaxed text-dark-text">
-                                {recommendation.reasoning || 'Todavia no hay un razonamiento disponible.'}
-                            </p>
-                        </div>
-                    </div>
-
                     <div className="card">
                         <h3 className="mb-4 flex items-center gap-2 font-bold">
                             <Award className="text-orange-accent" size={18} />
@@ -120,30 +116,32 @@ const PerfilPage = () => {
                         </p>
                     </div>
 
-                    {(routeBlocks.length > 0 || subjects.length > 0) && (
+                    {recommendedRoute.length > 0 && (
                         <div className="card">
                             <h3 className="mb-6 flex items-center gap-3 text-xl font-bold">
                                 <GraduationCap className="text-orange-accent" size={24} />
                                 Ruta recomendada
                             </h3>
+                            {(recommendation.primarySpecialization || recommendation.reasoning) && (
+                                <div className="mb-4 rounded-xl border border-dark-border bg-dark-bg/50 p-4">
+                                    {recommendation.primarySpecialization ? (
+                                        <p className="mb-1 font-bold text-orange-accent">{recommendation.primarySpecialization}</p>
+                                    ) : null}
+                                    {recommendation.reasoning ? (
+                                        <p className="text-sm leading-relaxed text-dark-text">{recommendation.reasoning}</p>
+                                    ) : null}
+                                </div>
+                            )}
                             <div className="grid gap-3 md:grid-cols-2">
-                                {(routeBlocks.length
-                                    ? routeBlocks
-                                    : subjects.map((subject, index) => ({
-                                          id: `subject-${index + 1}`,
-                                          blockTitle: subject,
-                                      }))
-                                )
-                                    .slice(0, 6)
-                                    .map((block, index) => (
-                                        <div key={block.id || block.blockTitle} className="rounded-xl border border-dark-border bg-dark-bg/50 p-4">
-                                            <p className="text-sm font-bold text-dark-text">{block.blockTitle || block.title}</p>
-                                            <p className="mt-1 text-xs text-dark-muted">
-                                                Curso {index + 1}
-                                                {block.specializationName ? ` - ${block.specializationName}` : ''}
-                                            </p>
-                                        </div>
-                                    ))}
+                                {recommendedRoute.map((block, index) => (
+                                    <div key={block.id || block.blockTitle} className="rounded-xl border border-dark-border bg-dark-bg/50 p-4">
+                                        <p className="text-sm font-bold text-dark-text">{block.blockTitle || block.title}</p>
+                                        <p className="mt-1 text-xs text-dark-muted">
+                                            Sprint {index + 1}
+                                            {block.specializationName ? ` - ${block.specializationName}` : ''}
+                                        </p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
