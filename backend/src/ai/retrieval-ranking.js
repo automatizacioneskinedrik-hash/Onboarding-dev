@@ -1,4 +1,4 @@
-const { getSpecializationById } = require('../utils/specializations');
+const { getSpecializationById } = require('../utils/seed-learning-content');
 
 const normalizeText = (value = '') =>
     String(value || '')

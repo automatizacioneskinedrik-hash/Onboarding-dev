@@ -87,9 +87,94 @@ const SPRINT_SPECIALIZATIONS = [
         estimated_hours: 35,
         description: 'Uso de datos y analitica avanzada para toma de decisiones empresariales.',
     },
+    {
+        key: 'arquitectura_analitica_avanzada',
+        specialization_id: 'arquitectura-analitica-avanzada',
+        masters: [DATALAR_ID],
+        title: 'Arquitectura Analitica Avanzada',
+        order: 10,
+        difficulty: 4,
+        estimated_hours: 40,
+        description: 'Diseno, implementacion y gestion de arquitecturas analiticas avanzadas en empresas.',
+    }
 ];
 
 const MTECMBA_SPRINT_TOPICS = {
+    comunicacion: [
+        'Comunicacion para el Liderazgo',
+        'Liderar y Gestionar el Cambio',
+        'Negociacion en los Negocios',
+        'Presentaciones de Alto Impacto',
+        'Oratoria para Negocios',
+        'Comunicacion de Crisis',
+    ],
+    emprendimiento: [
+        'Finanzas para Emprendedores',
+        'Emprendimiento y Planificacion de Negocios',
+        'Gestion de la Innovacion y el Crecimiento',
+        'Estrategias de Precios',
+        'Estrategia Legal y de Propiedad Intelectual',
+        'Estrategias de inversion de capital de riesgo',
+    ],
+    finanzas: [
+        'Finanzas Corporativas Avanzadas',
+        'ESG en la Industria de Servicios Financieros',
+        'Analitica Financiera e Innovacion',
+        'Fondos de Cobertura',
+        'Fusiones y Adquisiciones',
+        'Ecosistemas Fintech y Finanzas Descentralizadas',
+    ],
+    talento: [
+        'Gestion de Equipos',
+        'Gestion del Talento',
+        'Neurociencia del Liderazgo',
+        'Construir relaciones solidas y equipos cohesionados',
+        'Diseno Organizativo y Escalado del Talento',
+        'Gestion del Desempeno y Sistemas de Evaluacion en Entornos Tecnologicos',
+    ],
+    tecnologia: [
+        'Estrategia de Ciberseguridad',
+        'Cloud y DevOps para Directivos',
+        'Blockchain y Activos Digitales',
+        'Internet de las Cosas (IoT) e Industria 4.0',
+        'Arquitecturas Digitales y Plataformas Tecnologicas',
+        'Tecnologias Emergentes Aplicadas a la Empresa',
+    ],
+    ia: [
+        'IA y Deep Learning para Negocios',
+        'IA para la Productividad Empresarial',
+        'Estrategia e Implementacion de Inteligencia Artificial',
+        'Gobernanza, Etica y Regulacion de la IA',
+        'Ingenieria de Prompts para Directivos',
+        'Diseno y Aplicacion de Agentes Inteligentes Generativos en la Empresa',
+    ],
+    mercado_cliente: [
+        'Estrategia de Marketing Avanzada',
+        'Comportamiento del Consumidor',
+        'Vinculacion Digital y Lealtad',
+        'Gestion de la Experiencia de Cliente y Customer Journey',
+        'Analitica Comercial y Toma de Decisiones de Marketing',
+        'Estrategia de Marca y Posicionamiento en Entornos Digitales',
+    ],
+    operaciones: [
+        'Economia Global',
+        'Estrategia de Cadena de Suministro',
+        'Gestion de Riesgos en Cadenas de Suministro',
+        'Analitica de Operaciones',
+        'Economia Circular y Operaciones Sostenibles',
+        'Resiliencia Operativa y Continuidad del Negocio en Entornos Digitales',
+    ],
+    analitica_datos: [
+        'Entorno y Arquitectura para Data Science',
+        'Modelado Predictivo y Machine Learning',
+        'Ingeniería de Datos y Arquitecturas Escalables',
+        'Inteligencia Artificial y Deep Learning Aplicado',
+        'Analítica Estratégica en Áreas Clave del Negocio',
+        'Industrialización de Modelos y MLOps',
+    ],
+};
+
+const MINTEAR_SPRINT_TOPICS = {
     comunicacion: [
         'Comunicacion para el Liderazgo',
         'Liderar y Gestionar el Cambio',
@@ -164,40 +249,63 @@ const MTECMBA_SPRINT_TOPICS = {
     ],
 };
 
-const MINTEAR_SPRINT_TOPICS = {
-    comunicacion: MTECMBA_SPRINT_TOPICS.comunicacion,
-    emprendimiento: MTECMBA_SPRINT_TOPICS.emprendimiento,
-    finanzas: MTECMBA_SPRINT_TOPICS.finanzas,
-    talento: MTECMBA_SPRINT_TOPICS.talento,
-    tecnologia: MTECMBA_SPRINT_TOPICS.tecnologia,
+const DATALAR_SPRINT_TOPICS = {
+    comunicacion: [
+        'Comunicacion para el Liderazgo',
+        'Liderar y Gestionar el Cambio',
+        'Negociacion en los Negocios',
+        'Presentaciones de Alto Impacto',
+        'Oratoria para Negocios',
+        'Comunicacion de Crisis',
+    ],
+    emprendimiento: [
+        'Finanzas para Emprendedores',
+        'Emprendimiento y Planificacion de Negocios',
+        'Gestion de la Innovacion y el Crecimiento',
+        'Estrategias de Precios',
+        'Estrategia Legal y de Propiedad Intelectual',
+        'Estrategias de inversion de capital de riesgo',
+    ],
+    finanzas: [
+        'Finanzas Corporativas Avanzadas',
+        'ESG en la Industria de Servicios Financieros',
+        'Analitica Financiera e Innovacion',
+        'Fondos de Cobertura',
+        'Fusiones y Adquisiciones',
+        'Ecosistemas Fintech y Finanzas Descentralizadas',
+    ],
+    talento: [
+        'Gestion de Equipos',
+        'Gestion del Talento',
+        'Neurociencia del Liderazgo',
+        'Construir relaciones solidas y equipos cohesionados',
+        'Diseno Organizativo y Escalado del Talento',
+        'Gestion del Desempeno y Sistemas de Evaluacion en Entornos Tecnologicos',
+    ],
+    tecnologia: [
+        'Estrategia de Ciberseguridad',
+        'Cloud y DevOps para Directivos',
+        'Blockchain y Activos Digitales',
+        'Internet de las Cosas (IoT) e Industria 4.0',
+        'Arquitecturas Digitales y Plataformas Tecnologicas',
+        'Tecnologias Emergentes Aplicadas a la Empresa',
+    ],
     ia: [
         'IA y Deep Learning para Negocios',
-        'RPA (Robotic Process Automation) e Hiperautomatizacion',
+        'IA para la Productividad Empresarial',
         'Estrategia e Implementacion de Inteligencia Artificial',
-        'Vision Artificial y Reconocimiento de Imagenes',
-        'Arquitectura de Prompts y Evaluacion Sistematica',
-        'Personalizacion de Modelos: Fine-Tuning y RAG Avanzado',
+        'Gobernanza, Etica y Regulacion de la IA',
+        'Ingenieria de Prompts para Directivos',
+        'Diseno y Aplicacion de Agentes Inteligentes Generativos en la Empresa',
     ],
-    mercado_cliente: MTECMBA_SPRINT_TOPICS.mercado_cliente,
-    operaciones: MTECMBA_SPRINT_TOPICS.operaciones,
-    analitica_datos: [
-        'Analitica de datos para directivos',
-        'Machine learning para la toma de decisiones empresariales',
-        'Visualizacion de datos y cuadros de mando ejecutivos',
-        'Analitica predictiva aplicada al negocio',
-        'Gobierno del dato y calidad de la informacion',
-        'Data-Driven management y cultura analitica',
+    mercado_cliente: [
+        'Estrategia de Marketing Avanzada',
+        'Comportamiento del Consumidor',
+        'Vinculacion Digital y Lealtad',
+        'Gestion de la Experiencia de Cliente y Customer Journey',
+        'Analitica Comercial y Toma de Decisiones de Marketing',
+        'Estrategia de Marca y Posicionamiento en Entornos Digitales',
     ],
-};
-
-const DATALAR_SPRINT_TOPICS = {
-    comunicacion: MTECMBA_SPRINT_TOPICS.comunicacion,
-    emprendimiento: MTECMBA_SPRINT_TOPICS.emprendimiento,
-    finanzas: MTECMBA_SPRINT_TOPICS.finanzas,
-    talento: MTECMBA_SPRINT_TOPICS.talento,
-    tecnologia: MTECMBA_SPRINT_TOPICS.tecnologia,
-    ia: MTECMBA_SPRINT_TOPICS.ia,
-    mercado_cliente: MTECMBA_SPRINT_TOPICS.mercado_cliente,
     operaciones: [
         'Economia Global',
         'Estrategia de Cadena de Suministro',
@@ -206,14 +314,7 @@ const DATALAR_SPRINT_TOPICS = {
         'Economia Circular y Operaciones Sostenibles',
         'Resiliencia Operativa y Continuidad del Negocio en Entornos Digitales',
     ],
-    analitica_datos: [
-        'Analitica de datos para directivos',
-        'Machine learning para la toma de decisiones empresariales',
-        'Visualizacion de datos y cuadros de mando ejecutivos',
-        'Analitica predictiva aplicada al negocio',
-        'Gobierno del dato y calidad de la informacion',
-        'Data-Driven management y cultura analitica',
-        'Arquitectura Analitica Avanzada',
+    arquitectura_analitica_avanzada: [
         'Evaluacion Critica de Sistemas Analiticos Complejos',
         'Decision Ejecutiva Bajo Incertidumbre Algoritmica',
         'Gestion de Trade-offs Tecnicos, Financieros y Operativos en IA',
@@ -613,6 +714,7 @@ const LEGACY_SPRINT_TOPIC_PREFIX = {
     mercado_cliente: 'mc',
     operaciones: 'op',
     analitica_datos: 'ad',
+    arquitectura_analitica_avanzada: 'aaa',
 };
 
 const buildSprintTopicId = (masterId, key, order) =>
@@ -620,8 +722,15 @@ const buildSprintTopicId = (masterId, key, order) =>
         ? `topic_${LEGACY_SPRINT_TOPIC_PREFIX[key]}_${order}`
         : `${masterId}_topic_${key}_${order}`;
 
+const isSpecializationEnabledForMaster = (specialization, masterId) =>
+    !Array.isArray(specialization.masters) || specialization.masters.includes(masterId);
+
 const buildSprintContent = (masterId, topicsByKey) => {
-    const modules = SPRINT_SPECIALIZATIONS.map((module) => ({
+    const enabledSpecializations = SPRINT_SPECIALIZATIONS.filter((specialization) =>
+        isSpecializationEnabledForMaster(specialization, masterId)
+    );
+
+    const modules = enabledSpecializations.map((module) => ({
         id: buildSprintModuleId(masterId, module.key),
         master_id: masterId,
         catalog_type: 'sprint',
@@ -633,7 +742,7 @@ const buildSprintContent = (masterId, topicsByKey) => {
         description: module.description,
     }));
 
-    const topics = SPRINT_SPECIALIZATIONS.flatMap((module) =>
+    const topics = enabledSpecializations.flatMap((module) =>
         (topicsByKey[module.key] || []).map((title, index) => ({
             id: buildSprintTopicId(masterId, module.key, index + 1),
             master_id: masterId,
@@ -699,6 +808,191 @@ const topics = [
     ...datalarSprintContent.topics,
 ];
 
+const DEFAULT_MASTER_ID = MTECMBA_ID;
+
+const MASTER_SPRINT_TOPICS = {
+    [MTECMBA_ID]: MTECMBA_SPRINT_TOPICS,
+    [MINTEAR_ID]: MINTEAR_SPRINT_TOPICS,
+    [DATALAR_ID]: DATALAR_SPRINT_TOPICS,
+};
+
+const SPECIALIZATION_METADATA = {
+    comunicacion: {
+        description: 'Desarrolla habilidades de comunicacion estrategica para liderar equipos, cambios y conversaciones de alto impacto.',
+        keywords: ['comunicacion', 'liderazgo', 'presentaciones', 'oratoria', 'negociacion', 'crisis', 'relaciones publicas'],
+    },
+    emprendimiento: {
+        description: 'Fortalece pensamiento emprendedor, crecimiento, pricing y estructuracion de negocios.',
+        keywords: ['emprendimiento', 'startup', 'innovacion', 'pricing', 'venture', 'negocio', 'growth'],
+    },
+    finanzas: {
+        description: 'Profundiza en finanzas corporativas, mercados e innovacion financiera.',
+        keywords: ['finanzas', 'inversion', 'tesoreria', 'contabilidad', 'm&a', 'fintech', 'cfo'],
+    },
+    talento: {
+        description: 'Desarrolla liderazgo humano, diseno organizacional y gestion de equipos.',
+        keywords: ['talento', 'rrhh', 'people', 'liderazgo', 'equipos', 'desempeno', 'cultura'],
+    },
+    tecnologia: {
+        description: 'Amplia criterio ejecutivo sobre arquitectura digital, ciberseguridad y tecnologias emergentes.',
+        keywords: ['tecnologia', 'digital', 'cloud', 'devops', 'blockchain', 'iot', 'ciberseguridad'],
+    },
+    'ia-automatizacion': {
+        description: 'Integra IA, automatizacion y agentes inteligentes con criterio estrategico.',
+        keywords: ['ia', 'inteligencia artificial', 'automatizacion', 'machine learning', 'prompts', 'agentes', 'llm'],
+    },
+    'mercado-cliente': {
+        description: 'Mejora estrategia comercial, experiencia de cliente y posicionamiento de marca.',
+        keywords: ['marketing', 'cliente', 'customer', 'consumidor', 'marca', 'growth', 'lealtad'],
+    },
+    operaciones: {
+        description: 'Fortalece criterio operativo, supply chain, riesgos y sostenibilidad.',
+        keywords: ['operaciones', 'supply chain', 'logistica', 'riesgos', 'procesos', 'coo', 'eficiencia'],
+    },
+    'analitica-datos': {
+        description: 'Convierte datos en decisiones ejecutivas con analitica avanzada y gobierno del dato.',
+        keywords: ['datos', 'analitica', 'data', 'analytics', 'machine learning', 'bi', 'power bi', 'sql'],
+    },
+    'arquitectura-analitica-avanzada': {
+        description: 'Disena y lidera arquitecturas analiticas avanzadas para decisiones estrategicas en escenarios complejos.',
+        keywords: ['arquitectura de datos', 'data architecture', 'gobierno del dato', 'mlops', 'estrategia de datos', 'analytics engineering'],
+    },
+};
+
+const SPECIALIZATION_BY_ID = Object.fromEntries(
+    SPRINT_SPECIALIZATIONS.map((specialization) => [specialization.specialization_id, specialization])
+);
+
+const MODULE_TO_SPECIALIZATION_ID = Object.fromEntries(
+    learningModules
+        .filter((module) => module.catalog_type === 'sprint' && module.specialization_id)
+        .map((module) => [module.id, module.specialization_id])
+);
+
+const normalizeMasterId = (masterId = '') => String(masterId || '').trim().toLowerCase();
+const normalizeText = (value = '') =>
+    String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
+const getTopicsByMasterId = (masterId) =>
+    MASTER_SPRINT_TOPICS[normalizeMasterId(masterId)] || MASTER_SPRINT_TOPICS[DEFAULT_MASTER_ID];
+
+const buildSpecialization = (specializationId, masterId = DEFAULT_MASTER_ID) => {
+    const normalizedMasterId = normalizeMasterId(masterId) || DEFAULT_MASTER_ID;
+    const specialization = SPECIALIZATION_BY_ID[specializationId];
+
+    if (!specialization || !isSpecializationEnabledForMaster(specialization, normalizedMasterId)) {
+        return null;
+    }
+
+    const topicsByMaster = getTopicsByMasterId(normalizedMasterId);
+    const defaultTopicsByMaster = getTopicsByMasterId(DEFAULT_MASTER_ID);
+    const subjects = topicsByMaster[specialization.key] || defaultTopicsByMaster[specialization.key] || [];
+    const metadata = SPECIALIZATION_METADATA[specializationId] || {};
+    const blocks = subjects.map((title, index) => ({
+        id: `${specializationId}-block-${index + 1}`,
+        title,
+        order: index + 1,
+    }));
+
+    return {
+        id: specialization.specialization_id,
+        name: specialization.title.toUpperCase(),
+        description: metadata.description || specialization.description,
+        keywords: Array.isArray(metadata.keywords) ? metadata.keywords : [],
+        masterId: normalizedMasterId,
+        subjects,
+        blocks,
+    };
+};
+
+const getMasterSpecializations = (masterId = DEFAULT_MASTER_ID) => {
+    const normalizedMasterId = normalizeMasterId(masterId) || DEFAULT_MASTER_ID;
+
+    return SPRINT_SPECIALIZATIONS
+        .filter((specialization) => isSpecializationEnabledForMaster(specialization, normalizedMasterId))
+        .map((specialization) => buildSpecialization(specialization.specialization_id, normalizedMasterId))
+        .filter(Boolean);
+};
+
+const getAllSpecializations = (masterId = null) =>
+    getMasterSpecializations(masterId || DEFAULT_MASTER_ID);
+
+const getSpecializationById = (id, masterId = null) =>
+    getAllSpecializations(masterId).find((specialization) => specialization.id === id) || null;
+
+const getSpecializationIdByModuleId = (moduleId) => MODULE_TO_SPECIALIZATION_ID[moduleId] || null;
+
+const getSpecializationNamesForPrompt = (masterId = null) =>
+    getAllSpecializations(masterId)
+        .map(
+            (specialization) =>
+                `- ${specialization.name} (${specialization.id}): ${specialization.blocks
+                    .map((block) => block.title)
+                    .join(' | ')}`
+        )
+        .join('\n');
+
+const findBlockByTitle = ({ title, specializationId = null, masterId = null }) => {
+    const normalizedTitle = normalizeText(title);
+    if (!normalizedTitle) {
+        return null;
+    }
+
+    const specializations = specializationId
+        ? [getSpecializationById(specializationId, masterId)].filter(Boolean)
+        : getAllSpecializations(masterId);
+
+    for (const specialization of specializations) {
+        const block = specialization.blocks.find((item) => normalizeText(item.title) === normalizedTitle);
+
+        if (block) {
+            return {
+                ...block,
+                specializationId: specialization.id,
+                specializationName: specialization.name,
+            };
+        }
+    }
+
+    return null;
+};
+
+const findBlockById = ({ blockId, specializationId = null, masterId = null }) => {
+    if (!blockId) {
+        return null;
+    }
+
+    const specializations = specializationId
+        ? [getSpecializationById(specializationId, masterId)].filter(Boolean)
+        : getAllSpecializations(masterId);
+
+    for (const specialization of specializations) {
+        const block = specialization.blocks.find((item) => item.id === blockId);
+
+        if (block) {
+            return {
+                ...block,
+                specializationId: specialization.id,
+                specializationName: specialization.name,
+            };
+        }
+    }
+
+    return null;
+};
+
+const resolveCatalogBlock = ({ masterId = null, specializationId = null, blockId = null, title = null }) =>
+    findBlockById({ blockId, specializationId, masterId }) ||
+    findBlockByTitle({ title, specializationId, masterId });
+
+const SPECIALIZATIONS = Object.fromEntries(
+    getAllSpecializations(DEFAULT_MASTER_ID).map((specialization) => [specialization.id.toUpperCase(), specialization])
+);
+
 const seedCollection = async (collectionName, docs) => {
     const batch = db.batch();
 
@@ -723,8 +1017,20 @@ const seedLearningContent = async () => {
 };
 
 module.exports = {
+    DEFAULT_MASTER_ID,
     masters: MASTERS,
     learningModules,
     topics,
+    MODULE_TO_SPECIALIZATION_ID,
+    SPECIALIZATIONS,
+    buildSpecialization,
+    getAllSpecializations,
+    getMasterSpecializations,
+    getSpecializationById,
+    getSpecializationIdByModuleId,
+    getSpecializationNamesForPrompt,
+    findBlockByTitle,
+    findBlockById,
+    resolveCatalogBlock,
     seedLearningContent,
 };

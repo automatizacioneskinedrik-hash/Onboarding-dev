@@ -1,5 +1,5 @@
 const { AppError } = require('../services/errors/app-error');
-const { getAllSpecializations, getSpecializationById } = require('../utils/specializations');
+const { getAllSpecializations, getSpecializationById } = require('../utils/seed-learning-content');
 
 const createGenerateRecommendationUseCases = ({ analysisRepo, aiOrchestrator }) => {
     const listSpecializations = async ({ masterId } = {}) => getAllSpecializations(masterId);

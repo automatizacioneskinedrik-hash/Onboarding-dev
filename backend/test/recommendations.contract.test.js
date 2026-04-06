@@ -14,7 +14,7 @@ test('GET /api/recommendations/specializations filters catalog by masterId', asy
     // correcto y no una lista generica mezclada entre masters.
     const iaSpecialization = response.body.data.specializations.find((item) => item.id === 'ia-automatizacion');
     assert.ok(iaSpecialization);
-    assert.match(iaSpecialization.subjects[1], /RPA/);
+    assert.match(iaSpecialization.subjects[1], /IA para la Productividad Empresarial/);
 });
 
 test('GET /api/recommendations/my-recommendation returns latest recommendation', async () => {

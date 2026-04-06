@@ -1,9 +1,9 @@
 const { buildWelcomeAssistantMessage } = require('./chat-welcome-builder');
 const {
-    SPECIALIZATIONS,
+    getAllSpecializations,
     getSpecializationById,
     getSpecializationIdByModuleId,
-} = require('../utils/specializations');
+} = require('../utils/seed-learning-content');
 
 const FALLBACK_SKILL_KEYWORDS = {
     'analitica-datos': ['data', 'datos', 'sql', 'python', 'power bi', 'tableau', 'analytics', 'analitica'],
@@ -15,6 +15,7 @@ const FALLBACK_SKILL_KEYWORDS = {
     'mercado-cliente': ['marketing', 'cliente', 'brand', 'growth', 'producto'],
     operaciones: ['operaciones', 'logistica', 'supply chain', 'procesos'],
     comunicacion: ['comunicacion', 'comms', 'relaciones publicas', 'presentaciones'],
+    'arquitectura-analitica-avanzada': ['arquitectura de datos', 'mlops', 'gobierno del dato', 'data architecture'],
 };
 
 const resolveSpecializationIdFromMatch = (item) =>
@@ -42,7 +43,8 @@ const pickFallbackSpecialization = (profile = {}) => {
         }
     });
 
-    return Object.values(SPECIALIZATIONS).find((item) => item.id === bestId) || Object.values(SPECIALIZATIONS)[0];
+    const specializations = getAllSpecializations();
+    return specializations.find((item) => item.id === bestId) || specializations[0] || null;
 };
 
 const buildFallbackProfile = (cvText = '') => {
@@ -108,9 +110,10 @@ const buildRetrievedCatalogContext = (retrieval) => {
 
 const buildRecommendationFromRetrievalFallback = (profile, retrieval) => {
     const preferredModule = retrieval?.moduleRanking?.[0];
+    const fallbackSpecialization = pickFallbackSpecialization(profile);
     const preferredSpecializationId =
-        resolveSpecializationIdFromMatch(preferredModule) || pickFallbackSpecialization(profile).id;
-    const specialization = getSpecializationById(preferredSpecializationId) || pickFallbackSpecialization(profile);
+        resolveSpecializationIdFromMatch(preferredModule) || fallbackSpecialization?.id || null;
+    const specialization = getSpecializationById(preferredSpecializationId) || fallbackSpecialization;
     const secondarySpecializations = (retrieval?.moduleRanking || [])
         .slice(1, 3)
         .map((item) => resolveSpecializationIdFromMatch(item))
@@ -128,18 +131,18 @@ const buildRecommendationFromRetrievalFallback = (profile, retrieval) => {
     }));
 
     return {
-        primarySpecialization: specialization.name,
-        primarySpecializationId: specialization.id,
+        primarySpecialization: specialization?.name || 'RUTA PERSONALIZADA',
+        primarySpecializationId: specialization?.id || null,
         secondarySpecializations,
         matchScore: preferredModule ? 88 : 78,
         reasoning: preferredModule
-            ? `Se recomienda ${specialization.name} porque tu perfil se alinea con el modulo ${preferredModule.moduleTitle} y con los temas recuperados del catalogo que mejor potencian tu trayectoria actual.`
-            : `Se recomienda ${specialization.name} con base en las senales detectadas en tu perfil.`,
+            ? `Se recomienda ${specialization?.name || 'esta ruta'} porque tu perfil se alinea con el modulo ${preferredModule.moduleTitle} y con los temas recuperados del catalogo que mejor potencian tu trayectoria actual.`
+            : `Se recomienda ${specialization?.name || 'esta ruta'} con base en las senales detectadas en tu perfil.`,
         keyStrengths: (profile.skills || []).slice(0, 3),
         growthAreas: ['Profundizacion tecnica', 'Aplicacion estrategica'],
-        specialization,
-        subjects: specialization.subjects,
-        sprintUrl: specialization.sprintUrl,
+        specialization: specialization || null,
+        subjects: specialization?.subjects || [],
+        sprintUrl: specialization?.sprintUrl || null,
         recommendedCourses,
     };
 };
