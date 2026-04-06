@@ -32,12 +32,12 @@ test('university route planner respects MBA-specific catalog differences', () =>
             planBlocks: [
                 {
                     specializationId: 'ia-automatizacion',
-                    blockTitle: 'IA para la Productividad Empresarial',
+                    blockTitle: 'RPA (Robotic Process Automation) e Hiperautomatizacion',
                 },
             ],
         },
     });
 
     assert.equal(recommendation.planBlocks[0].specializationId, 'ia-automatizacion');
-    assert.match(recommendation.planBlocks[0].blockTitle, /IA para la Productividad Empresarial/);
+    assert.match(recommendation.planBlocks[0].blockTitle, /RPA/);
 });

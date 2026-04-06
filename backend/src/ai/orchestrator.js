@@ -1,5 +1,5 @@
 const { createLogger } = require('../services/observability/logger');
-const { getSpecializationNamesForPrompt } = require('../utils/seed-learning-content');
+const { getSpecializationNamesForPrompt } = require('../utils/specializations');
 const {
     buildFallbackProfile,
     buildChatResponseFallback,

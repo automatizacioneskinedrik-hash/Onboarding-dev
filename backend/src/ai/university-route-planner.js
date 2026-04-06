@@ -2,7 +2,7 @@ const {
     getAllSpecializations,
     getSpecializationById,
     resolveCatalogBlock,
-} = require('../utils/seed-learning-content');
+} = require('../utils/specializations');
 
 const MAX_ROUTE_BLOCKS = 6;
 
@@ -31,7 +31,6 @@ const PRIORITY_BY_MASTER = {
     ],
     'datalar-mba': [
         'analitica-datos',
-        'arquitectura-analitica-avanzada',
         'ia-automatizacion',
         'tecnologia',
         'finanzas',
@@ -141,12 +140,7 @@ const buildFallbackCandidates = ({ profile, masterId }) => {
                 return right.score - left.score;
             }
 
-            const leftPriority = masterPriority.indexOf(left.specialization.id);
-            const rightPriority = masterPriority.indexOf(right.specialization.id);
-            const leftWeight = leftPriority === -1 ? Number.MAX_SAFE_INTEGER : leftPriority;
-            const rightWeight = rightPriority === -1 ? Number.MAX_SAFE_INTEGER : rightPriority;
-
-            return leftWeight - rightWeight;
+            return masterPriority.indexOf(left.specialization.id) - masterPriority.indexOf(right.specialization.id);
         });
 };
 

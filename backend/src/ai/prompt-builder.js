@@ -91,7 +91,7 @@ Responde unicamente con un JSON valido:
   ]
 }
 
-Los IDs validos son unicamente los IDs mostrados arriba en "CATALOGO VALIDO PARA ESTE MBA".`;
+Los IDs validos son: comunicacion, emprendimiento, finanzas, talento, tecnologia, ia-automatizacion, mercado-cliente, operaciones, analitica-datos`;
 
 const buildChatMessages = (
     messages,
