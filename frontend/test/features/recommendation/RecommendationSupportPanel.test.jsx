@@ -7,6 +7,7 @@ describe('RecommendationSupportPanel', () => {
     const baseProps = {
         analysis: null,
         analysisLoading: false,
+        cvImprovementContent: null,
         file: null,
         improvementTips: [],
         isDarkMode: true,
@@ -24,12 +25,11 @@ describe('RecommendationSupportPanel', () => {
     it('shows selection guidance before a master is fully defined', () => {
         render(<RecommendationSupportPanel {...baseProps} />);
 
-        // Sin master activo, el panel debe guiar al siguiente paso en vez de fingir contenido.
         expect(screen.getByText('Selecciona tu MBA')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Abrir seleccion/i })).toBeInTheDocument();
     });
 
-    it('renders profile summary when analysis exists', () => {
+    it('keeps the selected master bar and renders actionable CV guidance when analysis exists', () => {
         render(
             <RecommendationSupportPanel
                 {...baseProps}
@@ -42,13 +42,30 @@ describe('RecommendationSupportPanel', () => {
                         skills: ['Liderazgo', 'Producto'],
                     },
                 }}
-                improvementTips={['Prioriza los sprints de estrategia.']}
+                cvImprovementContent={{
+                    strengths: ['Base tecnica solida', 'Experiencia en entorno tecnologico'],
+                    growthAreas: ['Logros medibles', 'Liderazgo y toma de decisiones'],
+                    recommendedChanges: [
+                        {
+                            title: 'Perfil profesional',
+                            suggestion: 'Orienta la redaccion hacia automatizacion y proyeccion de liderazgo.',
+                        },
+                    ],
+                    narrativeTips: ['Prioriza los sprints de estrategia.'],
+                }}
             />
         );
 
-        // Cuando ya existe analisis, el panel cambia de modo y pasa a resumir perfil + apoyo.
-        expect(screen.getByText(/Resumen del perfil/i)).toBeInTheDocument();
-        expect(screen.getByText(/Consultor/i)).toBeInTheDocument();
-        expect(screen.getByText(/Prioriza los sprints de estrategia/i)).toBeInTheDocument();
+        expect(screen.getByText(/MBA seleccionado/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Cambiar MBA/i })).toBeInTheDocument();
+        expect(screen.getAllByText(/TECH-MBA/i).length).toBeGreaterThan(0);
+        expect(screen.queryByText(/Tu perfil actual/i)).not.toBeInTheDocument();
+        expect(screen.getByText(/Como mejorar tu CV para este MBA/i)).toBeInTheDocument();
+        expect(screen.getByText(/Fortalezas/i)).toBeInTheDocument();
+        expect(screen.getByText(/Lo que debes reforzar/i)).toBeInTheDocument();
+        expect(screen.getByText(/Cambios recomendados/i)).toBeInTheDocument();
+        expect(screen.getByText(/Base tecnica solida/i)).toBeInTheDocument();
+        expect(screen.getByText(/Perfil profesional/i)).toBeInTheDocument();
+        expect(screen.getByText(/automatizacion y proyeccion de liderazgo/i)).toBeInTheDocument();
     });
 });

@@ -6,6 +6,7 @@ import { useChatHistory } from '../../chat';
 import { createChat } from '../../chat/services/chatService';
 import { normalizeAnalysis, useCvAnalysis } from '../../cv-analysis';
 import {
+    buildCvImprovementContent,
     buildImprovementTips,
     getRecommendation,
     getRouteBlocks,
@@ -87,6 +88,17 @@ export const useHomeDashboard = () => {
                 suggestedSubjects,
             }),
         [recommendation, routeBlocks, suggestedSubjects]
+    );
+    const cvImprovementContent = useMemo(
+        () =>
+            buildCvImprovementContent({
+                analysis: activeAnalysis,
+                improvementTips,
+                recommendation,
+                routeBlocks,
+                suggestedSubjects,
+            }),
+        [activeAnalysis, improvementTips, recommendation, routeBlocks, suggestedSubjects]
     );
     const needsMasterSelection = !activeMaster || isChoosingMaster;
     const selectedMasterVisual = getMasterVisual(activeMaster?.id);
@@ -355,6 +367,7 @@ export const useHomeDashboard = () => {
         history,
         historyLoading,
         hoverTooltip,
+        cvImprovementContent,
         improvementTips,
         isDeletingChat,
         isDarkMode,

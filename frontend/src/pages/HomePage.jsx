@@ -12,6 +12,7 @@ const HomePage = () => {
         analysisLoading,
         chatId,
         chatPendingDelete,
+        cvImprovementContent,
         error,
         file,
         history,
@@ -93,6 +94,7 @@ const HomePage = () => {
                                         <RecommendationSupportPanel
                                             analysis={analysis}
                                             analysisLoading={analysisLoading}
+                                            cvImprovementContent={cvImprovementContent}
                                             file={file}
                                             improvementTips={improvementTips}
                                             isDarkMode={isDarkMode}
