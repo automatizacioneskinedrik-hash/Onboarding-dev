@@ -138,7 +138,6 @@ const PerfilPage = () => {
     ).slice(0, 6);
     const profileHighlights = buildProfessionalHighlights(extractedProfile);
     const displaySkills = buildDisplaySkills(extractedProfile);
-    const visibleModules = availableModules.slice(0, 4);
     const visibleLanguages = (extractedProfile.languages || []).map(formatLanguage).filter(Boolean);
 
     return (
@@ -148,7 +147,7 @@ const PerfilPage = () => {
                 <p className="text-sm text-muted">Vista ejecutiva de tu ultimo CV analizado y su ruta asociada.</p>
             </header>
 
-            <div className="rounded-[24px] p-5 shadow-[0_16px_40px_rgba(0,0,0,0.18)]" style={{ backgroundColor: '#2D2926' }}>
+            <div className="rounded-[24px] p-5 shadow-[0_16px_40px_rgba(0,0,0,0.18)]" style={{ backgroundColor: '#25211F' }}>
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex min-w-0 items-center gap-4">
                         <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-2xl font-bold text-white">
@@ -156,8 +155,10 @@ const PerfilPage = () => {
                         </div>
                         <div className="min-w-0">
                             <h2 className="truncate text-2xl font-bold text-white">{extractedProfile.name || 'Perfil analizado'}</h2>
-                            <p className="truncate text-sm font-medium text-white/72">{extractedProfile.currentRole || 'Rol no especificado'}</p>
-                            <p className="mt-1 text-sm text-white/60">
+                            <p className="truncate text-sm font-medium" style={{ color: 'rgba(255,255,255,0.88)' }}>
+                                {extractedProfile.currentRole || 'Rol no especificado'}
+                            </p>
+                            <p className="mt-1 text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>
                                 {extractedProfile.yearsOfExperience || 0} anos de experiencia
                             </p>
                         </div>
@@ -246,19 +247,16 @@ const PerfilPage = () => {
                         </div>
                     )}
 
-                    {visibleModules.length > 0 && (
+                    {availableModules.length > 0 && (
                         <div className="card p-5">
-                            <div className="mb-5 flex items-center justify-between gap-3">
+                            <div className="mb-5">
                                 <h3 className="flex items-center gap-2 text-xl font-bold">
                                     <Briefcase className="text-orange-accent" size={20} />
                                     Modulos MBA
                                 </h3>
-                                {availableModules.length > 4 ? (
-                                    <span className="text-sm font-semibold text-orange-accent">Ver todos</span>
-                                ) : null}
                             </div>
                             <div className="grid gap-3 md:grid-cols-2">
-                                {visibleModules.map((module) => (
+                                {availableModules.map((module) => (
                                     <div key={module.id} className="rounded-2xl border border-dark-border bg-dark-bg/50 px-4 py-4">
                                         <h4 className="font-bold">{module.title}</h4>
                                     </div>
