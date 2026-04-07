@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, ChevronRight, FileText, Loader2, Sparkles, Target, Upload } from 'lucide-react';
+import { ArrowRight, ChevronRight, FileText, Loader2, RefreshCw, Sparkles, Target, Upload } from 'lucide-react';
 import { getMasterDisplayName } from '../../../shared/utils/masters';
 
 const SupportListSection = ({ title, items, isDarkMode, icon: Icon }) => {
@@ -64,29 +64,35 @@ const RecommendedChangesSection = ({ items, isDarkMode }) => {
 
 const SelectedMasterBar = ({ isDarkMode, onChangeMaster, selectedMaster, selectedMasterVisual }) => (
     <div className={`rounded-[20px] border px-4 py-3.5 ${isDarkMode ? 'border-white/10 bg-white/[0.02]' : 'border-stone-200 bg-stone-50/80'}`}>
-        <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
+        <div className="flex w-full items-center justify-between gap-4">
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <p className={`text-[9px] font-bold uppercase tracking-[0.18em] ${isDarkMode ? 'text-white/45' : 'text-stone-500'}`}>
                     MBA seleccionado
                 </p>
-                <div className="mt-2 flex items-center gap-2">
-                    <span
-                        className="inline-flex rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-white"
-                        style={{ backgroundColor: selectedMasterVisual.color }}
-                    >
-                        {getMasterDisplayName(selectedMaster)}
-                    </span>
-                </div>
+                <span
+                    className="inline-flex flex-shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-white"
+                    style={{ backgroundColor: '#50A584' }}
+                >
+                    {getMasterDisplayName(selectedMaster)}
+                </span>
             </div>
             <button
                 onClick={onChangeMaster}
-                className={`inline-flex h-8 flex-shrink-0 items-center rounded-full border px-2.5 text-[8px] font-bold uppercase tracking-[0.14em] transition-all ${
-                    isDarkMode
-                        ? 'border-orange-accent/20 bg-transparent text-orange-accent hover:border-orange-accent/35 hover:bg-orange-accent/10'
-                        : 'border-orange-accent/20 bg-white/60 text-orange-accent hover:border-orange-accent/35 hover:bg-orange-50'
-                }`}
+                className="inline-flex h-8 flex-shrink-0 items-center whitespace-nowrap rounded-full border px-2.5 text-[8px] font-bold uppercase tracking-[0.14em] transition-all"
+                style={{
+                    borderColor: '#EE5522',
+                    color: '#EE5522',
+                    backgroundColor: 'transparent',
+                }}
+                onMouseEnter={(event) => {
+                    event.currentTarget.style.backgroundColor = 'rgba(238, 85, 34, 0.08)';
+                }}
+                onMouseLeave={(event) => {
+                    event.currentTarget.style.backgroundColor = 'transparent';
+                }}
             >
-                Cambiar MBA
+                <span>Cambiar MBA</span>
+                <RefreshCw size={11} className="ml-1.5" />
             </button>
         </div>
     </div>
