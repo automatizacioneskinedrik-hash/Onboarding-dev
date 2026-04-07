@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, CheckCircle, ChevronRight, FileText, Loader2, Sparkles, Target, Upload } from 'lucide-react';
+import { ArrowRight, ChevronRight, FileText, Loader2, Sparkles, Target, Upload } from 'lucide-react';
 import { getMasterDisplayName } from '../../../shared/utils/masters';
 
 const SupportListSection = ({ title, items, isDarkMode, icon: Icon }) => {
@@ -222,13 +222,6 @@ const RecommendationSupportPanel = ({
                 selectedMaster={selectedMaster}
                 selectedMasterVisual={selectedMasterVisual}
             />
-
-            <div className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 ${isDarkMode ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-emerald-500/30 bg-emerald-50'}`}>
-                <CheckCircle size={18} className={isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} />
-                <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${isDarkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>
-                    CV analizado para {getMasterDisplayName(selectedMaster)}
-                </p>
-            </div>
 
             {(supportContent.strengths.length > 0 ||
                 supportContent.growthAreas.length > 0 ||
