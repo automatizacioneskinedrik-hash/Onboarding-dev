@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Briefcase, FileCheck, GraduationCap, Languages, Loader2, User } from 'lucide-react';
+import { Award, Briefcase, Check, FileCheck, GraduationCap, Languages, Loader2, User } from 'lucide-react';
 import { useAuth } from '../features/auth';
 import { useCvAnalysis } from '../features/cv-analysis';
 import { useMasterModules } from '../features/recommendation';
@@ -119,27 +119,22 @@ const PerfilPage = () => {
                     {recommendedRoute.length > 0 && (
                         <div className="card">
                             <h3 className="mb-6 flex items-center gap-3 text-xl font-bold">
-                                <GraduationCap className="text-orange-accent" size={24} />
-                                Ruta recomendada
+                                <span>🔥 Ruta recomendada</span>
                             </h3>
-                            {(recommendation.primarySpecialization || recommendation.reasoning) && (
-                                <div className="mb-4 rounded-xl border border-dark-border bg-dark-bg/50 p-4">
-                                    {recommendation.primarySpecialization ? (
-                                        <p className="mb-1 font-bold text-orange-accent">{recommendation.primarySpecialization}</p>
-                                    ) : null}
-                                    {recommendation.reasoning ? (
-                                        <p className="text-sm leading-relaxed text-dark-text">{recommendation.reasoning}</p>
-                                    ) : null}
-                                </div>
-                            )}
-                            <div className="grid gap-3 md:grid-cols-2">
+                            <div className="grid gap-3 md:grid-cols-3">
                                 {recommendedRoute.map((block, index) => (
-                                    <div key={block.id || block.blockTitle} className="rounded-xl border border-dark-border bg-dark-bg/50 p-4">
-                                        <p className="text-sm font-bold text-dark-text">{block.blockTitle || block.title}</p>
-                                        <p className="mt-1 text-xs text-dark-muted">
-                                            Sprint {index + 1}
-                                            {block.specializationName ? ` - ${block.specializationName}` : ''}
-                                        </p>
+                                    <div
+                                        key={block.id || block.blockTitle}
+                                        className="flex min-h-[84px] items-center gap-3 rounded-2xl px-4 py-4 text-white transition-colors hover:bg-[#84C1C1]"
+                                        style={{ backgroundColor: '#50A584' }}
+                                    >
+                                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/18 text-sm font-bold">
+                                            {index + 1}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-bold">{block.blockTitle || block.title}</p>
+                                        </div>
+                                        <Check size={16} className="flex-shrink-0 text-white" />
                                     </div>
                                 ))}
                             </div>
