@@ -8,26 +8,26 @@ const CHAT_JOURNEY_STAGES = {
 
 const STAGE_CONFIG = {
     [CHAT_JOURNEY_STAGES.SELECT_MASTER]: {
-        label: 'Seleccion de MBA pendiente',
+        label: 'Seleccion de Master pendiente',
         assistantGoals: [
             'Dar una bienvenida calida al sistema.',
-            'Explicar que el flujo comienza seleccionando un MBA.',
+            'Explicar que el flujo comienza seleccionando un Master.',
             'Indicar que despues debe cargar su CV en PDF para generar recomendaciones personalizadas.',
         ],
-        nextStep: 'Invita al usuario a seleccionar el MBA con el que desea trabajar antes de hablar de una ruta personalizada.',
+        nextStep: 'Invita al usuario a seleccionar el Master con el que desea trabajar antes de hablar de una ruta personalizada.',
         starterQuestions: [
             'Como funciona la recomendacion personalizada?',
-            'Que pasa despues de elegir mi MBA?',
+            'Que pasa despues de elegir mi Master?',
             'Que necesito cargar para recibir mi ruta?',
         ],
     },
     [CHAT_JOURNEY_STAGES.UPLOAD_CV]: {
-        label: 'MBA seleccionado, CV pendiente',
+        label: 'Master seleccionado, CV pendiente',
         assistantGoals: [
             'Dar una bienvenida calida al sistema.',
-            'Explicar que el MBA ya esta definido como contexto base.',
+            'Explicar que el Master ya esta definido como contexto base.',
             'Guiar al usuario para subir su CV en PDF y activar el analisis personalizado.',
-            'Responder dudas generales del MBA sin inventar una recomendacion que aun no existe.',
+            'Responder dudas generales del Master sin inventar una recomendacion que aun no existe.',
         ],
         nextStep: 'Invita al usuario a cargar su CV en PDF para analizar su perfil y construir su ruta recomendada.',
         starterQuestions: [
@@ -124,7 +124,7 @@ const buildChatJourneyPromptSection = (journeyContext = {}) => {
 
     return `CONTEXTO DE EXPERIENCIA DEL USUARIO:
 - Etapa actual: ${journeyContext.label || 'No definida'}
-- MBA seleccionado: ${journeyContext.selectedMasterName || 'Sin seleccionar'}
+- Master seleccionado: ${journeyContext.selectedMasterName || 'Sin seleccionar'}
 - CV analizado: ${journeyContext.hasUserProfile ? 'Si' : 'No'}
 - Recomendacion disponible: ${journeyContext.hasRecommendation ? 'Si' : 'No'}
 - Primera interaccion real del usuario: ${journeyContext.shouldSendWelcome ? 'Si' : 'No'}
@@ -139,10 +139,10 @@ PREGUNTAS GUIA SUGERIDAS:
 ${starterQuestions || '1. Como funciona el sistema?'}
 
 REGLAS DE COMPORTAMIENTO:
-- Si es la primera interaccion real del usuario, comienza con una bienvenida calida a LAR University y explica brevemente como funciona la plataforma antes de responder el resto de la consulta.
+- Si es la primera interaccion real del usuario, comienza con una bienvenida calida a LÄR University y explica brevemente como funciona la plataforma antes de responder el resto de la consulta.
 - Si el usuario saluda, pide ayuda general o no sabe por donde empezar, explicale brevemente el flujo de la plataforma.
-- El flujo oficial es: seleccionar MBA, cargar CV en PDF, analizar el perfil y generar recomendaciones personalizadas.
-- Si todavia no existe analisis de CV, puedes resolver dudas generales del sistema o del MBA, pero no inventes una recomendacion personalizada.
+- El flujo oficial es: seleccionar Master, cargar CV en PDF, analizar el perfil y generar recomendaciones personalizadas.
+- Si todavia no existe analisis de CV, puedes resolver dudas generales del sistema o del Master, pero no inventes una recomendacion personalizada.
 - Si ya existe recomendacion, conecta siempre la respuesta con el perfil del usuario y con la ruta sugerida.
 - Cierra cada respuesta con una accion concreta que el usuario pueda hacer dentro del sistema.`;
 };

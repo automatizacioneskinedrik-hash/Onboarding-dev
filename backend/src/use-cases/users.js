@@ -19,7 +19,7 @@ const createUserUseCases = ({ userRepo, statsRepo, masterRepo, catalogRepo }) =>
         const master = masterRepo.getById(masterId);
 
         if (!master) {
-            throw new AppError('MBA no valido.', 400);
+            throw new AppError('Master no valido.', 400);
         }
 
         let modules = [];
@@ -74,7 +74,7 @@ const createUserUseCases = ({ userRepo, statsRepo, masterRepo, catalogRepo }) =>
         const master = masterRepo.getById(masterId);
 
         if (!master) {
-            throw new AppError('MBA no valido.', 400);
+            throw new AppError('Master no valido.', 400);
         }
 
         const currentUser = await userRepo.findById(userId);

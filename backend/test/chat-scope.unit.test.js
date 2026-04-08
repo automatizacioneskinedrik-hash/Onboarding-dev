@@ -12,9 +12,9 @@ const {
     sanitizeMessagesForModel,
 } = require('../src/ai/chat-scope-guard');
 
-test('chat intent classifier allows LAR platform questions', () => {
+test('chat intent classifier allows LÄR platform questions', () => {
     const result = classifyChatIntent({
-        message: 'Como funciona la recomendacion del MBA en LAR University?',
+        message: 'Como funciona la recomendacion del Master en LÄR University?',
     });
 
     assert.equal(result.decision, CHAT_SCOPE_DECISIONS.ALLOW);
@@ -41,13 +41,13 @@ test('chat intent classifier rejects prompt injection attempts', () => {
 
 test('chat intent classifier allows ambiguous follow up when recent context is valid', () => {
     // Permitimos preguntas elipticas solo cuando el contexto reciente ya quedo validado
-    // dentro del dominio de LAR.
+    // dentro del dominio de LÄR.
     const result = classifyChatIntent({
         message: 'Y cual recomiendas?',
         recentMessages: [
             {
                 role: 'user',
-                content: 'Quiero entender mi ruta del MBA',
+                content: 'Quiero entender mi ruta del Master',
                 metadata: {
                     scope: {
                         decision: CHAT_SCOPE_DECISIONS.ALLOW,
@@ -92,5 +92,5 @@ test('sanitizeMessagesForModel removes rejected scope messages from history', ()
 test('buildOutOfScopeResponse redirects back to LAR scope', () => {
     const response = buildOutOfScopeResponse({ reason: 'out_of_scope' });
 
-    assert.match(response, /exclusivamente con temas de LAR University/i);
+    assert.match(response, /exclusivamente con temas de LÄR University/i);
 });

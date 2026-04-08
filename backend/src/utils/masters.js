@@ -1,23 +1,23 @@
 const MASTERS = [
     {
         id: 'mtecmba',
-        code: 'TECH-MBA',
-        name: 'TECH-MBA',
-        description: 'MBA orientado a liderazgo, tecnologia y gestion empresarial.',
+        code: 'TECHMBA',
+        name: 'TECH MBA',
+        description: 'MBA orientado a liderazgo, tecnología y gestion empresarial.',
         isActive: true,
     },
     {
         id: 'mintear',
-        code: 'MINTEAR-MBA',
-        name: 'MINTEAR-MBA',
-        description: 'MBA enfocado en innovacion, tecnologia emergente e inteligencia artificial.',
+        code: 'MINTEAR',
+        name: 'Inteligencia Artificial',
+        description: 'Master enfocado en innovacion, tecnología emergente e inteligencia artificial.',
         isActive: true,
     },
     {
         id: 'datalar-mba',
-        code: 'DATALAR-MBA',
-        name: 'DATALAR-MBA',
-        description: 'MBA centrado en analitica, datos y toma de decisiones empresariales.',
+        code: 'MDATASC',
+        name: 'Data Science',
+        description: 'Master centrado en analítica, datos y toma de decisiones empresariales.',
         isActive: true,
     },
 ];
