@@ -189,14 +189,6 @@ const PerfilPage = () => {
                                 Score {recommendation.matchScore}%
                             </span>
                         ) : null}
-                        {selectedMaster && (
-                            <span
-                                className="inline-flex rounded-full px-4 py-2 text-sm font-bold text-white"
-                                style={{ backgroundColor: '#EE5522' }}
-                            >
-                                {getMasterDisplayName(selectedMaster)}
-                            </span>
-                        )}
                     </div>
                 </div>
             </div>
