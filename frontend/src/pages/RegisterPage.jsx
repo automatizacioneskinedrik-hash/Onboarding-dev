@@ -20,7 +20,7 @@ const RegisterPage = () => {
         event.preventDefault();
 
         if (password !== confirmPassword) {
-            setError('Las contrasenas no coinciden');
+            setError('Las contraseñas no coinciden');
             return;
         }
 
@@ -50,9 +50,9 @@ const RegisterPage = () => {
             heroSubtitle="Comienza tu viaje hacia la elite"
             footer={
                 <p className={`text-[13px] ${isDarkMode ? 'text-stone-400' : 'text-slate-500'}`}>
-                    Ya tienes una cuenta?{' '}
+                    ¿Ya tienes una cuenta?{' '}
                     <Link to="/login" className="font-black text-orange-accent underline-offset-4 hover:underline">
-                        INICIA SESION
+                        INICIA SESIÓN
                     </Link>
                 </p>
             }
@@ -79,7 +79,7 @@ const RegisterPage = () => {
 
                 <div className="space-y-1.5">
                     <label className={`text-[11px] font-black uppercase tracking-[0.22em] ${isDarkMode ? 'text-stone-500' : 'text-slate-400'}`}>
-                        Correo electronico
+                        Correo electrónico
                     </label>
                     <div className="relative">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-accent" size={18} />
@@ -98,7 +98,7 @@ const RegisterPage = () => {
 
                 <div className="space-y-1.5">
                     <label className={`text-[11px] font-black uppercase tracking-[0.22em] ${isDarkMode ? 'text-stone-500' : 'text-slate-400'}`}>
-                        Contrasena
+                        Contraseña
                     </label>
                     <div className="relative">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-accent" size={18} />
@@ -117,7 +117,7 @@ const RegisterPage = () => {
 
                 <div className="space-y-1.5">
                     <label className={`text-[11px] font-black uppercase tracking-[0.22em] ${isDarkMode ? 'text-stone-500' : 'text-slate-400'}`}>
-                        Confirmar contrasena
+                        Confirmar contraseña
                     </label>
                     <div className="relative">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-accent" size={18} />

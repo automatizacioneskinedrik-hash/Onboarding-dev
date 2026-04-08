@@ -65,7 +65,7 @@ const ConfirmDialog = ({
 
                         <div className="min-w-0">
                             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-accent">
-                                Confirmacion
+                                Confirmación
                             </p>
                             <h3
                                 id="confirm-dialog-title"

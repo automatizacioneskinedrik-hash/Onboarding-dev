@@ -105,7 +105,7 @@ const HistorialPage = () => {
                         <h2 className="text-2xl font-black text-white">No se encontraron conversaciones</h2>
                         <div className="space-y-1">
                             <p className="mx-auto max-w-sm text-stone-400">
-                                Parece que aun no has iniciado ninguna charla o no coincide con tu busqueda.
+                                Parece que aún no has iniciado ninguna charla o no coincide con tu busqueda.
                             </p>
                             <p className="text-sm font-bold italic text-orange-accent/80">
                                 Empieza a trazar tu ruta profesional hoy.

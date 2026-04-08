@@ -116,9 +116,9 @@ const PerfilPage = () => {
                     <FileCheck className="text-dark-muted" size={48} />
                 </div>
                 <div>
-                    <h2 className="mb-2 text-2xl font-bold">Aun no hay perfil analizado</h2>
+                    <h2 className="mb-2 text-2xl font-bold">Aún no hay perfil analizado</h2>
                     <p className="mx-auto max-w-md text-dark-muted">
-                        Sube tu curriculum en la pagina de inicio para generar tu perfil profesional con IA.
+                        Sube tu curriculum en la página de inicio para generar tu perfil profesional con IA.
                     </p>
                 </div>
             </div>
@@ -146,7 +146,7 @@ const PerfilPage = () => {
                 <div>
                     <h1 className="mb-2 text-3xl font-bold">Mi Perfil Profesional</h1>
                     <p className="text-sm text-muted">
-                        Informacion extraida de tu ultimo CV analizado y ajustada al Master seleccionado.
+                        Información extraída de tu último CV analizado y ajustada al Master seleccionado.
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-3">
@@ -175,7 +175,7 @@ const PerfilPage = () => {
                                 {extractedProfile.currentRole || 'Rol no especificado'}
                             </p>
                             <p className="mt-1 text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                                {extractedProfile.yearsOfExperience || 0} anos de experiencia
+                                {extractedProfile.yearsOfExperience || 0} años de experiencia
                             </p>
                         </div>
                     </div>
@@ -267,7 +267,7 @@ const PerfilPage = () => {
                         <div className="card">
                             <h3 className="mb-6 flex items-center gap-3 text-xl font-bold">
                                 <Briefcase className="text-orange-accent" size={24} />
-                                Modulos existentes del Master
+                                Módulos existentes del Master
                             </h3>
                             <div className="space-y-4">
                                 {availableModules.map((module) => (
@@ -314,7 +314,7 @@ const PerfilPage = () => {
                             <div className="card p-5">
                                 <h3 className="mb-5 flex items-center gap-2 text-lg font-bold">
                                     <GraduationCap className="text-orange-accent" size={18} />
-                                    Educacion
+                                    Educación
                                 </h3>
                                 <div className="space-y-3">
                                     {extractedProfile.education.map((education, index) => (

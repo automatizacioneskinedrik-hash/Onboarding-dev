@@ -10,7 +10,7 @@ const MASTERS = [
         id: 'mintear',
         code: 'MINTEAR',
         name: 'Inteligencia Artificial',
-        description: 'Master enfocado en innovacion, tecnología emergente e inteligencia artificial.',
+        description: 'Master enfocado en innovación, tecnología emergente e inteligencia artificial.',
         isActive: true,
     },
     {

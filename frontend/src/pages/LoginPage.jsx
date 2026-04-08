@@ -67,7 +67,7 @@ const LoginPage = () => {
             heroSubtitle="Tu tercera via hacia la elite profesional"
             footer={
                 <p className={`text-[13px] ${isDarkMode ? 'text-stone-400' : 'text-slate-500'}`}>
-                    No tienes una cuenta?{' '}
+                    ¿No tienes una cuenta?{' '}
                     <Link to="/register" className="font-black text-orange-accent underline-offset-4 hover:underline">
                         REGISTRATE AQUI
                     </Link>
@@ -97,7 +97,7 @@ const LoginPage = () => {
             <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="space-y-1.5">
                     <label className={`text-[11px] font-black uppercase tracking-[0.22em] ${isDarkMode ? 'text-stone-500' : 'text-slate-400'}`}>
-                        Correo electronico
+                        Correo electrónico
                     </label>
                     <div className="relative">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-accent" size={18} />
@@ -116,7 +116,7 @@ const LoginPage = () => {
 
                 <div className="space-y-1.5">
                     <label className={`text-[11px] font-black uppercase tracking-[0.22em] ${isDarkMode ? 'text-stone-500' : 'text-slate-400'}`}>
-                        Contrasena
+                        Contraseña
                     </label>
                     <div className="relative">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-accent" size={18} />
@@ -148,7 +148,7 @@ const LoginPage = () => {
                         <Loader2 className="animate-spin" size={20} />
                     ) : (
                         <>
-                            <span>INICIAR SESION</span>
+                            <span>INICIAR SESIÓN</span>
                             <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
                         </>
                     )}

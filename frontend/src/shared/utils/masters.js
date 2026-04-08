@@ -35,8 +35,8 @@ const MASTER_SELECTION_THEMES = {
         posterTo: '#264B3D',
         posterFallbackColor: '#95BC88',
         posterImageUrl: HARDCODED_MASTER_POSTERS['mintear'],
-        badge: 'IA e innovacion',
-        headline: 'Disena rutas de innovacion con una vision aplicada al negocio.',
+        badge: 'IA e innovación',
+        headline: 'Diseña rutas de innovación con una visión aplicada al negocio.',
         textureColor: 'rgba(255,255,255,0.22)',
     },
     'datalar-mba': {
@@ -46,7 +46,7 @@ const MASTER_SELECTION_THEMES = {
         posterTo: '#567484',
         posterFallbackColor: '#9FD5D8',
         posterImageUrl: HARDCODED_MASTER_POSTERS['datalar-mba'],
-        badge: 'Analitica ejecutiva',
+        badge: 'Analítica ejecutiva',
         headline: 'Convierte datos, criterio y estrategia en decisiones de alto impacto.',
         textureColor: 'rgba(255,255,255,0.2)',
     },
@@ -58,7 +58,7 @@ const MASTER_SELECTION_THEMES = {
         posterFallbackColor: '#8DB7D9',
         posterImageUrl: HARDCODED_MASTER_POSTERS['mtecmba'],
         badge: 'Liderazgo tech',
-        headline: 'Integra tecnologia, producto y direccion para liderar transformacion.',
+        headline: 'Integra tecnología, producto y dirección para liderar transformación.',
         textureColor: 'rgba(255,255,255,0.18)',
     },
 };

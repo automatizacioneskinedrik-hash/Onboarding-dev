@@ -54,7 +54,7 @@ const buildFallbackProfile = (cvText = '') => {
     const guessedName = firstLine.length > 2 && firstLine.length < 80 ? firstLine : 'Candidato';
     const yearsMatch = cvText.match(/(\d{1,2})\s*(anos|years|a\w+os)/i);
 
-    const skills = ['Comunicacion', 'Trabajo en equipo', 'Resolucion de problemas'];
+    const skills = ['Comunicación', 'Trabajo en equipo', 'Resolución de problemas'];
     const skillHints = ['sql', 'python', 'excel', 'power bi', 'marketing', 'finanzas', 'liderazgo'];
     const lower = cvText.toLowerCase();
     skillHints.forEach((hint) => {
@@ -88,13 +88,13 @@ const buildRetrievedCatalogContext = (retrieval) => {
             const lines = [
                 `Resultado ${index + 1}`,
                 `Tipo: ${match.contentType}`,
-                `Titulo: ${match.title}`,
-                `Modulo: ${match.moduleTitle}`,
+                `Título: ${match.title}`,
+                `Módulo: ${match.moduleTitle}`,
                 `Distancia: ${match.distance ?? 'n/a'}`,
             ];
 
             if (match.description) {
-                lines.push(`Descripcion: ${match.description}`);
+                lines.push(`Descripción: ${match.description}`);
             }
 
             if (match.topics?.length) {
@@ -133,10 +133,10 @@ const buildRecommendationFromRetrievalFallback = (profile, retrieval) => {
         secondarySpecializations,
         matchScore: preferredModule ? 88 : 78,
         reasoning: preferredModule
-            ? `Se recomienda ${specialization.name} porque tu perfil se alinea con el modulo ${preferredModule.moduleTitle} y con los temas recuperados del catalogo que mejor potencian tu trayectoria actual.`
+            ? `Se recomienda ${specialization.name} porque tu perfil se alinea con el módulo ${preferredModule.moduleTitle} y con los temas recuperados del catálogo que mejor potencian tu trayectoria actual.`
             : `Se recomienda ${specialization.name} con base en las senales detectadas en tu perfil.`,
         keyStrengths: (profile.skills || []).slice(0, 3),
-        growthAreas: ['Profundizacion tecnica', 'Aplicacion estrategica'],
+        growthAreas: ['Profundización técnica', 'Aplicación estratégica'],
         specialization,
         subjects: specialization.subjects,
         sprintUrl: specialization.sprintUrl,
@@ -166,14 +166,14 @@ const buildChatResponseFallback = (
     }
 
     if (topCourse) {
-        return `Con base en tu pregunta, el resultado mas relevante es ${topCourse.title}, dentro del modulo ${topCourse.moduleTitle}. Si quieres, te explico por que encaja contigo y que aprenderias alli.`;
+        return `Con base en tu pregunta, el resultado mas relevante es ${topCourse.title}, dentro del módulo ${topCourse.moduleTitle}. Si quieres, te explico por qué encaja contigo y que aprenderías allí.`;
     }
 
     if (!recommendation) {
-        return `Recibido. Ya tengo tu mensaje: "${lastUserMessage}". Para darte una ruta personalizada, adjunta tu hoja de vida en PDF y continuare con el analisis.`;
+        return `Recibido. Ya tengo tu mensaje: "${lastUserMessage}". Para darte una ruta personalizada, adjunta tu hoja de vida en PDF y continuare con el análisis.`;
     }
 
-    return `Gracias por tu mensaje. Con base en tu perfil, tu ruta academica actual combina sprints con foco principal en ${recommendation.primarySpecialization || recommendation.specialization?.name}. Si quieres, te explico por que se eligieron esos 6 sprints y como aplicarlos en tu trabajo.`;
+    return `Gracias por tu mensaje. Con base en tu perfil, tu ruta académica actual combina sprints con foco principal en ${recommendation.primarySpecialization || recommendation.specialization?.name}. Si quieres, te explico por qué se eligieron esos 6 sprints y como aplicarlos en tu trabajo.`;
 };
 
 module.exports = {
