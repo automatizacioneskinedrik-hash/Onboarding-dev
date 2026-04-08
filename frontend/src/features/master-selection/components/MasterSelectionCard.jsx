@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import LazyImage from '../../../shared/ui/LazyImage';
 import {
+    getMasterCardLabel,
     getMasterDescription,
     getMasterDisplayName,
     getMasterSelectionTheme,
@@ -97,9 +98,9 @@ const MasterSelectionCard = ({ master, onSelect, isDarkMode = true }) => {
                     <div className="flex items-start justify-between gap-4">
                         <div>
                             <p className={`text-[10px] font-black uppercase tracking-[0.24em] ${codeClass}`}>
-                                {master.code}
+                                {getMasterCardLabel(master)}
                             </p>
-                            <h3 className="mt-2 max-w-[220px] text-[1.95rem] font-semibold leading-[0.98] tracking-[-0.04em] text-white">
+                            <h3 className="mt-2 max-w-[272px] text-[1.95rem] font-semibold leading-[0.98] tracking-[-0.04em] text-white text-balance">
                                 {getMasterDisplayName(master)}
                             </h3>
                         </div>

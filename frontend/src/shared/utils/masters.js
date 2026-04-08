@@ -1,5 +1,17 @@
 export const normalizeMasterId = (value) => String(value || '').trim().toLowerCase();
 
+const MASTER_DISPLAY_NAMES = {
+    'mintear': 'Máster en Inteligencia Artificial',
+    'datalar-mba': 'Máster en Data Science',
+    'mtecmba': 'Máster en TECH MBA',
+};
+
+const MASTER_CARD_LABELS = {
+    'mintear': 'MINTEAR',
+    'datalar-mba': 'MDATASC',
+    'mtecmba': 'TECHMBA',
+};
+
 const MASTER_ACCENTS = {
     'mtecmba': {
         color: 'rgb(132, 193, 193)',
@@ -65,8 +77,35 @@ const MASTER_SELECTION_THEMES = {
 
 export const getMasterDisplayName = (master) => {
     if (!master) return '';
-    if (typeof master === 'string') return master;
-    return master.code || master.name || master.id || '';
+    if (typeof master === 'string') {
+        return MASTER_DISPLAY_NAMES[normalizeMasterId(master)] || master;
+    }
+
+    return (
+        MASTER_DISPLAY_NAMES[normalizeMasterId(master.id)] ||
+        MASTER_DISPLAY_NAMES[normalizeMasterId(master.code)] ||
+        MASTER_DISPLAY_NAMES[normalizeMasterId(master.name)] ||
+        master.name ||
+        master.code ||
+        master.id ||
+        ''
+    );
+};
+
+export const getMasterCardLabel = (master) => {
+    if (!master) return '';
+    if (typeof master === 'string') {
+        return MASTER_CARD_LABELS[normalizeMasterId(master)] || master;
+    }
+
+    return (
+        MASTER_CARD_LABELS[normalizeMasterId(master.id)] ||
+        MASTER_CARD_LABELS[normalizeMasterId(master.code)] ||
+        master.code ||
+        master.name ||
+        master.id ||
+        ''
+    );
 };
 
 export const getMasterDescription = (master) => {

@@ -64,10 +64,10 @@ const RecommendedChangesSection = ({ items, isDarkMode }) => {
 
 const SelectedMasterBar = ({ isDarkMode, onChangeMaster, selectedMaster, selectedMasterVisual }) => (
     <div className={`rounded-[20px] border px-4 py-3.5 ${isDarkMode ? 'border-white/10 bg-white/[0.02]' : 'border-stone-200 bg-stone-50/80'}`}>
-        <div className="flex w-full flex-col gap-2">
+        <div className="flex w-full flex-col gap-3">
             <div className="flex items-center justify-between gap-4">
                 <p className={`text-[9px] font-bold uppercase tracking-[0.18em] ${isDarkMode ? 'text-white/45' : 'text-stone-500'}`}>
-                    Master seleccionado
+                    MBA seleccionado
                 </p>
                 <button
                     onClick={onChangeMaster}
@@ -88,7 +88,7 @@ const SelectedMasterBar = ({ isDarkMode, onChangeMaster, selectedMaster, selecte
                     <RefreshCw size={11} className="ml-1.5" />
                 </button>
             </div>
-            <div className="flex min-w-0">
+            <div className="flex min-w-0 pt-0.5">
                 <span
                     className="inline-flex w-fit min-w-max flex-shrink-0 items-center justify-center whitespace-nowrap rounded-full px-[14px] py-[6px] text-[10px] font-black uppercase tracking-[0.16em] text-white"
                     style={{ backgroundColor: '#0C5258' }}
@@ -132,7 +132,7 @@ const RecommendationSupportPanel = ({
                 </div>
                 <div className="mt-5 max-w-[240px] space-y-2">
                     <h3 className={`text-[1.05rem] font-black uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
-                        Selecciona tu Master
+                        Selecciona tu MBA
                     </h3>
                     <p className={`text-[11px] uppercase tracking-[0.16em] leading-relaxed ${isDarkMode ? 'text-white/45' : 'text-stone-500'}`}>
                         El panel derecho se convertira en tu area de apoyo cuando definas el contexto.
