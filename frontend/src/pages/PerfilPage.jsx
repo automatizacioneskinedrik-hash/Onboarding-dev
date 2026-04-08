@@ -149,18 +149,6 @@ const PerfilPage = () => {
                         Informacion extraida de tu ultimo CV analizado y ajustada al Master seleccionado.
                     </p>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                    {selectedMaster && (
-                        <span className="rounded-full border border-orange-accent/20 bg-orange-accent/10 px-4 py-2 text-sm font-medium text-orange-accent">
-                            {getMasterDisplayName(selectedMaster)}
-                        </span>
-                    )}
-                    {recommendation.matchScore ? (
-                        <span className="rounded-full border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm font-medium text-green-500">
-                            Score: {recommendation.matchScore}%
-                        </span>
-                    ) : null}
-                </div>
             </header>
 
             <div className="rounded-[24px] p-5 shadow-[0_16px_40px_rgba(0,0,0,0.18)]" style={{ backgroundColor: '#25211F' }}>
