@@ -46,7 +46,7 @@ test('buildWelcomeAssistantMessage explains the platform flow before CV upload',
 
     // El primer mensaje explica el flujo, pero no debe adelantarse a una recomendacion
     // personalizada todavia inexistente.
-    assert.match(message, /Bienvenido a LAR University/);
+    assert.match(message, /Bienvenido a LÄR University/);
     assert.match(message, /carga tu CV en PDF/i);
     assert.match(message, /analizamos tu perfil/i);
 });
@@ -61,8 +61,8 @@ test('buildChatJourneyPromptSection includes stage, flow and behavior rules', ()
 
     // Este texto termina dentro del prompt del chat; si cambia sin control, cambia tambien
     // el comportamiento del asistente.
-    assert.match(promptSection, /Etapa actual: MBA seleccionado, CV pendiente/);
+    assert.match(promptSection, /Etapa actual: Master seleccionado, CV pendiente/);
     assert.match(promptSection, /Primera interaccion real del usuario: Si/);
-    assert.match(promptSection, /seleccionar MBA, cargar CV en PDF, analizar el perfil/i);
+    assert.match(promptSection, /seleccionar Master, cargar CV en PDF, analizar el perfil/i);
     assert.match(promptSection, /no inventes una recomendacion personalizada/i);
 });

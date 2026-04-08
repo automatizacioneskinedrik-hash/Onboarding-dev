@@ -100,7 +100,7 @@ const buildApp = () => {
     app.get('/health', (req, res) => {
         res.status(200).json({
             success: true,
-            message: 'LAR University API is running',
+            message: 'LÄR University API is running',
             timestamp: new Date().toISOString(),
             environment: process.env.NODE_ENV || 'development',
             storage: process.env.USE_FIRESTORE === 'true' ? 'Firestore' : 'In-Memory',

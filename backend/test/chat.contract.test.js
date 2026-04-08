@@ -160,7 +160,7 @@ test('POST /api/chat/:chatId/message rejects out of scope prompts before reachin
 
     assert.equal(response.status, 200);
     assert.match(ssePayload, /data: \{"type":"start"/);
-    assert.match(ssePayload, /LAR University/);
+    assert.match(ssePayload, /LÄR University/);
     assert.doesNotMatch(ssePayload, /"token":"Hola"/);
 });
 
@@ -191,7 +191,7 @@ test('POST /api/chat/:chatId/message uses the selected master for a clean chat a
             });
             res.on('end', () => callback(null, payload));
         })
-        .send({ content: 'Quiero conocer el enfoque del MBA en tecnologia.' });
+        .send({ content: 'Quiero conocer el enfoque del Master en tecnología.' });
 
     const updatedChatResponse = await request
         .get(`/api/chat/${createResponse.body.data.chat.id}`)
