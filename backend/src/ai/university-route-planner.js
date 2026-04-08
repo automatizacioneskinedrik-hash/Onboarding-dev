@@ -8,35 +8,35 @@ const MAX_ROUTE_BLOCKS = 6;
 
 const PRIORITY_BY_MASTER = {
     mtecmba: [
-        'tecnologia',
-        'analitica-datos',
+        'tecnología',
+        'analítica-datos',
         'talento',
-        'comunicacion',
-        'ia-automatizacion',
+        'comunicación',
+        'ia-automatización',
         'operaciones',
         'mercado-cliente',
         'finanzas',
         'emprendimiento',
     ],
     mintear: [
-        'ia-automatizacion',
-        'tecnologia',
-        'analitica-datos',
+        'ia-automatización',
+        'tecnología',
+        'analítica-datos',
         'operaciones',
         'mercado-cliente',
-        'comunicacion',
+        'comunicación',
         'talento',
         'emprendimiento',
         'finanzas',
     ],
     'datalar-mba': [
-        'analitica-datos',
-        'ia-automatizacion',
-        'tecnologia',
+        'analítica-datos',
+        'ia-automatización',
+        'tecnología',
         'finanzas',
         'operaciones',
         'mercado-cliente',
-        'comunicacion',
+        'comunicación',
         'talento',
         'emprendimiento',
     ],
@@ -242,7 +242,7 @@ const buildReasoning = ({ aiReasoning, primarySpecialization, planBlocks }) => {
     }
 
     const visibleBlocks = planBlocks.slice(0, 3).map((block) => block.blockTitle).join(', ');
-    return `Se recomienda una ruta personalizada de 6 sprints con foco principal en ${primarySpecialization.name}. La seleccion combina especializaciones del Master para fortalecer tu perfil con un plan equilibrado y accionable. Los primeros sprints destacados son ${visibleBlocks}.`;
+    return `Se recomienda una ruta personalizada de 6 sprints con foco principal en ${primarySpecialization.name}. La selección combina especializaciones del Master para fortalecer tu perfil con un plan equilibrado y accionable. Los primeros sprints destacados son ${visibleBlocks}.`;
 };
 
 const resolveUniversityRecommendation = ({ profile, masterId, aiRecommendation = {} }) => {

@@ -8,7 +8,7 @@ const CHAT_JOURNEY_STAGES = {
 
 const STAGE_CONFIG = {
     [CHAT_JOURNEY_STAGES.SELECT_MASTER]: {
-        label: 'Seleccion de Master pendiente',
+        label: 'Selección de Master pendiente',
         assistantGoals: [
             'Dar una bienvenida calida al sistema.',
             'Explicar que el flujo comienza seleccionando un Master.',
@@ -16,9 +16,9 @@ const STAGE_CONFIG = {
         ],
         nextStep: 'Invita al usuario a seleccionar el Master con el que desea trabajar antes de hablar de una ruta personalizada.',
         starterQuestions: [
-            'Como funciona la recomendacion personalizada?',
-            'Que pasa despues de elegir mi Master?',
-            'Que necesito cargar para recibir mi ruta?',
+            '¿Cómo funciona la recomendación personalizada?',
+            '¿Qué pasa después de elegir mi Master?',
+            '¿Qué necesito cargar para recibir mi ruta?',
         ],
     },
     [CHAT_JOURNEY_STAGES.UPLOAD_CV]: {
@@ -31,13 +31,13 @@ const STAGE_CONFIG = {
         ],
         nextStep: 'Invita al usuario a cargar su CV en PDF para analizar su perfil y construir su ruta recomendada.',
         starterQuestions: [
-            'Como analizan mi CV?',
-            'Que recomendaciones recibire al subir mi CV?',
-            'Que informacion toma en cuenta la plataforma?',
+            '¿Cómo analizan mi CV?',
+            '¿Qué recomendaciones recibire al subir mi CV?',
+            '¿Qué información toma en cuenta la plataforma?',
         ],
     },
     [CHAT_JOURNEY_STAGES.REVIEW_RECOMMENDATION]: {
-        label: 'CV analizado y recomendacion disponible',
+        label: 'CV analizado y recomendación disponible',
         assistantGoals: [
             'Dar una bienvenida breve y profesional cuando el usuario lo necesite.',
             'Explicar la logica de la ruta recomendada y como se relaciona con el perfil del usuario.',
@@ -46,9 +46,9 @@ const STAGE_CONFIG = {
         ],
         nextStep: 'Invita al usuario a explorar por que se eligieron sus sprints, que priorizar y como aplicar la ruta en su trabajo.',
         starterQuestions: [
-            'Por que me recomendaron esta ruta?',
-            'Que sprint deberia priorizar primero?',
-            'Como aplico esta recomendacion en mi trabajo actual?',
+            '¿Por qué me recomendaron esta ruta?',
+            '¿Qué sprint deberia priorizar primero?',
+            '¿Cómo aplico esta recomendación en mi trabajo actual?',
         ],
     },
 };
@@ -126,8 +126,8 @@ const buildChatJourneyPromptSection = (journeyContext = {}) => {
 - Etapa actual: ${journeyContext.label || 'No definida'}
 - Master seleccionado: ${journeyContext.selectedMasterName || 'Sin seleccionar'}
 - CV analizado: ${journeyContext.hasUserProfile ? 'Si' : 'No'}
-- Recomendacion disponible: ${journeyContext.hasRecommendation ? 'Si' : 'No'}
-- Primera interaccion real del usuario: ${journeyContext.shouldSendWelcome ? 'Si' : 'No'}
+- Recomendación disponible: ${journeyContext.hasRecommendation ? 'Si' : 'No'}
+- Primera interacción real del usuario: ${journeyContext.shouldSendWelcome ? 'Si' : 'No'}
 
 OBJETIVOS DEL ASISTENTE EN ESTA ETAPA:
 ${assistantGoals || '1. Guiar al usuario con claridad y siguiente paso accionable.'}
@@ -136,10 +136,10 @@ SIGUIENTE PASO ESPERADO:
 ${journeyContext.nextStep || 'Invita al usuario a avanzar dentro del flujo principal.'}
 
 PREGUNTAS GUIA SUGERIDAS:
-${starterQuestions || '1. Como funciona el sistema?'}
+${starterQuestions || '1. ¿Cómo funciona el sistema?'}
 
 REGLAS DE COMPORTAMIENTO:
-- Si es la primera interaccion real del usuario, comienza con una bienvenida calida a LÄR University y explica brevemente como funciona la plataforma antes de responder el resto de la consulta.
+- Si es la primera interacción real del usuario, comienza con una bienvenida calida a LÄR University y explica brevemente cómo funciona la plataforma antes de responder el resto de la consulta.
 - Si el usuario saluda, pide ayuda general o no sabe por donde empezar, explicale brevemente el flujo de la plataforma.
 - El flujo oficial es: seleccionar Master, cargar CV en PDF, analizar el perfil y generar recomendaciones personalizadas.
 - Si todavia no existe analisis de CV, puedes resolver dudas generales del sistema o del Master, pero no inventes una recomendacion personalizada.

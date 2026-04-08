@@ -8,14 +8,14 @@ const formatRetrievedCoursesContext = (courses = []) => {
             const lines = [
                 `Resultado ${index + 1}:`,
                 `Tipo: ${course.contentType === 'learning_module' ? 'Modulo' : 'Tema'}`,
-                `Categoria: ${course.catalogType === 'master' ? 'Master' : 'Sprint'}`,
-                `Titulo: ${course.title}`,
-                `Modulo relacionado: ${course.moduleTitle}`,
+                `Categoría: ${course.catalogType === 'master' ? 'Master' : 'Sprint'}`,
+                `Título: ${course.title}`,
+                `Módulo relacionado: ${course.moduleTitle}`,
                 `Distancia estimada: ${course.distance ?? 'n/a'}`,
             ];
 
             if (course.description) {
-                lines.push(`Descripcion: ${course.description}`);
+                lines.push(`Descripción: ${course.description}`);
             }
 
             if (course.difficulty) {
@@ -27,7 +27,7 @@ const formatRetrievedCoursesContext = (courses = []) => {
             }
 
             if (course.topics.length) {
-                lines.push(`Topics del modulo: ${course.topics.join(', ')}`);
+                lines.push(`Topics del módulo: ${course.topics.join(', ')}`);
             }
 
             return lines.join('\n');
