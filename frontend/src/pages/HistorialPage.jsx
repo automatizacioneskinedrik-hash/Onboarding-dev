@@ -76,7 +76,7 @@ const HistorialPage = () => {
             <header className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div>
                     <h1 className="mb-2 text-3xl font-bold">Historial de Consultas</h1>
-                    <p className="text-sm text-muted">Todas tus conversaciones guardadas con el Asistente LAR University</p>
+                    <p className="text-sm text-muted">Todas tus conversaciones guardadas con el Asistente LÄR University</p>
                 </div>
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />

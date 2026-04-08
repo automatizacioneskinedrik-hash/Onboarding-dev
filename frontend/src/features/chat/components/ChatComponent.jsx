@@ -127,7 +127,7 @@ const ChatComponent = ({
                         isDarkMode ? 'text-dark-muted' : 'text-light-muted'
                     }`}
                 >
-                    Sincronizando con LAR AI...
+                    Sincronizando con LÄR AI...
                 </p>
             </div>
         );
@@ -210,7 +210,7 @@ const ChatComponent = ({
                 }`}
             >
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-accent">
-                    Modulos existentes del MBA
+                    Modulos existentes del Master
                 </p>
                 <div className="custom-scrollbar mt-3 min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
                     {moduleListLoading ? (
@@ -239,7 +239,7 @@ const ChatComponent = ({
                         ))
                     ) : (
                         <p className={`text-[11px] leading-relaxed ${isDarkMode ? 'text-white/60' : 'text-stone-500'}`}>
-                            Cuando el MBA tenga modulos cargados, aqui los veras listados.
+                            Cuando el Master tenga modulos cargados, aqui los veras listados.
                         </p>
                     )}
                 </div>

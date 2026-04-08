@@ -59,7 +59,7 @@ const PerfilPage = () => {
                 <div>
                     <h1 className="mb-2 text-3xl font-bold">Mi Perfil Profesional</h1>
                     <p className="text-sm text-muted">
-                        Informacion extraida de tu ultimo CV analizado y ajustada al MBA seleccionado.
+                        Informacion extraida de tu ultimo CV analizado y ajustada al Master seleccionado.
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-3">
@@ -150,7 +150,7 @@ const PerfilPage = () => {
                         <div className="card">
                             <h3 className="mb-6 flex items-center gap-3 text-xl font-bold">
                                 <Briefcase className="text-orange-accent" size={24} />
-                                Modulos existentes del MBA
+                                Modulos existentes del Master
                             </h3>
                             <div className="space-y-4">
                                 {availableModules.map((module) => (

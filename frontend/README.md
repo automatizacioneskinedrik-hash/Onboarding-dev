@@ -1,4 +1,4 @@
-# Frontend LAR University
+# Frontend LÄR University
 
 Frontend React/Vite organizado para crecer de forma incremental hacia una arquitectura `feature-based`.
 

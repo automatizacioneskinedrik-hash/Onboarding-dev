@@ -36,24 +36,12 @@ const Navbar = () => {
                                 }
                             }}
                         >
-                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-accent/10 transition-transform group-hover:scale-110">
-                                <svg viewBox="0 0 100 100" className="h-7 w-7">
-                                    <polygon points="50,20 15,80 85,80" fill="none" stroke="#F05A28" strokeWidth="12" />
-                                    <rect x="42" y="4" width="8" height="8" fill="#F05A28" />
-                                    <rect x="52" y="4" width="8" height="8" fill="#F05A28" />
-                                </svg>
-                            </div>
-                            <div className="flex flex-col">
-                                <span
-                                    className={`text-[1.2rem] font-black leading-none tracking-tighter ${
-                                        isDarkMode ? 'text-white' : 'text-[#1A1A1A]'
-                                    }`}
-                                >
-                                    LAR <span className="text-orange-accent">UNIVERSITY</span>
-                                </span>
-                                <span className="text-[9px] font-black uppercase tracking-[0.25em] text-orange-accent/50">
-                                    ELITE TECH
-                                </span>
+                            <div className="flex h-11 items-center rounded-xl px-2 transition-transform group-hover:scale-[1.02]">
+                                <img
+                                    src={isDarkMode ? '/lar-hub-white.png' : '/lar-hub.svg'}
+                                    alt="LAR Hub"
+                                    className="h-7 w-auto object-contain sm:h-8"
+                                />
                             </div>
                         </div>
                     </div>

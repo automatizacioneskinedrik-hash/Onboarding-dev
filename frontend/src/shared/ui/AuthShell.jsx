@@ -5,13 +5,13 @@ import LazyImage from './LazyImage';
 const HARDCODED_AUTH_BACKGROUND_URL =
     'https://storage.googleapis.com/assets_onboarding/Auth/Image_Login.png';
 
-const BrandMark = () => (
-    <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-accent/10">
-        <svg viewBox="0 0 100 100" className="h-8 w-8" aria-hidden="true">
-            <polygon points="50,20 15,80 85,80" fill="none" stroke="#FF6B35" strokeWidth="10" />
-            <rect x="42" y="4" width="7" height="7" fill="#FF6B35" />
-            <rect x="52" y="4" width="7" height="7" fill="#FF6B35" />
-        </svg>
+const BrandMark = ({ isDarkMode }) => (
+    <div className="mb-4 inline-flex items-center rounded-2xl border border-orange-accent/15 bg-orange-accent/5 px-3 py-2">
+        <img
+            src={isDarkMode ? '/lar-hub-white.png' : '/lar-hub.svg'}
+            alt="LAR Hub"
+            className="h-7 w-auto object-contain sm:h-8"
+        />
     </div>
 );
 
@@ -51,10 +51,7 @@ const AuthShell = ({ isDarkMode, cardTitle, heroSubtitle, children, footer = nul
                 >
                     <div className="w-full max-w-[410px]">
                         <div className="mb-6 text-left">
-                            <BrandMark />
-                            <h1 className={`text-[1.8rem] font-black tracking-tighter sm:text-[2rem] ${isDarkMode ? 'text-white' : 'text-[#181818]'}`}>
-                                LAR <span className="text-orange-accent">UNIVERSITY</span>
-                            </h1>
+                            <BrandMark isDarkMode={isDarkMode} />
                             <p className={`mt-2 max-w-sm text-sm leading-relaxed ${isDarkMode ? 'text-stone-300' : 'text-slate-600'}`}>
                                 {heroSubtitle}
                             </p>

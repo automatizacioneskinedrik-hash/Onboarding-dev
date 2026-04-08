@@ -56,7 +56,7 @@ const AppLayout = () => {
                                 : 'border-light-border bg-white/30 text-light-muted'
                         }`}
                     >
-                        <p>LAR UNIVERSITY 2026</p>
+                        <p>LÄR UNIVERSITY 2026</p>
                     </footer>
                 )}
             </main>
