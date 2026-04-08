@@ -52,7 +52,7 @@ describe('home dashboard helpers', () => {
             masters,
         });
 
-        expect(activeAnalysis.master.code).toBe('TECH MBA');
+        expect(activeAnalysis.master.code).toBe('TECHMBA');
         expect(activeAnalysis.extractedProfile.currentRole).toBe('Consultor');
     });
 
