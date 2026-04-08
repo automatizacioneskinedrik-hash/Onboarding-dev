@@ -1,4 +1,4 @@
-# 🚀 LAR University - Guía de Pruebas de API (Backend)
+# 🚀 LÄR University - Guía de Pruebas de API (Backend)
 
 Esta guía te ayudará a probar todas las funcionalidades del backend sin necesidad de un frontend, usando herramientas como **Postman**, **Insomnia** o simplemente **cURL**.
 

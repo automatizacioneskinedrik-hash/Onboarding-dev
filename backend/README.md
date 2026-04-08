@@ -1,6 +1,6 @@
-# LAR University Backend API
+# LÄR University Backend API
 
-Backend Node.js/Express para analisis de CV, recomendacion de sprints y chat asistido para LAR University.
+Backend Node.js/Express para analisis de CV, recomendacion de sprints y chat asistido para LÄR University.
 
 ## Stack
 

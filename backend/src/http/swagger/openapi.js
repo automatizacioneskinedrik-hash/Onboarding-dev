@@ -1,7 +1,7 @@
 const buildOpenApiSpec = ({ baseUrl = 'http://localhost:5000' } = {}) => ({
     openapi: '3.0.3',
     info: {
-        title: 'LAR University API',
+        title: 'LÄR University API',
         version: '1.0.0',
         description:
             'API para autenticacion, analisis de CV, recomendacion de rutas academicas personalizadas y chat asistido.',
@@ -75,14 +75,14 @@ const buildOpenApiSpec = ({ baseUrl = 'http://localhost:5000' } = {}) => ({
         },
         '/api/users/masters': {
             get: {
-                summary: 'Listar MBAs disponibles',
+                summary: 'Listar Masters disponibles',
                 security: [{ bearerAuth: [] }],
                 responses: { 200: { description: 'Catalogo de masters' } },
             },
         },
         '/api/users/master-modules': {
             get: {
-                summary: 'Listar modulos existentes del MBA',
+                summary: 'Listar modulos existentes del Master',
                 security: [{ bearerAuth: [] }],
                 parameters: [
                     {
@@ -92,12 +92,12 @@ const buildOpenApiSpec = ({ baseUrl = 'http://localhost:5000' } = {}) => ({
                         required: false,
                     },
                 ],
-                responses: { 200: { description: 'Modulos del MBA' } },
+                responses: { 200: { description: 'Modulos del Master' } },
             },
         },
         '/api/users/master': {
             put: {
-                summary: 'Seleccionar MBA',
+                summary: 'Seleccionar Master',
                 security: [{ bearerAuth: [] }],
                 requestBody: {
                     required: true,
@@ -112,7 +112,7 @@ const buildOpenApiSpec = ({ baseUrl = 'http://localhost:5000' } = {}) => ({
                         },
                     },
                 },
-                responses: { 200: { description: 'MBA actualizado' } },
+                responses: { 200: { description: 'Master actualizado' } },
             },
         },
         '/api/cv/upload': {
@@ -174,7 +174,7 @@ const buildOpenApiSpec = ({ baseUrl = 'http://localhost:5000' } = {}) => ({
         },
         '/api/recommendations/specializations': {
             get: {
-                summary: 'Listar especializaciones por MBA',
+                summary: 'Listar especializaciones por Master',
                 parameters: [
                     {
                         name: 'masterId',
@@ -188,7 +188,7 @@ const buildOpenApiSpec = ({ baseUrl = 'http://localhost:5000' } = {}) => ({
         },
         '/api/recommendations/specializations/{id}': {
             get: {
-                summary: 'Detalle de especializacion por MBA',
+                summary: 'Detalle de especializacion por Master',
                 parameters: [
                     {
                         name: 'id',
@@ -241,7 +241,7 @@ const buildSwaggerHtml = () => `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LAR University API Docs</title>
+  <title>LÄR University API Docs</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css" />
 </head>
 <body>

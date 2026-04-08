@@ -1,7 +1,7 @@
 {
   "name": "lar-university-backend",
   "version": "1.0.0",
-  "description": "Backend for LAR University - AI-powered specialization recommender",
+  "description": "Backend for LÄR University - AI-powered specialization recommender",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -15,7 +15,7 @@
     "openai",
     "recommendation"
   ],
-  "author": "LAR University",
+  "author": "LÄR University",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {

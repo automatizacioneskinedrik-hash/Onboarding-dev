@@ -25,7 +25,7 @@ const register = async (req, res, next) => {
 
         return sendSuccess(res, {
             statusCode: 201,
-            message: 'Cuenta creada exitosamente. Bienvenido a LAR University.',
+            message: 'Cuenta creada exitosamente. Bienvenido a LÄR University.',
             data: serializeAuthPayload({
                 usersRepository: getUsersRepository(),
                 ...result,

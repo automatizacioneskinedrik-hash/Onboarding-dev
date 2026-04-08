@@ -242,7 +242,7 @@ const buildReasoning = ({ aiReasoning, primarySpecialization, planBlocks }) => {
     }
 
     const visibleBlocks = planBlocks.slice(0, 3).map((block) => block.blockTitle).join(', ');
-    return `Se recomienda una ruta personalizada de 6 sprints con foco principal en ${primarySpecialization.name}. La seleccion combina especializaciones del MBA para fortalecer tu perfil con un plan equilibrado y accionable. Los primeros sprints destacados son ${visibleBlocks}.`;
+    return `Se recomienda una ruta personalizada de 6 sprints con foco principal en ${primarySpecialization.name}. La seleccion combina especializaciones del Master para fortalecer tu perfil con un plan equilibrado y accionable. Los primeros sprints destacados son ${visibleBlocks}.`;
 };
 
 const resolveUniversityRecommendation = ({ profile, masterId, aiRecommendation = {} }) => {
