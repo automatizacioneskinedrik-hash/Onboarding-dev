@@ -67,7 +67,7 @@ const SelectedMasterBar = ({ isDarkMode, onChangeMaster, selectedMaster, selecte
         <div className="flex w-full items-center justify-between gap-4">
             <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <p className={`text-[9px] font-bold uppercase tracking-[0.18em] ${isDarkMode ? 'text-white/45' : 'text-stone-500'}`}>
-                    MBA seleccionado
+                    Master seleccionado
                 </p>
                 <span
                     className="inline-flex flex-shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-white"
@@ -91,7 +91,7 @@ const SelectedMasterBar = ({ isDarkMode, onChangeMaster, selectedMaster, selecte
                     event.currentTarget.style.backgroundColor = 'transparent';
                 }}
             >
-                <span>Cambiar MBA</span>
+                <span>Cambiar Master</span>
                 <RefreshCw size={11} className="ml-1.5" />
             </button>
         </div>
@@ -130,7 +130,7 @@ const RecommendationSupportPanel = ({
                 </div>
                 <div className="mt-5 max-w-[240px] space-y-2">
                     <h3 className={`text-[1.05rem] font-black uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
-                        Selecciona tu MBA
+                        Selecciona tu Master
                     </h3>
                     <p className={`text-[11px] uppercase tracking-[0.16em] leading-relaxed ${isDarkMode ? 'text-white/45' : 'text-stone-500'}`}>
                         El panel derecho se convertira en tu area de apoyo cuando definas el contexto.
@@ -239,7 +239,7 @@ const RecommendationSupportPanel = ({
                             <Sparkles size={18} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-orange-accent">Como mejorar tu CV para este MBA</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-orange-accent">Como mejorar tu CV para este Master</p>
                             <p className={`mt-1 text-[11px] leading-relaxed ${isDarkMode ? 'text-white/60' : 'text-stone-600'}`}>
                                 Prioriza lo que ya destaca en tu perfil y enfoca tu hoja de vida en senales claras de impacto y proyeccion.
                             </p>

@@ -82,7 +82,7 @@ export const getMasterSelectionTheme = (masterId) =>
         posterTo: '#7A3C2D',
         posterFallbackColor: '#EFA78B',
         posterImageUrl: '',
-        badge: 'Ruta LAR',
+        badge: 'Ruta LÄR',
         headline: 'Explora una experiencia ejecutiva construida para potenciar tu perfil.',
         textureColor: 'rgba(255,255,255,0.2)',
     };

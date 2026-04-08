@@ -12,7 +12,7 @@ const ErrorToast = ({ error }) => {
                 <AlertCircle size={24} className="text-orange-accent" />
             </div>
             <div>
-                <h4 className="mb-1 text-[11px] font-bold uppercase tracking-widest text-orange-accent">Sistema LAR</h4>
+                <h4 className="mb-1 text-[11px] font-bold uppercase tracking-widest text-orange-accent">Sistema LÄR</h4>
                 <p className="text-[12px] font-medium uppercase tracking-wider leading-relaxed opacity-90">{error}</p>
             </div>
         </div>

@@ -109,7 +109,7 @@ export const useHomeDashboard = () => {
     });
 
     // Cambiar de master invalida el archivo seleccionado y el analisis visible porque ambos
-    // dependen del MBA activo.
+    // dependen del Master activo.
     const clearCurrentAnalysis = useCallback(() => {
         setAnalysis(null);
         setFile(null);
@@ -197,7 +197,7 @@ export const useHomeDashboard = () => {
             const response = await selectMaster(masterId);
 
             if (!response.success) {
-                setError(response.message || 'No se pudo seleccionar el MBA.');
+                setError(response.message || 'No se pudo seleccionar el Master.');
                 return;
             }
 
@@ -217,7 +217,7 @@ export const useHomeDashboard = () => {
             clearCurrentAnalysis();
         } catch (selectionError) {
             console.error('Error selecting master:', selectionError);
-            setError(selectionError.response?.data?.message || 'No se pudo seleccionar el MBA.');
+            setError(selectionError.response?.data?.message || 'No se pudo seleccionar el Master.');
         }
     };
 

@@ -63,23 +63,23 @@ const HomeSidebar = ({
                                 isSidebarOpen ? 'gap-2.5 px-1.5 py-1.5 hover:bg-white/[0.04]' : 'justify-center p-1.5 hover:bg-white/[0.04]'
                             }`}
                         >
-                            <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${isDarkMode ? 'bg-white/[0.04]' : 'bg-stone-100/80'}`}>
-                                <svg viewBox="0 0 100 100" className="h-6 w-6">
-                                    <polygon points="50,20 15,80 85,80" fill="none" stroke="#F05A28" strokeWidth="12" />
-                                    <rect x="42" y="4" width="8" height="8" fill="#F05A28" />
-                                    <rect x="52" y="4" width="8" height="8" fill="#F05A28" />
-                                </svg>
+                            <div
+                                className={`flex items-center justify-center rounded-2xl px-2 ${
+                                    isSidebarOpen
+                                        ? isDarkMode
+                                            ? 'h-10 bg-white/[0.04]'
+                                            : 'h-10 bg-stone-100/80'
+                                        : isDarkMode
+                                            ? 'h-10 w-10 bg-white/[0.04]'
+                                            : 'h-10 w-10 bg-stone-100/80'
+                                }`}
+                            >
+                                <img
+                                    src={isDarkMode ? '/lar-hub-white.png' : '/lar-hub.svg'}
+                                    alt="LAR Hub"
+                                    className={`${isSidebarOpen ? 'h-[22px] w-auto max-w-[152px]' : 'h-[18px] w-auto max-w-[28px]'} object-contain`}
+                                />
                             </div>
-                            {isSidebarOpen && (
-                                <div className="min-w-0 leading-none">
-                                    <p className={`truncate text-[0.92rem] font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-[#1A1A1A]'}`}>
-                                        LAR <span className="text-orange-accent">UNIVERSITY</span>
-                                    </p>
-                                    <p className="mt-1 text-[8px] font-black uppercase tracking-[0.18em] text-orange-accent/60">
-                                        Elite Tech
-                                    </p>
-                                </div>
-                            )}
                         </button>
                     </div>
 

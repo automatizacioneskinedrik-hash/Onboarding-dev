@@ -16,7 +16,7 @@ describe('RecommendationSupportPanel', () => {
         onFileChange: vi.fn(),
         onOpenMasterSelection: vi.fn(),
         onUpload: vi.fn(),
-        selectedMaster: { id: 'mtecmba', code: 'TECH-MBA' },
+        selectedMaster: { id: 'mtecmba', code: 'TECHMBA' },
         selectedMasterVisual: { color: '#F05A28' },
         showMasterSelectionModal: false,
         uploading: false,
@@ -56,11 +56,11 @@ describe('RecommendationSupportPanel', () => {
             />
         );
 
-        expect(screen.getByText(/MBA seleccionado/i)).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Cambiar MBA/i })).toBeInTheDocument();
-        expect(screen.getAllByText(/TECH-MBA/i).length).toBeGreaterThan(0);
+        expect(screen.getByText(/Master seleccionado/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Cambiar Master/i })).toBeInTheDocument();
+        expect(screen.getAllByText(/TECHMBA/i).length).toBeGreaterThan(0);
         expect(screen.queryByText(/Tu perfil actual/i)).not.toBeInTheDocument();
-        expect(screen.getByText(/Como mejorar tu CV para este MBA/i)).toBeInTheDocument();
+        expect(screen.getByText(/Como mejorar tu CV para este Master/i)).toBeInTheDocument();
         expect(screen.getByText(/Fortalezas/i)).toBeInTheDocument();
         expect(screen.getByText(/Lo que debes reforzar/i)).toBeInTheDocument();
         expect(screen.getByText(/Cambios recomendados/i)).toBeInTheDocument();

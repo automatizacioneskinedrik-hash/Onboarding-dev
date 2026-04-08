@@ -22,7 +22,7 @@ describe('home dashboard helpers', () => {
 
     it('resolves the active master from the chat context when a chat is open', () => {
         // Con un chat abierto, su contexto debe mandar sobre la seleccion global del perfil.
-        const masters = [{ id: 'mtecmba', code: 'TECH-MBA' }];
+        const masters = [{ id: 'mtecmba', code: 'TECHMBA' }];
         const selectedMaster = { id: 'fallback', code: 'GENERAL' };
 
         expect(
@@ -37,7 +37,7 @@ describe('home dashboard helpers', () => {
 
     it('normalizes the active analysis from the chat context', () => {
         // El dashboard consume analisis del chat y del perfil con el mismo contrato interno.
-        const masters = [{ id: 'mtecmba', code: 'TECH-MBA' }];
+        const masters = [{ id: 'mtecmba', code: 'TECHMBA' }];
 
         const activeAnalysis = resolveActiveAnalysis({
             chatId: 'chat-1',
@@ -52,7 +52,7 @@ describe('home dashboard helpers', () => {
             masters,
         });
 
-        expect(activeAnalysis.master.code).toBe('TECH-MBA');
+        expect(activeAnalysis.master.code).toBe('TECHMBA');
         expect(activeAnalysis.extractedProfile.currentRole).toBe('Consultor');
     });
 

@@ -78,7 +78,7 @@ const MasterSelectionCard = ({ master, onSelect, isDarkMode = true }) => {
                         <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] backdrop-blur-sm ${badgeClass}`}>
                             {theme.badge}
                         </span>
-                        <span className={`text-[3.2rem] font-black uppercase leading-none ${watermarkClass}`}>LAR</span>
+                        <span className={`text-[3.2rem] font-black uppercase leading-none ${watermarkClass}`}>LÄR</span>
                     </div>
 
                     

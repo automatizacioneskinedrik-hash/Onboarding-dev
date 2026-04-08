@@ -52,7 +52,7 @@ export const useCvAnalysis = ({ enabled, masters, selectedMaster } = {}) => {
         }
 
         // Si el usuario cambia de master, invalidamos el analisis visible para no mostrar
-        // recomendaciones de un MBA distinto como si siguieran activas.
+        // recomendaciones de un Master distinto como si siguieran activas.
         if (analysis.masterId !== selectedMaster.id) {
             setAnalysis(null);
         }

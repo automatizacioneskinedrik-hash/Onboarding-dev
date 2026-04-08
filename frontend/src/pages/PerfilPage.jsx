@@ -141,10 +141,26 @@ const PerfilPage = () => {
     const visibleLanguages = (extractedProfile.languages || []).map(formatLanguage).filter(Boolean);
 
     return (
-        <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6 duration-700">
-            <header className="space-y-2">
-                <h1 className="text-3xl font-bold">Mi Perfil Profesional</h1>
-                <p className="text-sm text-muted">Vista ejecutiva de tu ultimo CV analizado y su ruta asociada.</p>
+        <div className="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-700">
+            <header className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                <div>
+                    <h1 className="mb-2 text-3xl font-bold">Mi Perfil Profesional</h1>
+                    <p className="text-sm text-muted">
+                        Informacion extraida de tu ultimo CV analizado y ajustada al Master seleccionado.
+                    </p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                    {selectedMaster && (
+                        <span className="rounded-full border border-orange-accent/20 bg-orange-accent/10 px-4 py-2 text-sm font-medium text-orange-accent">
+                            {getMasterDisplayName(selectedMaster)}
+                        </span>
+                    )}
+                    {recommendation.matchScore ? (
+                        <span className="rounded-full border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm font-medium text-green-500">
+                            Score: {recommendation.matchScore}%
+                        </span>
+                    ) : null}
+                </div>
             </header>
 
             <div className="rounded-[24px] p-5 shadow-[0_16px_40px_rgba(0,0,0,0.18)]" style={{ backgroundColor: '#25211F' }}>
@@ -248,14 +264,12 @@ const PerfilPage = () => {
                     )}
 
                     {availableModules.length > 0 && (
-                        <div className="card p-5">
-                            <div className="mb-5">
-                                <h3 className="flex items-center gap-2 text-xl font-bold">
-                                    <Briefcase className="text-orange-accent" size={20} />
-                                    Modulos MBA
-                                </h3>
-                            </div>
-                            <div className="grid gap-3 md:grid-cols-2">
+                        <div className="card">
+                            <h3 className="mb-6 flex items-center gap-3 text-xl font-bold">
+                                <Briefcase className="text-orange-accent" size={24} />
+                                Modulos existentes del Master
+                            </h3>
+                            <div className="space-y-4">
                                 {availableModules.map((module) => (
                                     <div key={module.id} className="rounded-2xl border border-dark-border bg-dark-bg/50 px-4 py-4">
                                         <h4 className="font-bold">{module.title}</h4>

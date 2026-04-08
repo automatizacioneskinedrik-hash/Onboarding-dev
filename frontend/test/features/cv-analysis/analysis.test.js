@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildCvSummary, normalizeAnalysis } from '../../../src/features/cv-analysis/utils/analysis';
 
 describe('analysis utils', () => {
-    const masters = [{ id: 'mtecmba', code: 'TECH-MBA' }];
+    const masters = [{ id: 'mtecmba', code: 'TECHMBA' }];
 
     it('normalizes backend payload into frontend analysis shape', () => {
         // Protege el adapter que traduce el contrato backend al shape estable que usan
@@ -21,7 +21,7 @@ describe('analysis utils', () => {
             masters
         );
 
-        expect(analysis.master.code).toBe('TECH-MBA');
+        expect(analysis.master.code).toBe('TECHMBA');
         expect(analysis.extractedProfile.currentRole).toBe('Product Manager');
         expect(analysis.recommendation.primarySpecialization).toBe('Strategy');
     });
