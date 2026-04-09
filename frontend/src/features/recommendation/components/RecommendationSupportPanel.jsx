@@ -90,8 +90,13 @@ const SelectedMasterBar = ({ isDarkMode, onChangeMaster, selectedMaster, selecte
             </div>
             <div className="flex min-w-0 pt-0.5">
                 <span
-                    className="inline-flex w-fit min-w-max flex-shrink-0 items-center justify-center whitespace-nowrap rounded-full px-[14px] py-[6px] text-[10px] font-black uppercase tracking-[0.16em] text-white"
-                    style={{ backgroundColor: '#0C5258' }}
+                    className="inline-flex w-full max-w-full items-center justify-center rounded-[18px] px-3 py-2 text-center text-[9px] font-black uppercase tracking-[0.14em] text-white sm:w-fit sm:max-w-[20rem] sm:px-[14px] sm:text-[10px]"
+                    style={{
+                        backgroundColor: '#0C5258',
+                        lineHeight: 1.2,
+                        minHeight: '2.5rem',
+                        wordBreak: 'break-word',
+                    }}
                 >
                     {getMasterDisplayName(selectedMaster)}
                 </span>
