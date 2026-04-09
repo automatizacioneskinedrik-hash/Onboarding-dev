@@ -22,22 +22,22 @@ export const resolveChatJourneyStage = ({
 
 const STAGE_QUESTIONS = {
     [CHAT_JOURNEY_STAGES.SELECT_MASTER]: [
-        'Como funciona la plataforma?',
-        'Que pasa despues de elegir mi Master?',
-        'Que necesito para recibir recomendaciones?',
-        'Como se usa el CV dentro del sistema?',
+        '¿Como funciona la plataforma?',
+        '¿Que pasa despues de elegir mi Master?',
+        '¿Que necesito para recibir recomendaciones?',
+        '¿Como se usa el CV dentro del sistema?',
     ],
     [CHAT_JOURNEY_STAGES.UPLOAD_CV]: [
-        'Como analizan mi CV?',
-        'Que recomendaciones recibire al subir mi CV?',
-        'Que informacion toma en cuenta la plataforma?',
-        'Como se genera mi ruta personalizada?',
+        '¿Como analizan mi CV?',
+        '¿Que recomendaciones recibire al subir mi CV?',
+        '¿Que informacion toma en cuenta la plataforma?',
+        '¿Como se genera mi ruta personalizada?',
     ],
     [CHAT_JOURNEY_STAGES.REVIEW_RECOMMENDATION]: [
-        'Por que me recomendaron esta ruta?',
-        'Que sprint deberia priorizar primero?',
-        'Que sprints encajan mejor con mi perfil?',
-        'Como aprovecho este Master en mi trabajo actual?',
+        '¿Por que me recomendaron esta ruta?',
+        '¿Que sprint deberia priorizar primero?',
+        '¿Que sprints encajan mejor con mi perfil?',
+        '¿Como aprovecho este Master en mi trabajo actual?',
     ],
 };
 

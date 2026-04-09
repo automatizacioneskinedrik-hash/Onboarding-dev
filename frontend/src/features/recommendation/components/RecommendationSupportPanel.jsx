@@ -117,11 +117,63 @@ const RecommendationSupportPanel = ({
     showMasterSelectionModal,
     uploading,
 }) => {
+    const fileInputRef = React.useRef(null);
+    const [isDragOver, setIsDragOver] = React.useState(false);
+
     const supportContent = cvImprovementContent || {
         strengths: [],
         growthAreas: [],
         recommendedChanges: [],
         narrativeTips: improvementTips,
+    };
+
+    const triggerFilePicker = () => {
+        fileInputRef.current?.click();
+    };
+
+    const applyFileSelection = (selectedFile) => {
+        if (!selectedFile) {
+            return;
+        }
+
+        const input = fileInputRef.current;
+        if (!input) {
+            return;
+        }
+
+        try {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(selectedFile);
+            input.files = dataTransfer.files;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch {
+            onFileChange({ target: { files: [selectedFile] } });
+        }
+    };
+
+    const handleDragOver = (event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+    };
+
+    const handleDragEnter = (event) => {
+        event.preventDefault();
+        setIsDragOver(true);
+    };
+
+    const handleDragLeave = (event) => {
+        event.preventDefault();
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+            setIsDragOver(false);
+        }
+    };
+
+    const handleDrop = (event) => {
+        event.preventDefault();
+        setIsDragOver(false);
+
+        const droppedFile = event.dataTransfer.files?.[0];
+        applyFileSelection(droppedFile);
     };
 
     if (needsMasterSelection) {
@@ -144,7 +196,7 @@ const RecommendationSupportPanel = ({
                         onClick={onOpenMasterSelection}
                         className="mt-5 rounded-2xl bg-orange-accent px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:brightness-110"
                     >
-                        Abrir seleccion
+                        Abrir selección
                     </button>
                 )}
             </div>
@@ -156,7 +208,7 @@ const RecommendationSupportPanel = ({
             <div className="flex flex-col items-center justify-center gap-3 py-16">
                 <Loader2 className="animate-spin text-orange-accent" size={28} />
                 <p className={`${isDarkMode ? 'text-white/60' : 'text-stone-500'} text-[10px] uppercase tracking-[0.18em]`}>
-                    Cargando analisis
+                    Cargando análisis
                 </p>
             </div>
         );
@@ -172,16 +224,51 @@ const RecommendationSupportPanel = ({
                     selectedMasterVisual={selectedMasterVisual}
                 />
 
-                <div className={`rounded-[24px] border px-4 py-4 ${isDarkMode ? 'border-white/10 bg-white/[0.02]' : 'border-stone-200 bg-stone-50/80'}`}>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-orange-accent/20 bg-orange-accent/10">
+                <div
+                    className={`relative isolate overflow-visible rounded-[24px] border px-4 py-4 transition-all ${
+                        isDragOver
+                            ? isDarkMode
+                                ? 'border-orange-accent/50 bg-orange-accent/10'
+                                : 'border-orange-accent/50 bg-orange-50/80'
+                            : isDarkMode
+                                ? 'border-white/10 bg-white/[0.02]'
+                                : 'border-stone-200 bg-stone-50/80'
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                >
+                    <div
+                        aria-hidden="true"
+                        className={`pointer-events-none absolute -inset-[3px] -z-10 rounded-[28px] blur-md transition-all duration-300 ${
+                            isDragOver ? 'bg-orange-accent/35 animate-pulse' : isDarkMode ? 'bg-orange-accent/14 animate-pulse' : 'bg-orange-accent/12 animate-pulse'
+                        }`}
+                    />
+                    <div
+                        aria-hidden="true"
+                        className={`pointer-events-none absolute -inset-[8px] -z-20 rounded-[32px] blur-xl transition-all duration-300 ${
+                            isDragOver ? 'bg-orange-accent/25 animate-pulse' : isDarkMode ? 'bg-orange-accent/10 animate-pulse' : 'bg-orange-accent/8 animate-pulse'
+                        }`}
+                        style={{ animationDelay: '250ms' }}
+                    />
+                    <button
+                        type="button"
+                        onClick={triggerFilePicker}
+                        className="flex h-12 w-12 items-center justify-center rounded-2xl border border-orange-accent/20 bg-orange-accent/10 transition-all hover:bg-orange-accent/15"
+                        aria-label="Subir archivo PDF"
+                    >
                         <Upload className="text-orange-accent" size={20} />
-                    </div>
+                    </button>
                     <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.22em] text-orange-accent">Vincular potencial</p>
                     <h3 className={`mt-2 text-[1.15rem] font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
-                        Activa una recomendacion personalizada
+                        Activa una recomendación personalizada
                     </h3>
                     <p className={`mt-2.5 text-[11px] leading-relaxed ${isDarkMode ? 'text-white/60' : 'text-stone-600'}`}>
-                        Sube tu CV para que podamos conectar tu perfil con {getMasterDisplayName(selectedMaster)} y proponerte una ruta mas precisa.
+                        Sube tu CV para que podamos conectar tu perfil con {getMasterDisplayName(selectedMaster)} y proponerte una ruta más precisa.
+                    </p>
+                    <p className={`mt-2 text-[10px] uppercase tracking-[0.14em] ${isDarkMode ? 'text-white/45' : 'text-stone-500'}`}>
+                        Arrastra y suelta tu PDF aquí o haz clic en el ícono.
                     </p>
                 </div>
 
@@ -206,7 +293,7 @@ const RecommendationSupportPanel = ({
                                 <p className="truncate text-[11px]">{file ? file.name : 'Seleccionar archivo'}</p>
                             </div>
                         </div>
-                        <input type="file" className="hidden" accept=".pdf" onChange={onFileChange} />
+                        <input ref={fileInputRef} type="file" className="hidden" accept=".pdf" onChange={onFileChange} />
                         <ArrowRight size={16} className="flex-shrink-0" />
                     </label>
 
@@ -243,7 +330,7 @@ const RecommendationSupportPanel = ({
                         <div>
                             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-orange-accent">Como mejorar tu CV para este Master</p>
                             <p className={`mt-1 text-[11px] leading-relaxed ${isDarkMode ? 'text-white/60' : 'text-stone-600'}`}>
-                                Prioriza lo que ya destaca en tu perfil y enfoca tu hoja de vida en senales claras de impacto y proyeccion.
+                                Prioriza lo que ya destaca en tu perfil y enfoca tu hoja de vida en señales claras de impacto y proyección.
                             </p>
                         </div>
                     </div>
