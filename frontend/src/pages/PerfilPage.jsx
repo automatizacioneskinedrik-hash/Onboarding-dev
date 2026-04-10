@@ -36,15 +36,15 @@ const buildProfessionalHighlights = (profile = {}) => {
     const highlights = [];
 
     if (/(hardware|software|integr)/.test(haystack)) {
-        highlights.push('Experiencia en integraciÃ³n hardware/software');
+        highlights.push('Experiencia en integración hardware/software');
     }
 
     if (/(crm|automat|digital)/.test(haystack)) {
-        highlights.push('AutomatizaciÃ³n con CRM y herramientas digitales');
+        highlights.push('Automatización con CRM y herramientas digitales');
     }
 
     if (/(python|javascript|program|soporte|support)/.test(haystack)) {
-        highlights.push('ProgramaciÃ³n y soporte tÃ©cnico');
+        highlights.push('Programación y soporte técnico');
     }
 
     if (!highlights.length && profile.currentRole) {
@@ -56,7 +56,7 @@ const buildProfessionalHighlights = (profile = {}) => {
     }
 
     if (highlights.length < 3 && profile.yearsOfExperience) {
-        highlights.push(`${profile.yearsOfExperience} aÃ±os de experiencia profesional`);
+        highlights.push(`${profile.yearsOfExperience} años de experiencia profesional`);
     }
 
     return [...new Set(highlights)].slice(0, 3);
@@ -65,9 +65,9 @@ const buildProfessionalHighlights = (profile = {}) => {
 const SKILL_MAPPINGS = [
     {
         match: /(hardware|software|integr)/,
-        label: 'IntegraciÃ³n HW/SW',
+        label: 'Integración HW/SW',
         level: 92,
-        caption: 'Arquitectura e integraciÃ³n',
+        caption: 'Arquitectura e integración',
         barColor: '#0C5258',
         tone: { backgroundColor: '#DCEBED', color: '#0C5258' },
     },
@@ -75,15 +75,15 @@ const SKILL_MAPPINGS = [
         match: /crm/,
         label: 'CRM',
         level: 84,
-        caption: 'OperaciÃ³n comercial',
+        caption: 'Operación comercial',
         barColor: '#EE5522',
         tone: { backgroundColor: '#FCE6DE', color: '#EE5522' },
     },
     {
         match: /automat/,
-        label: 'AutomatizaciÃ³n',
+        label: 'Automatización',
         level: 88,
-        caption: 'OptimizaciÃ³n de procesos',
+        caption: 'Optimización de procesos',
         barColor: '#50A584',
         tone: { backgroundColor: '#E6F3EE', color: '#50A584' },
     },
@@ -91,7 +91,7 @@ const SKILL_MAPPINGS = [
         match: /javascript|java script|\bjs\b/,
         label: 'JavaScript',
         level: 78,
-        caption: 'Stack tÃ©cnico',
+        caption: 'Stack técnico',
         barColor: '#8E6C00',
         tone: { backgroundColor: '#F3EED9', color: '#8E6C00' },
     },
@@ -99,7 +99,7 @@ const SKILL_MAPPINGS = [
         match: /python/,
         label: 'Python',
         level: 80,
-        caption: 'AnÃ¡lisis y automatizaciÃ³n',
+        caption: 'Análisis y automatización',
         barColor: '#2E5B9A',
         tone: { backgroundColor: '#E3EDF8', color: '#2E5B9A' },
     },
@@ -107,7 +107,7 @@ const SKILL_MAPPINGS = [
         match: /soporte|support/,
         label: 'Soporte',
         level: 72,
-        caption: 'OperaciÃ³n y continuidad',
+        caption: 'Operación y continuidad',
         barColor: '#2D2926',
         tone: { backgroundColor: '#ECE8E4', color: '#2D2926' },
     },
@@ -139,7 +139,7 @@ const summarizeExperience = (experience = {}) => {
     if (/crm/.test(haystack)) tags.push('CRM');
     if (/(hardware|software|integr)/.test(haystack)) tags.push('Integraciones');
     if (/(dashboard|analit|data|datos)/.test(haystack)) tags.push('Dashboards');
-    if (/(automat|process|proceso)/.test(haystack)) tags.push('AutomatizaciÃ³n');
+    if (/(automat|process|proceso)/.test(haystack)) tags.push('Automatización');
     if (!tags.length && experience.description) tags.push(experience.description.split(/[,.]/)[0].trim());
 
     return tags.slice(0, 3).join(' + ');
@@ -174,9 +174,9 @@ const PerfilPage = () => {
                     <FileCheck className="text-dark-muted" size={48} />
                 </div>
                 <div>
-                    <h2 className="mb-2 text-2xl font-bold">AÃºn no hay perfil analizado</h2>
+                    <h2 className="mb-2 text-2xl font-bold">Aún no hay perfil analizado</h2>
                     <p className="mx-auto max-w-md text-dark-muted">
-                        Sube tu currÃ­culum en la pÃ¡gina de inicio para generar tu perfil profesional con IA.
+                        Sube tu currículum en la página de inicio para generar tu perfil profesional con IA.
                     </p>
                 </div>
             </div>
@@ -197,7 +197,7 @@ const PerfilPage = () => {
     const profileHighlights = buildProfessionalHighlights(extractedProfile);
     const displaySkills = buildDisplaySkills(extractedProfile);
     const visibleLanguages = (extractedProfile.languages || []).map(formatLanguage).filter(Boolean);
-    const masterDisplayName = getMasterDisplayName(selectedMaster || resolvedMasterId) || 'MÃ¡ster seleccionado';
+    const masterDisplayName = getMasterDisplayName(selectedMaster || resolvedMasterId) || 'Máster seleccionado';
     const scoreValue = Number(recommendation.matchScore || 0);
     const scoreLabel =
         scoreValue >= 85 ? 'Alta compatibilidad' : scoreValue >= 70 ? 'Buen encaje' : 'Potencial de crecimiento';
@@ -205,7 +205,7 @@ const PerfilPage = () => {
     const visibleProfileTags = [
         masterDisplayName,
         extractedProfile.industry,
-        extractedProfile.yearsOfExperience ? `${extractedProfile.yearsOfExperience} aÃ±os de experiencia` : null,
+        extractedProfile.yearsOfExperience ? `${extractedProfile.yearsOfExperience} años de experiencia` : null,
     ]
         .filter(Boolean)
         .slice(0, 3);
@@ -217,7 +217,7 @@ const PerfilPage = () => {
                     <p className="profile-section-kicker">PERFIL PROFESIONAL</p>
                     <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Mi perfil profesional</h1>
                     <p className="mt-2 max-w-3xl text-sm text-dark-muted">
-                        InformaciÃ³n extraÃ­da de tu Ãºltimo CV analizado y alineada con el mÃ¡ster seleccionado.
+                        Información extraída de tu último CV analizado y alineada con el máster seleccionado.
                     </p>
                 </div>
 
@@ -278,7 +278,7 @@ const PerfilPage = () => {
                                 <p className="profile-section-kicker">FORTALEZAS CLAVE</p>
                                 <h3 className="mt-2 text-xl font-bold text-[#16110F]">Tu perfil destaca en</h3>
                                 <p className="mt-1 text-sm text-slate-500">
-                                    Puntos del CV que hoy generan mejor percepciÃ³n de valor.
+                                    Puntos del CV que hoy generan mejor percepción de valor.
                                 </p>
                             </div>
 
@@ -303,7 +303,7 @@ const PerfilPage = () => {
                                 <p className="profile-section-kicker">SKILL SIGNALS</p>
                                 <h3 className="mt-2 text-xl font-bold text-[#16110F]">Habilidades destacadas</h3>
                                 <p className="mt-1 text-sm text-slate-500">
-                                    Lectura visual de las capacidades mÃ¡s visibles en tu perfil actual.
+                                    Lectura visual de las capacidades más visibles en tu perfil actual.
                                 </p>
                             </div>
 
@@ -366,8 +366,8 @@ const PerfilPage = () => {
                                         <p className="text-sm text-dark-muted">{experience.company}</p>
                                         <p className="mt-1 text-sm font-medium text-dark-text">
                                             {summarizeExperience(experience)
-                                                ? `â†’ ${summarizeExperience(experience)}`
-                                                : 'â†’ Experiencia aplicada'}
+                                                ? `→ ${summarizeExperience(experience)}`
+                                                : '→ Experiencia aplicada'}
                                         </p>
                                     </div>
                                 ))}
@@ -379,7 +379,7 @@ const PerfilPage = () => {
                         <div className="card p-5">
                             <h3 className="mb-5 flex items-center gap-2 text-lg font-bold">
                                 <GraduationCap className="text-orange-accent" size={18} />
-                                EducaciÃ³n
+                                Educación
                             </h3>
                             <div className="space-y-3">
                                 {extractedProfile.education.map((education, index) => (
@@ -417,7 +417,7 @@ const PerfilPage = () => {
                                         Ruta recomendada
                                     </h3>
                                     <p className="mt-1 text-sm text-slate-500">
-                                        Secuencia visual para recorrer tu recomendaciÃ³n de forma clara.
+                                        Secuencia visual para recorrer tu recomendación de forma clara.
                                     </p>
                                 </div>
                             </div>
@@ -452,17 +452,17 @@ const PerfilPage = () => {
                         <div className="profile-premium-card p-6">
                             <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                                 <div>
-                                    <p className="profile-section-kicker">CATÃLOGO BASE</p>
+                                    <p className="profile-section-kicker">CATÁLOGO BASE</p>
                                     <h3 className="mt-2 flex items-center gap-2 text-xl font-bold text-[#16110F]">
                                         <Briefcase className="text-[#F45A22]" size={20} />
-                                        MÃ³dulos existentes del MÃ¡ster
+                                        Módulos existentes del Máster
                                     </h3>
                                     <p className="mt-1 text-sm text-slate-500">
                                         Contenido actualmente disponible en {masterDisplayName}.
                                     </p>
                                 </div>
 
-                                <span className="profile-neutral-chip">{availableModules.length} mÃ³dulos</span>
+                                <span className="profile-neutral-chip">{availableModules.length} módulos</span>
                             </div>
 
                             <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -471,7 +471,7 @@ const PerfilPage = () => {
                                         <div className="flex items-start justify-between gap-3">
                                             <div>
                                                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                                                    MÃ³dulo {index + 1}
+                                                    Módulo {index + 1}
                                                 </p>
                                                 <h4 className="mt-2 text-base font-bold text-[#16110F]">{module.title}</h4>
                                             </div>
