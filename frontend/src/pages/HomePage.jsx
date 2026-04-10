@@ -13,27 +13,31 @@ const onboardingSteps = [
         target: '[data-tour="selected-master"]',
         content: 'Aqu\u00ed ves el m\u00e1ster activo con el que se personalizar\u00e1 tu ruta.',
         placement: 'left',
-        disableBeacon: true,
+        skipBeacon: true,
     },
     {
         target: '[data-tour="upload-pdf"]',
         content: 'Sube tu CV aqu\u00ed para que podamos analizar tu perfil.',
         placement: 'left',
+        skipBeacon: true,
     },
     {
         target: '[data-tour="analyze-cv"]',
         content: 'Haz clic aqu\u00ed para generar tu an\u00e1lisis personalizado.',
         placement: 'left',
+        skipBeacon: true,
     },
     {
         target: '[data-tour="chat-panel"]',
         content: 'Aqu\u00ed aparecer\u00e1 tu an\u00e1lisis, recomendaciones y podr\u00e1s conversar con el asistente.',
         placement: 'auto',
+        skipBeacon: true,
     },
     {
         target: '[data-tour="history-sidebar"]',
         content: 'Aqu\u00ed podr\u00e1s retomar consultas anteriores.',
         placement: 'right',
+        skipBeacon: true,
     },
 ];
 
@@ -68,7 +72,13 @@ const HomePage = () => {
     } = useHomeDashboard();
     const [runOnboarding, setRunOnboarding] = React.useState(false);
     const [onboardingReady, setOnboardingReady] = React.useState(false);
-    const isNewUser = history.length === 0 && !analysis;
+    const isNewUser = history.length === 0;
+    const canAutoStartOnboarding =
+        onboardingReady &&
+        isNewUser &&
+        Boolean(selectedMaster?.id) &&
+        !needsMasterSelection &&
+        !showMasterSelectionModal;
 
     React.useEffect(() => {
         if (historyLoading || analysisLoading) {
@@ -83,35 +93,40 @@ const HomePage = () => {
             return;
         }
 
-        if (!onboardingReady) {
+        if (!canAutoStartOnboarding) {
             return;
         }
 
-        const hasSeenOnboarding = window.localStorage.getItem(ONBOARDING_STORAGE_KEY);
-        if (hasSeenOnboarding === 'true') {
-            return;
-        }
-
-        if (!isNewUser) {
-            return;
-        }
-
-        if (needsMasterSelection || showMasterSelectionModal) {
+        if (window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true') {
             return;
         }
 
         if (!isSidebarOpen) {
             actions.setIsSidebarOpen(true);
         }
+    }, [actions, canAutoStartOnboarding, isSidebarOpen]);
+
+    React.useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        if (!canAutoStartOnboarding || !isSidebarOpen || runOnboarding) {
+            return;
+        }
+
+        if (window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true') {
+            return;
+        }
 
         const timerId = window.setTimeout(() => {
             setRunOnboarding(true);
-        }, 250);
+        }, 450);
 
         return () => {
             window.clearTimeout(timerId);
         };
-    }, [actions, isNewUser, isSidebarOpen, needsMasterSelection, onboardingReady, showMasterSelectionModal]);
+    }, [canAutoStartOnboarding, isSidebarOpen, runOnboarding]);
 
     const handleOnboardingCallback = React.useCallback((data) => {
         const status = data?.status;
@@ -120,14 +135,6 @@ const HomePage = () => {
             setRunOnboarding(false);
         }
     }, []);
-
-    const handleOpenOnboarding = React.useCallback(() => {
-        if (!isSidebarOpen) {
-            actions.setIsSidebarOpen(true);
-        }
-
-        setRunOnboarding(true);
-    }, [actions, isSidebarOpen]);
 
     return (
         <div
@@ -207,20 +214,6 @@ const HomePage = () => {
             <div className="flex min-w-0 flex-1 overflow-hidden">
                 <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
                     <div className="flex-1 min-h-0 overflow-hidden px-3 pb-3 pt-2 sm:px-4 sm:pt-3 xl:px-5 xl:pt-4">
-                        <div className="mb-3 flex justify-end">
-                            <button
-                                type="button"
-                                onClick={handleOpenOnboarding}
-                                className={`rounded-2xl border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] transition-all ${
-                                    isDarkMode
-                                        ? 'border-orange-accent/30 bg-white/[0.03] text-orange-accent hover:bg-orange-accent/10'
-                                        : 'border-orange-accent/25 bg-white/80 text-orange-accent hover:bg-orange-50'
-                                }`}
-                            >
-                                Ver guÃ­a
-                            </button>
-                        </div>
-
                         <div className="grid h-full min-h-0 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-0">
                             <div
                                 className={`min-h-0 overflow-hidden rounded-[28px] border shadow-[0_18px_60px_rgba(0,0,0,0.22)] ${
