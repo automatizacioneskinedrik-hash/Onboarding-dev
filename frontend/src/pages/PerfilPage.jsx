@@ -481,15 +481,11 @@ const PerfilPage = () => {
                                             </span>
                                         </div>
 
-                                        {(module.topics || []).length > 0 && (
-                                            <div className="mt-4 flex flex-wrap gap-2">
-                                                {module.topics.slice(0, 3).map((topic) => (
-                                                    <span key={topic} className="profile-neutral-chip">
-                                                        {topic}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
+                                        {module.description ? (
+                                            <p className="mt-4 text-sm leading-6 text-slate-500">
+                                                {module.description}
+                                            </p>
+                                        ) : null}
                                     </article>
                                 ))}
                             </div>
