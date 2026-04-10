@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-    ArrowRight,
     Award,
     Briefcase,
     CheckCircle2,
@@ -350,7 +349,7 @@ const PerfilPage = () => {
                 <div className="space-y-6 lg:col-span-2">
                     {recommendedRoute.length > 0 && (
                         <div className="profile-premium-card p-6">
-                            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                            <div className="flex flex-col gap-3">
                                 <div>
                                     <p className="profile-section-kicker">ROADMAP SUGERIDO</p>
                                     <h3 className="mt-2 flex items-center gap-2 text-xl font-bold text-[#16110F]">
@@ -362,9 +361,6 @@ const PerfilPage = () => {
                                     </p>
                                 </div>
 
-                                {recommendation.primarySpecialization ? (
-                                    <span className="profile-neutral-chip">{recommendation.primarySpecialization}</span>
-                                ) : null}
                             </div>
 
                             <div className="mt-6 space-y-4">
@@ -387,8 +383,6 @@ const PerfilPage = () => {
                                                 Sprint {index + 1} de tu hoja de ruta recomendada.
                                             </p>
                                         </div>
-
-                                        <ArrowRight size={18} className="hidden text-slate-400 md:block" />
                                     </div>
                                 ))}
                             </div>
