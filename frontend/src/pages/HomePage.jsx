@@ -1,9 +1,41 @@
 import React from 'react';
+import { Joyride, STATUS } from 'react-joyride';
 import { ChatComponent } from '../features/chat';
 import { ErrorToast, HomeSidebar, SidebarTooltip, useHomeDashboard } from '../features/home-dashboard';
 import { MasterSelectionModal } from '../features/master-selection';
 import { RecommendationSupportPanel } from '../features/recommendation';
 import ConfirmDialog from '../shared/ui/ConfirmDialog';
+
+const ONBOARDING_STORAGE_KEY = 'lar_onboarding_seen';
+
+const onboardingSteps = [
+    {
+        target: '[data-tour="selected-master"]',
+        content: 'Aqu\u00ed ves el m\u00e1ster activo con el que se personalizar\u00e1 tu ruta.',
+        placement: 'left',
+        disableBeacon: true,
+    },
+    {
+        target: '[data-tour="upload-pdf"]',
+        content: 'Sube tu CV aqu\u00ed para que podamos analizar tu perfil.',
+        placement: 'left',
+    },
+    {
+        target: '[data-tour="analyze-cv"]',
+        content: 'Haz clic aqu\u00ed para generar tu an\u00e1lisis personalizado.',
+        placement: 'left',
+    },
+    {
+        target: '[data-tour="chat-panel"]',
+        content: 'Aqu\u00ed aparecer\u00e1 tu an\u00e1lisis, recomendaciones y podr\u00e1s conversar con el asistente.',
+        placement: 'auto',
+    },
+    {
+        target: '[data-tour="history-sidebar"]',
+        content: 'Aqu\u00ed podr\u00e1s retomar consultas anteriores.',
+        placement: 'right',
+    },
+];
 
 const HomePage = () => {
     const {
@@ -34,6 +66,68 @@ const HomePage = () => {
         uploading,
         actions,
     } = useHomeDashboard();
+    const [runOnboarding, setRunOnboarding] = React.useState(false);
+    const [onboardingReady, setOnboardingReady] = React.useState(false);
+    const isNewUser = history.length === 0 && !analysis;
+
+    React.useEffect(() => {
+        if (historyLoading || analysisLoading) {
+            return;
+        }
+
+        setOnboardingReady(true);
+    }, [analysisLoading, historyLoading]);
+
+    React.useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        if (!onboardingReady) {
+            return;
+        }
+
+        const hasSeenOnboarding = window.localStorage.getItem(ONBOARDING_STORAGE_KEY);
+        if (hasSeenOnboarding === 'true') {
+            return;
+        }
+
+        if (!isNewUser) {
+            return;
+        }
+
+        if (needsMasterSelection || showMasterSelectionModal) {
+            return;
+        }
+
+        if (!isSidebarOpen) {
+            actions.setIsSidebarOpen(true);
+        }
+
+        const timerId = window.setTimeout(() => {
+            setRunOnboarding(true);
+        }, 250);
+
+        return () => {
+            window.clearTimeout(timerId);
+        };
+    }, [actions, isNewUser, isSidebarOpen, needsMasterSelection, onboardingReady, showMasterSelectionModal]);
+
+    const handleOnboardingCallback = React.useCallback((data) => {
+        const status = data?.status;
+        if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+            window.localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
+            setRunOnboarding(false);
+        }
+    }, []);
+
+    const handleOpenOnboarding = React.useCallback(() => {
+        if (!isSidebarOpen) {
+            actions.setIsSidebarOpen(true);
+        }
+
+        setRunOnboarding(true);
+    }, [actions, isSidebarOpen]);
 
     return (
         <div
@@ -41,6 +135,56 @@ const HomePage = () => {
                 isDarkMode ? 'bg-transparent' : 'bg-light-bg'
             }`}
         >
+            <Joyride
+                steps={onboardingSteps}
+                run={runOnboarding}
+                callback={handleOnboardingCallback}
+                continuous
+                showProgress
+                showSkipButton
+                scrollToFirstStep
+                disableScrolling={false}
+                disableOverlayClose
+                spotlightPadding={12}
+                floaterProps={{
+                    styles: {
+                        floater: {
+                            filter: 'drop-shadow(0 18px 40px rgba(0,0,0,0.18))',
+                        },
+                    },
+                }}
+                locale={{
+                    back: 'Anterior',
+                    close: 'Cerrar',
+                    last: 'Finalizar',
+                    next: 'Siguiente',
+                    skip: 'Omitir',
+                }}
+                styles={{
+                    options: {
+                        zIndex: 10000,
+                        primaryColor: '#F05A28',
+                        overlayColor: 'rgba(0, 0, 0, 0.72)',
+                        textColor: '#111827',
+                        arrowColor: '#ffffff',
+                        backgroundColor: '#ffffff',
+                    },
+                    tooltip: {
+                        borderRadius: 20,
+                        padding: 18,
+                    },
+                    buttonNext: {
+                        borderRadius: 9999,
+                    },
+                    buttonBack: {
+                        marginRight: 8,
+                    },
+                    buttonSkip: {
+                        color: '#6B7280',
+                    },
+                }}
+            />
+
             <HomeSidebar
                 chatId={chatId}
                 history={history}
@@ -63,6 +207,20 @@ const HomePage = () => {
             <div className="flex min-w-0 flex-1 overflow-hidden">
                 <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
                     <div className="flex-1 min-h-0 overflow-hidden px-3 pb-3 pt-2 sm:px-4 sm:pt-3 xl:px-5 xl:pt-4">
+                        <div className="mb-3 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={handleOpenOnboarding}
+                                className={`rounded-2xl border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] transition-all ${
+                                    isDarkMode
+                                        ? 'border-orange-accent/30 bg-white/[0.03] text-orange-accent hover:bg-orange-accent/10'
+                                        : 'border-orange-accent/25 bg-white/80 text-orange-accent hover:bg-orange-50'
+                                }`}
+                            >
+                                Ver guÃ­a
+                            </button>
+                        </div>
+
                         <div className="grid h-full min-h-0 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-0">
                             <div
                                 className={`min-h-0 overflow-hidden rounded-[28px] border shadow-[0_18px_60px_rgba(0,0,0,0.22)] ${

@@ -63,7 +63,10 @@ const RecommendedChangesSection = ({ items, isDarkMode }) => {
 };
 
 const SelectedMasterBar = ({ isDarkMode, onChangeMaster, selectedMaster, selectedMasterVisual }) => (
-    <div className={`rounded-[20px] border px-4 py-3.5 ${isDarkMode ? 'border-white/10 bg-white/[0.02]' : 'border-stone-200 bg-stone-50/80'}`}>
+    <div
+        data-tour="selected-master"
+        className={`rounded-[20px] border px-4 py-3.5 ${isDarkMode ? 'border-white/10 bg-white/[0.02]' : 'border-stone-200 bg-stone-50/80'}`}
+    >
         <div className="flex w-full flex-col gap-3">
             <div className="flex items-center justify-between gap-4">
                 <p className={`text-[9px] font-bold uppercase tracking-[0.18em] ${isDarkMode ? 'text-white/45' : 'text-stone-500'}`}>
@@ -279,6 +282,7 @@ const RecommendationSupportPanel = ({
 
                 <div className="space-y-2.5">
                     <label
+                        data-tour="upload-pdf"
                         className={`flex h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border px-3.5 transition-all ${
                             file
                                 ? isDarkMode
@@ -303,6 +307,7 @@ const RecommendationSupportPanel = ({
                     </label>
 
                     <button
+                        data-tour="analyze-cv"
                         onClick={onUpload}
                         disabled={!file || uploading}
                         className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-orange-accent text-[9px] font-bold uppercase tracking-[0.24em] text-white transition-all disabled:cursor-not-allowed disabled:opacity-40"

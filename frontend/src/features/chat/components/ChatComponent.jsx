@@ -252,7 +252,10 @@ const ChatComponent = ({
 
     return (
         <div className="chat-container relative flex h-full min-h-[600px] flex-col overflow-hidden bg-transparent transition-all duration-500">
-            <div className="no-scrollbar flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-4">
+            <div
+                data-tour="chat-panel"
+                className="no-scrollbar flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-4"
+            >
                 {messages.length === 0 ? (
                     <div
                         data-testid="chat-empty-state"

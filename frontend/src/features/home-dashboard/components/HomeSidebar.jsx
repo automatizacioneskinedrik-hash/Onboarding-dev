@@ -48,6 +48,7 @@ const HomeSidebar = ({
 
     return (
         <aside
+            data-tour="history-sidebar"
             className={`sidebar-transition relative z-[90] flex h-full flex-shrink-0 overflow-x-visible overflow-y-hidden border-r transition-colors duration-300 ${
                 isDarkMode ? 'border-white/5 bg-[#070707]/95 backdrop-blur-xl' : 'border-stone-200 bg-white/95 backdrop-blur-xl'
             } ${isSidebarOpen ? 'w-[258px]' : 'w-[78px]'}`}
