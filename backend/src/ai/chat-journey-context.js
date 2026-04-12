@@ -1,5 +1,7 @@
 const { getMasterById } = require('../utils/masters');
 
+const MAX_USER_INTERACTIONS = 20;
+
 const CHAT_JOURNEY_STAGES = {
     SELECT_MASTER: 'select_master',
     UPLOAD_CV: 'upload_cv',
@@ -106,6 +108,9 @@ const resolveChatJourneyContext = ({
         hasUserProfile,
         hasRecommendation,
         userMessageCount,
+        maxUserInteractions: MAX_USER_INTERACTIONS,
+        remainingInteractions: Math.max(0, MAX_USER_INTERACTIONS - userMessageCount),
+        isOutOfInteractions: userMessageCount >= MAX_USER_INTERACTIONS,
         shouldSendWelcome: userMessageCount <= 1,
         assistantGoals: config.assistantGoals,
         nextStep: config.nextStep,
@@ -127,6 +132,7 @@ const buildChatJourneyPromptSection = (journeyContext = {}) => {
 - Master seleccionado: ${journeyContext.selectedMasterName || 'Sin seleccionar'}
 - CV analizado: ${journeyContext.hasUserProfile ? 'Si' : 'No'}
 - Recomendación disponible: ${journeyContext.hasRecommendation ? 'Si' : 'No'}
+- Interacciones restantes para definir ruta: ${journeyContext.remainingInteractions ?? 'Desconocidas'} de ${journeyContext.maxUserInteractions || MAX_USER_INTERACTIONS}
 - Primera interacción real del usuario: ${journeyContext.shouldSendWelcome ? 'Si' : 'No'}
 
 OBJETIVOS DEL ASISTENTE EN ESTA ETAPA:
@@ -149,6 +155,7 @@ REGLAS DE COMPORTAMIENTO:
 
 module.exports = {
     CHAT_JOURNEY_STAGES,
+    MAX_USER_INTERACTIONS,
     resolveChatJourneyContext,
     buildChatJourneyPromptSection,
 };

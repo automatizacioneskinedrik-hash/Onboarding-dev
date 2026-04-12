@@ -11,6 +11,8 @@ const {
     sanitizeMessagesForModel,
 } = require('../ai/chat-scope-guard');
 
+const MAX_USER_INTERACTIONS = 20;
+
 const createChatUseCases = ({
     chatRepo,
     analysisRepo,
@@ -170,6 +172,34 @@ const createChatUseCases = ({
         }
 
         const nextUserMessageCount = chat.messages.filter((message) => message.role === 'user').length + 1;
+
+        if (nextUserMessageCount > MAX_USER_INTERACTIONS) {
+            const remainingInteractions = Math.max(0, MAX_USER_INTERACTIONS - (nextUserMessageCount - 1));
+            const aiContent = 'Has alcanzado el limite de 20 interacciones para definir tu ruta de sprints. Si quieres, puedo ayudarte a resumir lo avanzado y priorizar los siguientes pasos con lo que ya tenemos.';
+
+            const assistantMessage = await chatRepo.addMessage(chatId, {
+                role: 'assistant',
+                content: aiContent,
+                metadata: {
+                    type: 'text',
+                    scope: {
+                        intent: 'interaction_limit',
+                        decision: CHAT_SCOPE_DECISIONS.ALLOW,
+                        policy: 'interaction_limit_20',
+                    },
+                    interactionLimit: {
+                        max: MAX_USER_INTERACTIONS,
+                        remaining: remainingInteractions,
+                    },
+                },
+            });
+
+            onStart?.({ chatId, userMessage: null, retrieval: null });
+            onToken?.(aiContent);
+            onDone?.({ chatId, assistantMessage, retrieval: null, aiContent });
+            return;
+        }
+
         const chatJourneyContext = resolveChatJourneyContext({
             userName: user?.name,
             selectedMasterId,
