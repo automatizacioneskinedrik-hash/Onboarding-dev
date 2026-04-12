@@ -50,4 +50,5 @@ test('chat prompt keeps system role and user messages', () => {
     assert.match(messages[0].content, /Markdown simple y limpio/i);
     assert.match(messages[0].content, /no eres un chatbot generalista/i);
     assert.match(messages[0].content, /seleccionar Master, cargar CV en PDF, analizar el perfil/i);
+    assert.match(messages[0].content, /maximo de 20 interacciones/i);
 });

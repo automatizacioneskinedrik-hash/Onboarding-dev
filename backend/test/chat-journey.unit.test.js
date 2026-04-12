@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 
 const {
     CHAT_JOURNEY_STAGES,
+    MAX_USER_INTERACTIONS,
     resolveChatJourneyContext,
     buildChatJourneyPromptSection,
 } = require('../src/ai/chat-journey-context');
@@ -20,6 +21,7 @@ test('resolveChatJourneyContext identifies upload CV stage when master is select
     assert.equal(journey.userName, 'Ana');
     assert.equal(journey.selectedMasterName, 'TECH-MBA');
     assert.equal(journey.shouldSendWelcome, true);
+    assert.equal(journey.remainingInteractions, MAX_USER_INTERACTIONS - 1);
     assert.match(journey.nextStep, /cargar su CV/i);
 });
 
@@ -34,6 +36,17 @@ test('resolveChatJourneyContext identifies review stage when recommendation is a
     assert.equal(journey.key, CHAT_JOURNEY_STAGES.REVIEW_RECOMMENDATION);
     assert.equal(journey.hasRecommendation, true);
     assert.equal(journey.shouldSendWelcome, false);
+    assert.equal(journey.remainingInteractions, MAX_USER_INTERACTIONS - 2);
+});
+
+test('resolveChatJourneyContext marks interaction budget as exhausted at 20 user messages', () => {
+    const journey = resolveChatJourneyContext({
+        selectedMasterId: 'mtecmba',
+        userMessageCount: MAX_USER_INTERACTIONS,
+    });
+
+    assert.equal(journey.remainingInteractions, 0);
+    assert.equal(journey.isOutOfInteractions, true);
 });
 
 test('buildWelcomeAssistantMessage explains the platform flow before CV upload', () => {
@@ -62,6 +75,7 @@ test('buildChatJourneyPromptSection includes stage, flow and behavior rules', ()
     // Este texto termina dentro del prompt del chat; si cambia sin control, cambia tambien
     // el comportamiento del asistente.
     assert.match(promptSection, /Etapa actual: Master seleccionado, CV pendiente/);
+    assert.match(promptSection, /Interacciones restantes para definir ruta:/i);
     assert.match(promptSection, /Primera interaccion real del usuario: Si/);
     assert.match(promptSection, /seleccionar Master, cargar CV en PDF, analizar el perfil/i);
     assert.match(promptSection, /no inventes una recomendacion personalizada/i);
