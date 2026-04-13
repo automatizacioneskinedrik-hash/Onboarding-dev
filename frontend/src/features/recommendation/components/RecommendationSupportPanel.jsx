@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, ChevronRight, FileText, Loader2, RefreshCw, Sparkles, Target, Upload } from 'lucide-react';
+import { ChevronRight, Loader2, RefreshCw, Sparkles, Target, Upload } from 'lucide-react';
 import { getMasterDisplayName } from '../../../shared/utils/masters';
 
 const SupportListSection = ({ title, items, isDarkMode, icon: Icon }) => {
@@ -233,7 +233,8 @@ const RecommendationSupportPanel = ({
                 />
 
                 <div
-                    className={`relative isolate overflow-visible rounded-[24px] border px-4 py-4 transition-all ${
+                    data-tour="upload-pdf"
+                    className={`relative isolate cursor-pointer overflow-visible rounded-[24px] border px-4 py-4 transition-all ${
                         isDragOver
                             ? isDarkMode
                                 ? 'border-orange-accent/50 bg-orange-accent/10'
@@ -246,7 +247,25 @@ const RecommendationSupportPanel = ({
                     onDragEnter={handleDragEnter}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
+                    onClick={triggerFilePicker}
+                    onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            triggerFilePicker();
+                        }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Subir archivo PDF"
                 >
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        accept=".pdf"
+                        onChange={onFileChange}
+                        onClick={(event) => event.stopPropagation()}
+                    />
                     <div
                         aria-hidden="true"
                         className={`pointer-events-none absolute -inset-[3px] -z-10 rounded-[28px] blur-md transition-all duration-300 ${
@@ -260,52 +279,27 @@ const RecommendationSupportPanel = ({
                         }`}
                         style={{ animationDelay: '250ms' }}
                     />
-                    <button
-                        type="button"
-                        onClick={triggerFilePicker}
-                        className="flex h-12 w-12 items-center justify-center rounded-2xl border border-orange-accent/20 bg-orange-accent/10 transition-all hover:bg-orange-accent/15"
-                        aria-label="Subir archivo PDF"
+                    <div
+                        className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-orange-accent/20 bg-orange-accent/10 transition-all hover:bg-orange-accent/15"
+                        aria-hidden="true"
                     >
                         <Upload className="text-orange-accent" size={20} />
-                    </button>
-                    <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.22em] text-orange-accent">Vincular potencial</p>
-                    <h3 className={`mt-2 text-[1.15rem] font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
-                        Activa una recomendación personalizada
+                    </div>
+                    <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.22em] text-orange-accent">Vincular potencial</p>
+                    <h3 className={`mt-2.5 text-[1.05rem] font-bold leading-snug tracking-tight ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
+                        Analiza tu perfil y recibe una ruta personalizada en Data Science.
                     </h3>
                     <p className={`mt-2.5 text-[11px] leading-relaxed ${isDarkMode ? 'text-white/60' : 'text-stone-600'}`}>
-                        Sube tu CV para que podamos conectar tu perfil con {getMasterDisplayName(selectedMaster)} y proponerte una ruta más precisa.
+                        Sube tu CV (PDF) haciendo clic sobre el icono.
                     </p>
-                    <p className={`mt-2 text-[10px] uppercase tracking-[0.14em] ${isDarkMode ? 'text-white/45' : 'text-stone-500'}`}>
-                        Arrastra y suelta tu PDF aquí o haz clic en el ícono.
-                    </p>
+                    {file && (
+                        <p className={`mt-3 truncate text-[11px] font-bold ${isDarkMode ? 'text-white/75' : 'text-stone-700'}`}>
+                            CV cargado: {file.name} ✅
+                        </p>
+                    )}
                 </div>
 
                 <div className="space-y-2.5">
-                    <label
-                        data-tour="upload-pdf"
-                        className={`flex h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border px-3.5 transition-all ${
-                            file
-                                ? isDarkMode
-                                    ? 'border-orange-accent/40 bg-orange-accent/10 text-orange-accent'
-                                    : 'border-orange-accent/40 bg-orange-50 text-orange-accent'
-                                : isDarkMode
-                                    ? 'border-white/10 bg-black/20 text-white/70 hover:border-white/20 hover:bg-white/[0.03]'
-                                    : 'border-stone-200 bg-white text-stone-700 hover:border-stone-300'
-                        }`}
-                    >
-                        <div className="flex min-w-0 items-center gap-3">
-                            <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${file ? 'bg-orange-accent/15' : isDarkMode ? 'bg-white/5' : 'bg-stone-100'}`}>
-                                <FileText size={15} />
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-[9px] font-bold uppercase tracking-[0.18em]">Subir PDF</p>
-                                <p className="truncate text-[11px]">{file ? file.name : 'Seleccionar archivo'}</p>
-                            </div>
-                        </div>
-                        <input ref={fileInputRef} type="file" className="hidden" accept=".pdf" onChange={onFileChange} />
-                        <ArrowRight size={16} className="flex-shrink-0" />
-                    </label>
-
                     <button
                         data-tour="analyze-cv"
                         onClick={onUpload}
