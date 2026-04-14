@@ -2,6 +2,30 @@ import React from 'react';
 import { Loader2, Save } from 'lucide-react';
 import { updateOnboardingVideo } from '../services/onboardingService';
 
+const transformYouTubeUrl = (url = '') => {
+    try {
+        const parsedUrl = new URL(url);
+        const hostname = parsedUrl.hostname.replace(/^www\./, '');
+        let videoId = null;
+
+        if (hostname === 'youtube.com' && parsedUrl.pathname === '/watch') {
+            videoId = parsedUrl.searchParams.get('v');
+        }
+
+        if (hostname === 'youtu.be') {
+            videoId = parsedUrl.pathname.split('/').filter(Boolean)[0] || null;
+        }
+
+        if (videoId) {
+            return `https://www.youtube.com/embed/${videoId}`;
+        }
+    } catch {
+        return url;
+    }
+
+    return url;
+};
+
 const OnboardingVideoAdminCard = ({
     isDarkMode,
     initialVideoUrl = '',
@@ -24,8 +48,9 @@ const OnboardingVideoAdminCard = ({
         setFeedback(null);
 
         try {
+            const finalUrl = transformYouTubeUrl(videoUrl.trim());
             const payload = {
-                introVideoUrl: videoUrl.trim(),
+                introVideoUrl: finalUrl,
                 introVideoEnabled: enabled,
             };
 
