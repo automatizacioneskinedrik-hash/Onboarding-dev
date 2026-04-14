@@ -129,55 +129,6 @@ const OnboardingVideoAdminCard = ({
             </div>
 
             <form className="space-y-4 px-4 py-4" onSubmit={handleSubmit}>
-                <div
-                    className={`overflow-hidden rounded-[8px] border ${
-                        isDarkMode ? 'border-white/10 bg-black/24' : 'border-stone-200 bg-stone-50'
-                    }`}
-                >
-                    <div className="aspect-video min-h-[150px] w-full bg-black">
-                        {previewUrl ? (
-                            isDirectVideoUrl(previewUrl) ? (
-                                <video className="h-full w-full" src={previewUrl} controls muted playsInline />
-                            ) : (
-                                <iframe
-                                    className="h-full w-full"
-                                    src={previewUrl}
-                                    title="Vista previa del video de onboarding"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                    allowFullScreen
-                                />
-                            )
-                        ) : (
-                            <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-                                <PlayCircle className="text-orange-accent/75" size={34} />
-                                <p className="px-5 text-[10px] font-bold uppercase tracking-[0.16em] text-white/55">
-                                    Agrega un enlace para ver la vista previa
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <label className="block">
-                    <span className={`text-[10px] font-black uppercase tracking-[0.14em] ${isDarkMode ? 'text-white/70' : 'text-stone-700'}`}>
-                        Pega un enlace de YouTube
-                    </span>
-                    <input
-                        type="url"
-                        value={videoUrl}
-                        onChange={(event) => setVideoUrl(event.target.value)}
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        className={`mt-2 h-11 w-full rounded-[8px] border px-3 text-[12px] font-semibold outline-none transition-all ${
-                            isDarkMode
-                                ? 'border-white/10 bg-black/30 text-white placeholder:text-white/30 focus:border-orange-accent/55'
-                                : 'border-stone-200 bg-white text-stone-900 placeholder:text-stone-400 focus:border-orange-accent/65'
-                        }`}
-                    />
-                    <p className={`mt-2 text-[10px] font-semibold ${isDarkMode ? 'text-white/42' : 'text-stone-500'}`}>
-                        Se convertira automaticamente al formato correcto.
-                    </p>
-                </label>
-
                 <label
                     className={`flex min-h-[74px] cursor-pointer items-center justify-between gap-3 rounded-[8px] border px-3 py-3 transition-all ${
                         enabled
@@ -233,23 +184,80 @@ const OnboardingVideoAdminCard = ({
                     </p>
                 </div>
 
-                <div className="min-h-[18px]">
-                    {feedback && (
-                        <p className={`text-[11px] font-bold leading-[18px] ${feedback.type === 'success' ? 'text-emerald-500' : 'text-red-500'}`}>
-                            {feedback.type === 'success' ? <CheckCircle2 className="mr-1 inline" size={13} /> : null}
-                            {feedback.message}
-                        </p>
-                    )}
-                </div>
+                {enabled && (
+                    <>
+                        <div
+                            className={`overflow-hidden rounded-[8px] border ${
+                                isDarkMode ? 'border-white/10 bg-black/24' : 'border-stone-200 bg-stone-50'
+                            }`}
+                        >
+                            <div className="aspect-video min-h-[150px] w-full bg-black">
+                                {previewUrl ? (
+                                    isDirectVideoUrl(previewUrl) ? (
+                                        <video className="h-full w-full" src={previewUrl} controls muted playsInline />
+                                    ) : (
+                                        <iframe
+                                            className="h-full w-full"
+                                            src={previewUrl}
+                                            title="Vista previa del video de onboarding"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                            allowFullScreen
+                                        />
+                                    )
+                                ) : (
+                                    <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+                                        <PlayCircle className="text-orange-accent/75" size={34} />
+                                        <p className="px-5 text-[10px] font-bold uppercase tracking-[0.16em] text-white/55">
+                                            Agrega un enlace para ver la vista previa
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <label className="block">
+                            <span className={`text-[10px] font-black uppercase tracking-[0.14em] ${isDarkMode ? 'text-white/70' : 'text-stone-700'}`}>
+                                Pega un enlace de YouTube
+                            </span>
+                            <input
+                                type="url"
+                                value={videoUrl}
+                                onChange={(event) => setVideoUrl(event.target.value)}
+                                placeholder="https://www.youtube.com/watch?v=..."
+                                className={`mt-2 h-11 w-full rounded-[8px] border px-3 text-[12px] font-semibold outline-none transition-all ${
+                                    isDarkMode
+                                        ? 'border-white/10 bg-black/30 text-white placeholder:text-white/30 focus:border-orange-accent/55'
+                                        : 'border-stone-200 bg-white text-stone-900 placeholder:text-stone-400 focus:border-orange-accent/65'
+                                }`}
+                            />
+                            <p className={`mt-2 text-[10px] font-semibold ${isDarkMode ? 'text-white/42' : 'text-stone-500'}`}>
+                                Se convertira automaticamente al formato correcto.
+                            </p>
+                        </label>
+                    </>
+                )}
 
                 <button
                     type="submit"
                     disabled={saving}
-                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[8px] bg-orange-accent px-4 text-[10px] font-black uppercase tracking-[0.18em] text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                    className={`inline-flex items-center justify-center gap-2 rounded-[8px] px-4 text-[10px] font-black uppercase tracking-[0.18em] transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                        enabled
+                            ? 'h-11 w-full bg-orange-accent text-white hover:brightness-110'
+                            : isDarkMode
+                                ? 'h-9 w-full border border-white/10 bg-white/[0.04] text-white/72 hover:border-orange-accent/35 hover:text-orange-accent'
+                                : 'h-9 w-full border border-stone-200 bg-white text-stone-600 hover:border-orange-accent/45 hover:text-orange-accent'
+                    }`}
                 >
                     {saving ? <Loader2 className="animate-spin" size={15} /> : <Save size={15} />}
-                    Guardar configuracion
+                    {enabled ? 'Guardar configuracion' : 'Guardar estado'}
                 </button>
+
+                {feedback && (
+                    <p className={`text-[11px] font-bold leading-[18px] ${feedback.type === 'success' ? 'text-emerald-500' : 'text-red-500'}`}>
+                        {feedback.type === 'success' ? <CheckCircle2 className="mr-1 inline" size={13} /> : null}
+                        {feedback.message}
+                    </p>
+                )}
             </form>
         </section>
     );
