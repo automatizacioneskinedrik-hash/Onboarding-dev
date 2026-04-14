@@ -17,7 +17,7 @@ const MASTERS = [
         id: 'datalar-mba',
         code: 'MDATASC',
         name: 'Data Science',
-        description: 'Master centrado en analítica, datos y toma de decisiones empresariales.',
+        description: 'Máster especializado en ciencia de datos avanzada, modelado predictivo y el desarrollo de algoritmos.',
         isActive: true,
     },
 ];
