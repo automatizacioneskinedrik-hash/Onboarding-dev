@@ -64,6 +64,7 @@ const MasterSelectionCard = ({ master, onSelect, isDarkMode = true }) => {
                             rootMargin="220px"
                             keepFallbackUntilLoaded
                             fallback={posterFallback}
+                            style={{ objectPosition: theme.posterObjectPosition || 'center 20%' }}
                             className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                             pendingClassName="opacity-0"
                             loadedClassName="opacity-100"

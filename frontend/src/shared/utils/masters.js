@@ -34,9 +34,9 @@ export const getMasterVisual = (masterId) =>
     };
 
 const HARDCODED_MASTER_POSTERS = {
-    'mtecmba': 'https://storage.googleapis.com/assets_onboarding/MBAS/MBA_Mtec.png',
-    'mintear': 'https://storage.googleapis.com/assets_onboarding/MBAS/MBA_Mintear.png',
-    'datalar-mba': 'https://storage.googleapis.com/assets_onboarding/MBAS/MBA_Datalar.png',
+    'mtecmba': 'https://storage.googleapis.com/assets_onboarding/MBAS/MTEC_MBA.png',
+    'mintear': 'https://storage.googleapis.com/assets_onboarding/MBAS/MINTEAR_MBA.png',
+    'datalar-mba': 'https://storage.googleapis.com/assets_onboarding/MBAS/MDATASC_MBA.png',
 };
 
 const MASTER_SELECTION_THEMES = {
@@ -47,6 +47,7 @@ const MASTER_SELECTION_THEMES = {
         posterTo: '#264B3D',
         posterFallbackColor: '#95BC88',
         posterImageUrl: HARDCODED_MASTER_POSTERS['mintear'],
+        posterObjectPosition: 'center 38%',
         badge: 'IA e innovación',
         headline: 'Diseña rutas de innovación con una visión aplicada al negocio.',
         textureColor: 'rgba(255,255,255,0.22)',
@@ -58,6 +59,7 @@ const MASTER_SELECTION_THEMES = {
         posterTo: '#567484',
         posterFallbackColor: '#9FD5D8',
         posterImageUrl: HARDCODED_MASTER_POSTERS['datalar-mba'],
+        posterObjectPosition: 'center 38%',
         badge: 'Analítica ejecutiva',
         headline: 'Convierte datos, criterio y estrategia en decisiones de alto impacto.',
         textureColor: 'rgba(255,255,255,0.2)',
@@ -69,6 +71,7 @@ const MASTER_SELECTION_THEMES = {
         posterTo: '#3B5776',
         posterFallbackColor: '#8DB7D9',
         posterImageUrl: HARDCODED_MASTER_POSTERS['mtecmba'],
+        posterObjectPosition: 'center 26%',
         badge: 'Liderazgo tech',
         headline: 'Integra tecnología, producto y dirección para liderar transformación.',
         textureColor: 'rgba(255,255,255,0.18)',
@@ -121,6 +124,7 @@ export const getMasterSelectionTheme = (masterId) =>
         posterTo: '#7A3C2D',
         posterFallbackColor: '#EFA78B',
         posterImageUrl: '',
+        posterObjectPosition: 'center 20%',
         badge: 'Ruta LÄR',
         headline: 'Explora una experiencia ejecutiva construida para potenciar tu perfil.',
         textureColor: 'rgba(255,255,255,0.2)',
