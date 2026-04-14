@@ -104,6 +104,10 @@ const HomePage = () => {
             return;
         }
 
+        if (!onboardingVideoHandled) {
+            return;
+        }
+
         if (window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true') {
             return;
         }
@@ -111,7 +115,7 @@ const HomePage = () => {
         if (!isSidebarOpen) {
             actions.setIsSidebarOpen(true);
         }
-    }, [actions, canAutoStartOnboarding, isSidebarOpen]);
+    }, [actions, canAutoStartOnboarding, isSidebarOpen, onboardingVideoHandled]);
 
     React.useEffect(() => {
         if (typeof window === 'undefined') {
