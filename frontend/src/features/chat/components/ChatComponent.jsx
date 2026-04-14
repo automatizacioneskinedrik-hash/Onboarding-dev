@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Loader2, Send, Sparkles, User, Wand2 } from 'lucide-react';
+import { Loader2, Send, User, Wand2 } from 'lucide-react';
 import { useTheme } from '../../theme';
 import { getMasterDisplayName } from '../../../shared/utils/masters';
 import MarkdownMessage from '../../../shared/ui/MarkdownMessage';
@@ -10,6 +10,27 @@ import {
     getSuggestedQuestionsForStage,
     resolveChatJourneyStage,
 } from '../utils/chatJourney';
+
+const LarAnalysisSymbol = () => (
+    <svg
+        className="lar-analysis-symbol"
+        width="66"
+        height="76"
+        viewBox="0 0 66 76"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+    >
+        <rect x="17" y="0" width="10" height="10" rx="1" fill="#EE5522" />
+        <rect x="39" y="0" width="10" height="10" rx="1" fill="#EE5522" />
+        <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            d="M24 18H42L58 72H8L24 18ZM31 31L21 64H45L35 31H31Z"
+            fill="#EE5522"
+        />
+    </svg>
+);
 
 const ChatComponent = ({
     chatId,
@@ -262,12 +283,12 @@ const ChatComponent = ({
                         className={`flex flex-col items-center space-y-5 px-6 py-8 text-center ${emptyStateLayoutClassName}`}
                     >
                         <div className="relative">
-                            <div className="absolute inset-0 bg-orange-accent opacity-5 blur-2xl" />
-                            <div className="relative rounded-[2rem] border border-orange-accent/20 bg-orange-accent/10 p-8 shadow-[0_0_50px_rgba(240,90,40,0.1)]">
-                                <Sparkles className="text-orange-accent" size={48} />
+                            <div className="absolute inset-0 rounded-[28px] bg-[#EE5522]/10 blur-2xl" />
+                            <div className="lar-analysis-symbol-shell relative flex h-[116px] w-[116px] items-center justify-center border">
+                                <LarAnalysisSymbol />
                             </div>
                         </div>
-                        <div className="mx-auto max-w-[320px] space-y-2">
+                        <div className="mx-auto max-w-[320px] space-y-2.5">
                             <h4
                                 className={`text-[1.32rem] font-black uppercase italic leading-none tracking-tighter ${
                                     isDarkMode ? 'text-white' : 'text-slate-900'

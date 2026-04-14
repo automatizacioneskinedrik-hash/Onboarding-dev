@@ -42,6 +42,63 @@ const onboardingSteps = [
     },
 ];
 
+const OnboardingTourTooltip = ({
+    backProps,
+    index,
+    isLastStep,
+    primaryProps,
+    size,
+    skipProps,
+    step,
+    tooltipProps,
+}) => {
+    const isFirstStep = index === 0;
+
+    return (
+        <div {...tooltipProps} className="onboarding-tour-tooltip">
+            <div className="mb-3 flex items-center justify-between gap-4">
+                <span className="rounded-full bg-[#EE5522]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#EE5522]">
+                    Paso {index + 1} de {size}
+                </span>
+                <button
+                    type="button"
+                    {...skipProps}
+                    className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#2D2926]/55 underline-offset-4 transition-colors hover:text-[#EE5522] hover:underline"
+                >
+                    Saltar tour
+                </button>
+            </div>
+
+            <div className="text-[13px] font-semibold leading-relaxed text-[#2D2926]">
+                {step.content}
+            </div>
+
+            <div className="mt-5 flex items-center justify-between gap-3">
+                <button
+                    type="button"
+                    {...backProps}
+                    disabled={isFirstStep}
+                    className={`rounded-[8px] border px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] transition-all ${
+                        isFirstStep
+                            ? 'cursor-not-allowed border-[#2D2926]/10 text-[#2D2926]/25'
+                            : 'border-[#2D2926]/16 text-[#2D2926]/70 hover:border-[#EE5522]/45 hover:text-[#EE5522]'
+                    }`}
+                >
+                    Atras
+                </button>
+
+                <button
+                    type="button"
+                    {...primaryProps}
+                    className="rounded-[8px] bg-[#EE5522] px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-white shadow-[0_12px_28px_rgba(238,85,34,0.28)] transition-all hover:brightness-110"
+                >
+                    {isLastStep ? 'Finalizar' : 'Siguiente'}
+                </button>
+            </div>
+        </div>
+    );
+};
+
 const HomePage = () => {
     const {
         analysis,
@@ -268,13 +325,26 @@ const HomePage = () => {
                 scrollToFirstStep
                 disableScrolling={false}
                 disableOverlayClose
-                spotlightPadding={12}
+                tooltipComponent={OnboardingTourTooltip}
+                spotlightPadding={14}
                 floaterProps={{
                     styles: {
                         floater: {
-                            filter: 'drop-shadow(0 18px 40px rgba(0,0,0,0.18))',
+                            filter: 'none',
                         },
                     },
+                }}
+                options={{
+                    arrowColor: '#E4E5E2',
+                    backgroundColor: '#E4E5E2',
+                    blockTargetInteraction: false,
+                    overlayClickAction: false,
+                    overlayColor: 'rgba(45, 41, 38, 0.75)',
+                    primaryColor: '#EE5522',
+                    spotlightRadius: 12,
+                    textColor: '#2D2926',
+                    width: 330,
+                    zIndex: 11000,
                 }}
                 locale={{
                     back: 'Anterior',
@@ -284,17 +354,25 @@ const HomePage = () => {
                     skip: 'Omitir',
                 }}
                 styles={{
-                    options: {
-                        zIndex: 10000,
-                        primaryColor: '#F05A28',
-                        overlayColor: 'rgba(0, 0, 0, 0.72)',
-                        textColor: '#111827',
-                        arrowColor: '#ffffff',
-                        backgroundColor: '#ffffff',
+                    arrow: {
+                        color: '#E4E5E2',
+                        filter: 'drop-shadow(0 8px 14px rgba(45, 41, 38, 0.18))',
+                    },
+                    floater: {
+                        filter: 'none',
+                    },
+                    overlay: {
+                        backgroundColor: 'rgba(45, 41, 38, 0.75)',
+                    },
+                    spotlight: {
+                        className: 'onboarding-spotlight-glow',
+                        stroke: '#EE5522',
+                        strokeWidth: 3,
                     },
                     tooltip: {
-                        borderRadius: 20,
-                        padding: 18,
+                        backgroundColor: 'transparent',
+                        borderRadius: 12,
+                        padding: 0,
                     },
                     buttonNext: {
                         borderRadius: 9999,
