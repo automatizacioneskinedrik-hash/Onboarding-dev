@@ -16,6 +16,7 @@ const chatRoutes = require('./http/routes/chat.routes');
 const cvRoutes = require('./http/routes/cv.routes');
 const recommendationRoutes = require('./http/routes/recommendation.routes');
 const userRoutes = require('./http/routes/user.routes');
+const onboardingRoutes = require('./http/routes/onboarding.routes');
 
 const normalizeOrigin = (value = '') => value.trim().replace(/\/+$/, '');
 
@@ -127,6 +128,7 @@ const buildApp = () => {
     app.use('/api/chat', chatRoutes);
     app.use('/api/cv', cvRoutes);
     app.use('/api/recommendations', recommendationRoutes);
+    app.use('/api/onboarding', onboardingRoutes);
 
     app.use(notFound);
     app.use(errorHandler);

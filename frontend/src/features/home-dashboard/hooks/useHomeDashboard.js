@@ -382,6 +382,7 @@ export const useHomeDashboard = () => {
         suggestedSubjects,
         toggleTheme,
         uploading,
+        user,
         actions: {
             handleCancelDeleteChat,
             handleChangeMaster,

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Joyride, STATUS } from 'react-joyride';
 import { ChatComponent } from '../features/chat';
-import { ErrorToast, HomeSidebar, SidebarTooltip, useHomeDashboard } from '../features/home-dashboard';
+import { ErrorToast, HomeSidebar, OnboardingVideoAdminCard, OnboardingVideoModal, SidebarTooltip, useHomeDashboard } from '../features/home-dashboard';
+import { getOnboardingVideo } from '../features/home-dashboard/services/onboardingService';
 import { MasterSelectionModal } from '../features/master-selection';
 import { RecommendationSupportPanel } from '../features/recommendation';
 import ConfirmDialog from '../shared/ui/ConfirmDialog';
@@ -68,10 +69,15 @@ const HomePage = () => {
         suggestedSubjects,
         toggleTheme,
         uploading,
+        user,
         actions,
     } = useHomeDashboard();
     const [runOnboarding, setRunOnboarding] = React.useState(false);
     const [onboardingReady, setOnboardingReady] = React.useState(false);
+    const [onboardingVideoConfig, setOnboardingVideoConfig] = React.useState(null);
+    const [showOnboardingVideo, setShowOnboardingVideo] = React.useState(false);
+    const [onboardingFlowStarted, setOnboardingFlowStarted] = React.useState(false);
+    const [onboardingVideoHandled, setOnboardingVideoHandled] = React.useState(false);
     const isNewUser = history.length === 0;
     const canAutoStartOnboarding =
         onboardingReady &&
@@ -79,6 +85,7 @@ const HomePage = () => {
         Boolean(selectedMaster?.id) &&
         !needsMasterSelection &&
         !showMasterSelectionModal;
+    const isAdmin = user?.role === 'admin';
 
     React.useEffect(() => {
         if (historyLoading || analysisLoading) {
@@ -111,7 +118,101 @@ const HomePage = () => {
             return;
         }
 
+        if (!canAutoStartOnboarding || onboardingFlowStarted) {
+            return;
+        }
+
+        if (window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true') {
+            return;
+        }
+
+        let isMounted = true;
+
+        const loadOnboardingVideo = async () => {
+            try {
+                const response = await getOnboardingVideo();
+                const videoConfig = response.data || {};
+                const introVideoUrl = typeof videoConfig.introVideoUrl === 'string'
+                    ? videoConfig.introVideoUrl.trim()
+                    : '';
+                let hasValidVideoUrl = false;
+
+                if (introVideoUrl) {
+                    try {
+                        new URL(introVideoUrl);
+                        hasValidVideoUrl = true;
+                    } catch {
+                        hasValidVideoUrl = false;
+                    }
+                }
+
+                if (!isMounted) {
+                    return;
+                }
+
+                setOnboardingVideoConfig({
+                    ...videoConfig,
+                    introVideoUrl,
+                });
+
+                if (videoConfig.introVideoEnabled === true && hasValidVideoUrl) {
+                    setShowOnboardingVideo(true);
+                    setOnboardingFlowStarted(true);
+                    return;
+                }
+            } catch (error) {
+                console.error('Error fetching onboarding video:', error);
+            }
+
+            if (isMounted) {
+                setOnboardingVideoHandled(true);
+                setOnboardingFlowStarted(true);
+            }
+        };
+
+        loadOnboardingVideo();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [canAutoStartOnboarding, onboardingFlowStarted]);
+
+    React.useEffect(() => {
+        if (!isAdmin || onboardingVideoConfig) {
+            return;
+        }
+
+        let isMounted = true;
+
+        const loadAdminOnboardingVideo = async () => {
+            try {
+                const response = await getOnboardingVideo();
+
+                if (isMounted) {
+                    setOnboardingVideoConfig(response.data || {});
+                }
+            } catch (error) {
+                console.error('Error fetching onboarding video:', error);
+            }
+        };
+
+        loadAdminOnboardingVideo();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [isAdmin, onboardingVideoConfig]);
+
+    React.useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
         if (!canAutoStartOnboarding || !isSidebarOpen || runOnboarding) {
+            return;
+        }
+
+        if (!onboardingVideoHandled) {
             return;
         }
 
@@ -126,7 +227,7 @@ const HomePage = () => {
         return () => {
             window.clearTimeout(timerId);
         };
-    }, [canAutoStartOnboarding, isSidebarOpen, runOnboarding]);
+    }, [canAutoStartOnboarding, isSidebarOpen, onboardingVideoHandled, runOnboarding]);
 
     const handleOnboardingCallback = React.useCallback((data) => {
         const status = data?.status;
@@ -134,6 +235,11 @@ const HomePage = () => {
             window.localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
             setRunOnboarding(false);
         }
+    }, []);
+
+    const handleOnboardingVideoClose = React.useCallback(() => {
+        setShowOnboardingVideo(false);
+        setOnboardingVideoHandled(true);
     }, []);
 
     return (
@@ -259,6 +365,17 @@ const HomePage = () => {
                                             showMasterSelectionModal={showMasterSelectionModal}
                                             uploading={uploading}
                                         />
+                                        {isAdmin && (
+                                            <OnboardingVideoAdminCard
+                                                isDarkMode={isDarkMode}
+                                                initialVideoUrl={onboardingVideoConfig?.introVideoUrl || ''}
+                                                initialEnabled={Boolean(onboardingVideoConfig?.introVideoEnabled)}
+                                                onSaved={(nextConfig) => setOnboardingVideoConfig((previousConfig) => ({
+                                                    ...(previousConfig || {}),
+                                                    ...nextConfig,
+                                                }))}
+                                            />
+                                        )}
                                     </div>
                                 </div>
                             </aside>
@@ -280,6 +397,13 @@ const HomePage = () => {
                 onConfirm={actions.handleConfirmDeleteChat}
             />
             <ErrorToast error={error} />
+
+            <OnboardingVideoModal
+                open={showOnboardingVideo}
+                videoUrl={onboardingVideoConfig?.introVideoUrl}
+                isDarkMode={isDarkMode}
+                onClose={handleOnboardingVideoClose}
+            />
 
             {needsMasterSelection && showMasterSelectionModal && (
                 <MasterSelectionModal
