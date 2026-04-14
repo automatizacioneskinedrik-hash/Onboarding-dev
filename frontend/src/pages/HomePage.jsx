@@ -233,6 +233,12 @@ const HomePage = () => {
         };
     }, [canAutoStartOnboarding, isSidebarOpen, onboardingVideoHandled, runOnboarding]);
 
+    React.useEffect(() => {
+        if (runOnboarding && showMasterSelectionModal) {
+            setRunOnboarding(false);
+        }
+    }, [runOnboarding, showMasterSelectionModal]);
+
     const handleOnboardingCallback = React.useCallback((data) => {
         const status = data?.status;
         if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {

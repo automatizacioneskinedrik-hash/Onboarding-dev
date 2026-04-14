@@ -134,7 +134,7 @@ const OnboardingVideoAdminCard = ({
                         isDarkMode ? 'border-white/10 bg-black/24' : 'border-stone-200 bg-stone-50'
                     }`}
                 >
-                    <div className="aspect-video w-full bg-black">
+                    <div className="aspect-video min-h-[150px] w-full bg-black">
                         {previewUrl ? (
                             isDirectVideoUrl(previewUrl) ? (
                                 <video className="h-full w-full" src={previewUrl} controls muted playsInline />
@@ -179,7 +179,7 @@ const OnboardingVideoAdminCard = ({
                 </label>
 
                 <label
-                    className={`flex cursor-pointer items-center justify-between gap-3 rounded-[8px] border px-3 py-3 transition-all ${
+                    className={`flex min-h-[74px] cursor-pointer items-center justify-between gap-3 rounded-[8px] border px-3 py-3 transition-all ${
                         enabled
                             ? isDarkMode
                                 ? 'border-orange-accent/35 bg-orange-accent/10'
@@ -217,7 +217,7 @@ const OnboardingVideoAdminCard = ({
                 </label>
 
                 <div
-                    className={`flex items-center gap-2 rounded-[8px] px-3 py-2.5 ${
+                    className={`flex min-h-[40px] items-center gap-2 rounded-[8px] px-3 py-2.5 ${
                         enabled
                             ? isDarkMode
                                 ? 'bg-emerald-500/10 text-emerald-300'
@@ -228,17 +228,19 @@ const OnboardingVideoAdminCard = ({
                     }`}
                 >
                     <span className={`h-2 w-2 rounded-full ${enabled ? 'bg-emerald-500' : 'bg-stone-400'}`} />
-                    <p className="text-[10px] font-black uppercase tracking-[0.12em]">
+                    <p className="text-[10px] font-black uppercase leading-snug tracking-[0.12em]">
                         {enabled ? 'Video activo en onboarding' : 'El onboarding se mostrara sin video'}
                     </p>
                 </div>
 
-                {feedback && (
-                    <p className={`text-[11px] font-bold ${feedback.type === 'success' ? 'text-emerald-500' : 'text-red-500'}`}>
-                        {feedback.type === 'success' ? <CheckCircle2 className="mr-1 inline" size={13} /> : null}
-                        {feedback.message}
-                    </p>
-                )}
+                <div className="min-h-[18px]">
+                    {feedback && (
+                        <p className={`text-[11px] font-bold leading-[18px] ${feedback.type === 'success' ? 'text-emerald-500' : 'text-red-500'}`}>
+                            {feedback.type === 'success' ? <CheckCircle2 className="mr-1 inline" size={13} /> : null}
+                            {feedback.message}
+                        </p>
+                    )}
+                </div>
 
                 <button
                     type="submit"
