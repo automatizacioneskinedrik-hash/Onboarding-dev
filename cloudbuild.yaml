@@ -25,7 +25,7 @@
       - deploy
       - backend-dev
       - --image=${_BACKEND_IMAGE}:${SHORT_SHA}
-      - --region=us-central1
+      - --region=europe-southwest1
       - --platform=managed
       - --quiet
 
@@ -57,7 +57,7 @@
       - deploy
       - frontend-dev
       - --image=${_FRONTEND_IMAGE}:${SHORT_SHA}
-      - --region=us-central1
+      - --region=europe-southwest1
       - --platform=managed
       - --quiet
 
@@ -67,7 +67,7 @@
 substitutions:
   _BACKEND_IMAGE: europe-southwest1-docker.pkg.dev/onboarding-dev-487716/repo-onboarding-dev/backend
   _FRONTEND_IMAGE: europe-southwest1-docker.pkg.dev/onboarding-dev-487716/repo-onboarding-dev/frontend
-  _VITE_API_URL: https://backend-dev-866351374703.us-central1.run.app
+  _VITE_API_URL: https://backend-dev-866351374703.europe-southwest1.run.app
 
 images:
   - ${_BACKEND_IMAGE}:${SHORT_SHA}
