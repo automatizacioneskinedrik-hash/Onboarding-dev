@@ -17,6 +17,20 @@ test('GET /api/recommendations/specializations filters catalog by masterId', asy
     assert.match(iaSpecialization.subjects[1], /RPA/);
 });
 
+test('GET /api/recommendations/specializations redirects mtecmba catalog to datalar', async () => {
+    const { request } = createTestApp();
+
+    const response = await request.get('/api/recommendations/specializations').query({ masterId: 'mtecmba' });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.success, true);
+
+    const dataSpecialization = response.body.data.specializations.find((item) => item.id === 'analitica-datos');
+    assert.ok(dataSpecialization);
+    // El flujo comercial redirige MTECH MBA al catalogo de Datalar para recomendaciones.
+    assert.match(dataSpecialization.subjects.join(' | '), /Arquitectura Anal[ií]tica Avanzada/i);
+});
+
 test('GET /api/recommendations/my-recommendation returns latest recommendation', async () => {
     const { request, store } = createTestApp();
     const token = await loginDefaultUser(request);

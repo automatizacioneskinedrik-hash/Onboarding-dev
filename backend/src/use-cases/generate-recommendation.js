@@ -1,11 +1,13 @@
 const { AppError } = require('../services/errors/app-error');
 const { getAllSpecializations, getSpecializationById } = require('../utils/specializations');
+const { resolveRecommendationMasterId } = require('../utils/recommendation-master-policy');
 
 const createGenerateRecommendationUseCases = ({ analysisRepo, aiOrchestrator }) => {
-    const listSpecializations = async ({ masterId } = {}) => getAllSpecializations(masterId);
+    const listSpecializations = async ({ masterId } = {}) =>
+        getAllSpecializations(resolveRecommendationMasterId(masterId));
 
     const getSpecializationOrThrow = async (id, { masterId } = {}) => {
-        const specialization = getSpecializationById(id, masterId);
+        const specialization = getSpecializationById(id, resolveRecommendationMasterId(masterId));
 
         if (!specialization) {
             throw new AppError('Especializacion no encontrada.', 404);
@@ -21,7 +23,8 @@ const createGenerateRecommendationUseCases = ({ analysisRepo, aiOrchestrator }) 
             throw new AppError('No tienes una recomendacion aun. Por favor sube tu CV o perfil de LinkedIn.', 404);
         }
 
-        const allSpecs = getAllSpecializations(analysis.masterId);
+        const recommendationMasterId = resolveRecommendationMasterId(analysis.masterId);
+        const allSpecs = getAllSpecializations(recommendationMasterId);
         const specialization =
             allSpecs.find((item) => item.name === analysis.recommendation?.primarySpecialization) ||
             allSpecs.find((item) => item.id === analysis.recommendation?.primarySpecializationId) ||
