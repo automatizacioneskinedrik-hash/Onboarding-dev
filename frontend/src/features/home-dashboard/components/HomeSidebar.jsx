@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Loader2, LogOut, MessageSquare, Moon, Plus, Sun, Trash2, User } from 'lucide-react';
+import { Clock, Loader2, LogOut, MessageSquare, Moon, Plus, Settings, Sun, Trash2, User } from 'lucide-react';
 
 const HomeSidebar = ({
     chatId,
@@ -11,10 +11,12 @@ const HomeSidebar = ({
     onDeleteChat,
     onLogout,
     onNewChat,
+    onOpenAdminPanel,
     onOpenProfile,
     onSelectChat,
     onToggleSidebar,
     onToggleTheme,
+    showAdminPanelAction = false,
 }) => {
     const actions = [
         {
@@ -35,6 +37,19 @@ const HomeSidebar = ({
                 ? 'border-white/10 bg-white/[0.04] text-orange-accent hover:bg-white/[0.08]'
                 : 'border-stone-200 bg-stone-50 text-orange-accent hover:bg-stone-100',
         },
+        ...(showAdminPanelAction
+            ? [
+                {
+                    key: 'admin',
+                    label: 'Panel de administracion',
+                    onClick: onOpenAdminPanel,
+                    icon: <Settings size={13} />,
+                    className: isDarkMode
+                        ? 'border-white/10 bg-white/[0.04] text-white/80 hover:bg-white/[0.08]'
+                        : 'border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100',
+                },
+            ]
+            : []),
         {
             key: 'logout',
             label: 'Cerrar sesion',

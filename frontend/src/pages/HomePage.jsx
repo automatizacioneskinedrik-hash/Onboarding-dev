@@ -8,36 +8,129 @@ import { RecommendationSupportPanel } from '../features/recommendation';
 import ConfirmDialog from '../shared/ui/ConfirmDialog';
 
 const ONBOARDING_STORAGE_KEY = 'lar_onboarding_seen';
+const TOUR_VIEWPORT_PADDING = 28;
+const TOUR_TOOLTIP_GAP = 14;
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), Math.max(min, max));
+
+const keepTourTooltipInViewport = () => ({
+    name: 'keepTourTooltipInViewport',
+    fn({ x, y, rects }) {
+        if (typeof window === 'undefined') {
+            return { x, y };
+        }
+
+        const maxX = window.innerWidth - rects.floating.width - TOUR_VIEWPORT_PADDING;
+        const maxY = window.innerHeight - rects.floating.height - TOUR_VIEWPORT_PADDING;
+
+        return {
+            x: clamp(x, TOUR_VIEWPORT_PADDING, maxX),
+            y: clamp(y, TOUR_VIEWPORT_PADDING, maxY),
+        };
+    },
+});
+
+const chooseTourStepFourPlacement = () => ({
+    name: 'chooseTourStepFourPlacement',
+    fn({ elements, placement, rects }) {
+        if (typeof window === 'undefined' || !elements.reference?.getBoundingClientRect) {
+            return {};
+        }
+
+        const targetRect = elements.reference.getBoundingClientRect();
+        const availableSpace = {
+            bottom: window.innerHeight - targetRect.bottom - TOUR_VIEWPORT_PADDING,
+            left: targetRect.left - TOUR_VIEWPORT_PADDING,
+            right: window.innerWidth - targetRect.right - TOUR_VIEWPORT_PADDING,
+            top: targetRect.top - TOUR_VIEWPORT_PADDING,
+        };
+        const tooltipHeight = rects.floating.height + TOUR_TOOLTIP_GAP;
+        const tooltipWidth = rects.floating.width + TOUR_TOOLTIP_GAP;
+
+        let nextPlacement = 'bottom';
+
+        if (availableSpace.right >= tooltipWidth) {
+            nextPlacement = 'right';
+        } else if (availableSpace.left >= tooltipWidth) {
+            nextPlacement = 'left';
+        } else if (availableSpace.top >= tooltipHeight) {
+            nextPlacement = 'top';
+        } else if (availableSpace.bottom >= tooltipHeight) {
+            nextPlacement = 'bottom';
+        }
+
+        if (!placement.startsWith(nextPlacement)) {
+            return {
+                reset: {
+                    placement: nextPlacement,
+                },
+            };
+        }
+
+        return {};
+    },
+});
+
+const tourFloatingOptions = {
+    strategy: 'fixed',
+    autoUpdate: {
+        ancestorResize: true,
+        ancestorScroll: true,
+        elementResize: true,
+    },
+    flipOptions: {
+        padding: TOUR_VIEWPORT_PADDING,
+        rootBoundary: 'viewport',
+    },
+    shiftOptions: {
+        padding: TOUR_VIEWPORT_PADDING,
+        rootBoundary: 'viewport',
+    },
+    middleware: [keepTourTooltipInViewport()],
+};
 
 const onboardingSteps = [
     {
         target: '[data-tour="selected-master"]',
         content: 'Aqu\u00ed ves el m\u00e1ster activo con el que se personalizar\u00e1 tu ruta.',
-        placement: 'left',
+        placement: 'left-start',
+        floatingOptions: tourFloatingOptions,
+        offset: 8,
         skipBeacon: true,
     },
     {
         target: '[data-tour="upload-pdf"]',
         content: 'Sube tu CV aqu\u00ed para que podamos analizar tu perfil.',
         placement: 'left',
+        floatingOptions: tourFloatingOptions,
+        offset: 8,
         skipBeacon: true,
     },
     {
         target: '[data-tour="analyze-cv"]',
         content: 'Haz clic aqu\u00ed para generar tu an\u00e1lisis personalizado.',
-        placement: 'left',
+        placement: 'left-end',
+        floatingOptions: tourFloatingOptions,
+        offset: 8,
         skipBeacon: true,
     },
     {
         target: '[data-tour="chat-panel"]',
         content: 'Aqu\u00ed aparecer\u00e1 tu an\u00e1lisis, recomendaciones y podr\u00e1s conversar con el asistente.',
-        placement: 'auto',
+        placement: 'right',
+        floatingOptions: {
+            ...tourFloatingOptions,
+            middleware: [chooseTourStepFourPlacement(), keepTourTooltipInViewport()],
+        },
+        offset: 4,
         skipBeacon: true,
     },
     {
         target: '[data-tour="history-sidebar"]',
         content: 'Aqu\u00ed podr\u00e1s retomar consultas anteriores.',
-        placement: 'right',
+        placement: 'right-start',
+        floatingOptions: tourFloatingOptions,
+        offset: 8,
         skipBeacon: true,
     },
 ];
@@ -56,29 +149,29 @@ const OnboardingTourTooltip = ({
 
     return (
         <div {...tooltipProps} className="onboarding-tour-tooltip">
-            <div className="mb-3 flex items-center justify-between gap-4">
-                <span className="rounded-full bg-[#EE5522]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#EE5522]">
+            <div className="mb-2.5 flex items-center justify-between gap-3">
+                <span className="rounded-full bg-[#EE5522]/10 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#EE5522]">
                     Paso {index + 1} de {size}
                 </span>
                 <button
                     type="button"
                     {...skipProps}
-                    className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#2D2926]/55 underline-offset-4 transition-colors hover:text-[#EE5522] hover:underline"
+                    className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#2D2926]/55 underline-offset-4 transition-colors hover:text-[#EE5522] hover:underline"
                 >
                     Saltar tour
                 </button>
             </div>
 
-            <div className="text-[13px] font-semibold leading-relaxed text-[#2D2926]">
+            <div className="onboarding-tour-tooltip-content text-[12px] font-semibold leading-[1.55] text-[#2D2926]">
                 {step.content}
             </div>
 
-            <div className="mt-5 flex items-center justify-between gap-3">
+            <div className="mt-4 flex flex-shrink-0 items-center justify-between gap-2.5">
                 <button
                     type="button"
                     {...backProps}
                     disabled={isFirstStep}
-                    className={`rounded-[8px] border px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] transition-all ${
+                    className={`rounded-[8px] border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] transition-all ${
                         isFirstStep
                             ? 'cursor-not-allowed border-[#2D2926]/10 text-[#2D2926]/25'
                             : 'border-[#2D2926]/16 text-[#2D2926]/70 hover:border-[#EE5522]/45 hover:text-[#EE5522]'
@@ -90,7 +183,7 @@ const OnboardingTourTooltip = ({
                 <button
                     type="button"
                     {...primaryProps}
-                    className="rounded-[8px] bg-[#EE5522] px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-white shadow-[0_12px_28px_rgba(238,85,34,0.28)] transition-all hover:brightness-110"
+                    className="rounded-[8px] bg-[#EE5522] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white shadow-[0_10px_22px_rgba(238,85,34,0.24)] transition-all hover:brightness-110"
                 >
                     {isLastStep ? 'Finalizar' : 'Siguiente'}
                 </button>
@@ -135,6 +228,7 @@ const HomePage = () => {
     const [showOnboardingVideo, setShowOnboardingVideo] = React.useState(false);
     const [onboardingFlowStarted, setOnboardingFlowStarted] = React.useState(false);
     const [onboardingVideoHandled, setOnboardingVideoHandled] = React.useState(false);
+    const [isAdminPanelOpen, setIsAdminPanelOpen] = React.useState(false);
     const isNewUser = history.length === 0;
     const canAutoStartOnboarding =
         onboardingReady &&
@@ -326,7 +420,7 @@ const HomePage = () => {
                 disableScrolling={false}
                 disableOverlayClose
                 tooltipComponent={OnboardingTourTooltip}
-                spotlightPadding={14}
+                spotlightPadding={10}
                 floaterProps={{
                     styles: {
                         floater: {
@@ -341,9 +435,13 @@ const HomePage = () => {
                     overlayClickAction: false,
                     overlayColor: 'rgba(45, 41, 38, 0.75)',
                     primaryColor: '#EE5522',
-                    spotlightRadius: 12,
+                    arrowBase: 22,
+                    arrowSize: 10,
+                    arrowSpacing: 8,
+                    offset: 8,
+                    spotlightRadius: 10,
                     textColor: '#2D2926',
-                    width: 330,
+                    width: 292,
                     zIndex: 11000,
                 }}
                 locale={{
@@ -356,7 +454,7 @@ const HomePage = () => {
                 styles={{
                     arrow: {
                         color: '#E4E5E2',
-                        filter: 'drop-shadow(0 8px 14px rgba(45, 41, 38, 0.18))',
+                        filter: 'drop-shadow(0 5px 10px rgba(45, 41, 38, 0.16))',
                     },
                     floater: {
                         filter: 'none',
@@ -399,8 +497,10 @@ const HomePage = () => {
                 onDeleteChat={actions.handleDeleteChat}
                 onLogout={actions.handleLogout}
                 onNewChat={actions.handleNewChat}
+                onOpenAdminPanel={() => setIsAdminPanelOpen(true)}
                 onOpenProfile={actions.handleOpenProfile}
                 onSelectChat={actions.openChat}
+                showAdminPanelAction={isAdmin}
                 onToggleSidebar={() => actions.setIsSidebarOpen((previousState) => !previousState)}
                 onToggleTheme={toggleTheme}
             />
@@ -453,17 +553,6 @@ const HomePage = () => {
                                             showMasterSelectionModal={showMasterSelectionModal}
                                             uploading={uploading}
                                         />
-                                        {isAdmin && (
-                                            <OnboardingVideoAdminCard
-                                                isDarkMode={isDarkMode}
-                                                initialVideoUrl={onboardingVideoConfig?.introVideoUrl || ''}
-                                                initialEnabled={Boolean(onboardingVideoConfig?.introVideoEnabled)}
-                                                onSaved={(nextConfig) => setOnboardingVideoConfig((previousConfig) => ({
-                                                    ...(previousConfig || {}),
-                                                    ...nextConfig,
-                                                }))}
-                                            />
-                                        )}
                                     </div>
                                 </div>
                             </aside>
@@ -485,6 +574,72 @@ const HomePage = () => {
                 onConfirm={actions.handleConfirmDeleteChat}
             />
             <ErrorToast error={error} />
+
+            {isAdmin && isAdminPanelOpen && (
+                <div
+                    className="fixed inset-0 z-[12000] flex items-center justify-center bg-black/55 px-4 py-6 backdrop-blur-sm"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="admin-panel-title"
+                >
+                    <div
+                        className={`custom-scrollbar max-h-full w-full max-w-[560px] overflow-y-auto rounded-[8px] border shadow-[0_24px_70px_rgba(0,0,0,0.32)] ${
+                            isDarkMode
+                                ? 'border-white/10 bg-[#101010]'
+                                : 'border-stone-200 bg-white'
+                        }`}
+                    >
+                        <div
+                            className="flex items-start justify-between gap-4 border-b px-5 py-4"
+                            style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#E7E5E4' }}
+                        >
+                            <div>
+                                <p className={`text-[10px] font-black uppercase tracking-[0.18em] ${
+                                    isDarkMode ? 'text-orange-accent' : 'text-orange-accent'
+                                }`}>
+                                    Panel de administracion
+                                </p>
+                                <h2
+                                    id="admin-panel-title"
+                                    className={`mt-1 text-lg font-black leading-tight ${
+                                        isDarkMode ? 'text-white' : 'text-stone-950'
+                                    }`}
+                                >
+                                    Configuracion de onboarding
+                                </h2>
+                                <p className={`mt-1 text-[12px] font-semibold leading-relaxed ${
+                                    isDarkMode ? 'text-white/52' : 'text-stone-500'
+                                }`}>
+                                    Ajustes internos para la experiencia inicial de usuarios.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsAdminPanelOpen(false)}
+                                className={`rounded-[8px] border px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] transition-colors ${
+                                    isDarkMode
+                                        ? 'border-white/10 text-white/70 hover:border-orange-accent/35 hover:text-orange-accent'
+                                        : 'border-stone-200 text-stone-600 hover:border-orange-accent/45 hover:text-orange-accent'
+                                }`}
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+
+                        <div className="px-4 pb-4">
+                            <OnboardingVideoAdminCard
+                                isDarkMode={isDarkMode}
+                                initialVideoUrl={onboardingVideoConfig?.introVideoUrl || ''}
+                                initialEnabled={Boolean(onboardingVideoConfig?.introVideoEnabled)}
+                                onSaved={(nextConfig) => setOnboardingVideoConfig((previousConfig) => ({
+                                    ...(previousConfig || {}),
+                                    ...nextConfig,
+                                }))}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <OnboardingVideoModal
                 open={showOnboardingVideo}

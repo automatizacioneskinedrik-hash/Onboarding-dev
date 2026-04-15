@@ -60,16 +60,15 @@ const OnboardingVideoAdminCard = ({
         setEnabled(Boolean(initialEnabled));
     }, [initialEnabled, initialVideoUrl]);
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
+    const saveVideoConfig = async ({ nextEnabled = enabled, nextVideoUrl = videoUrl } = {}) => {
         setSaving(true);
         setFeedback(null);
 
         try {
-            const finalUrl = transformYouTubeUrl(videoUrl.trim());
+            const finalUrl = transformYouTubeUrl(nextVideoUrl.trim());
             const payload = {
                 introVideoUrl: finalUrl,
-                introVideoEnabled: enabled,
+                introVideoEnabled: nextEnabled,
             };
 
             const response = await updateOnboardingVideo(payload);
@@ -90,19 +89,40 @@ const OnboardingVideoAdminCard = ({
                 ...payload,
                 updatedAt: new Date().toISOString(),
             });
+
+            return true;
         } catch (error) {
             setFeedback({
                 type: 'error',
                 message: error.response?.data?.message || 'No se pudo guardar la configuracion.',
             });
+
+            return false;
         } finally {
             setSaving(false);
         }
     };
 
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        await saveVideoConfig();
+    };
+
+    const handleEnabledChange = async (event) => {
+        const nextEnabled = event.target.checked;
+        const previousEnabled = enabled;
+
+        setEnabled(nextEnabled);
+        const saved = await saveVideoConfig({ nextEnabled });
+
+        if (!saved) {
+            setEnabled(previousEnabled);
+        }
+    };
+
     return (
         <section
-            className={`mt-5 overflow-hidden rounded-[8px] border ${
+            className={`mt-3 overflow-hidden rounded-[8px] border ${
                 isDarkMode
                     ? 'border-white/10 bg-[#151515]/90 shadow-[0_18px_50px_rgba(0,0,0,0.24)]'
                     : 'border-stone-200 bg-white shadow-[0_16px_42px_rgba(15,23,42,0.08)]'
@@ -162,7 +182,8 @@ const OnboardingVideoAdminCard = ({
                     <input
                         type="checkbox"
                         checked={enabled}
-                        onChange={(event) => setEnabled(event.target.checked)}
+                        onChange={handleEnabledChange}
+                        disabled={saving}
                         className="sr-only"
                     />
                 </label>
