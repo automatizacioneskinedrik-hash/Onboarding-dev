@@ -1,5 +1,6 @@
 const { createLogger } = require('../services/observability/logger');
 const { getSpecializationNamesForPrompt } = require('../utils/specializations');
+const { resolveRecommendationMasterId } = require('../utils/recommendation-master-policy');
 const {
     buildFallbackProfile,
     buildChatResponseFallback,
@@ -41,15 +42,17 @@ const createAiOrchestrator = ({
     // La recomendacion siempre se resuelve con el planner interno para normalizar ids,
     // bloques y enlaces aunque la salida del modelo venga incompleta o con nombres variables.
     const generateRecommendation = async ({ profile, sourceType = 'pdf', options = {}, log = logger }) => {
+        const recommendationMasterId = resolveRecommendationMasterId(options.masterId);
+
         if (!openAiClient.isConfigured()) {
             const fallbackRecommendation = resolveUniversityRecommendation({
                 profile,
-                masterId: options.masterId,
+                masterId: recommendationMasterId,
             });
 
             log?.info('Recomendacion generada con fallback local', {
                 sourceType,
-                masterId: options.masterId || null,
+                masterId: recommendationMasterId,
                 specializationId: fallbackRecommendation.primarySpecializationId,
                 planBlocks: fallbackRecommendation.planBlocks.length,
             });
@@ -60,8 +63,11 @@ const createAiOrchestrator = ({
         openAiClient.ensureConfigured();
         const prompt = promptBuilder.buildRecommendationPrompt({
             profile,
-            options,
-            specializationsList: getSpecializationNamesForPrompt(options.masterId),
+            options: {
+                ...options,
+                masterId: recommendationMasterId,
+            },
+            specializationsList: getSpecializationNamesForPrompt(recommendationMasterId),
         });
 
         try {
@@ -74,14 +80,14 @@ const createAiOrchestrator = ({
             const result = JSON.parse(response.choices[0].message.content);
             const resolvedRecommendation = resolveUniversityRecommendation({
                 profile,
-                masterId: options.masterId,
+                masterId: recommendationMasterId,
                 aiRecommendation: result,
             });
 
             log?.info('Recomendacion generada', {
                 model: openAiClient.getChatModel(),
                 sourceType,
-                masterId: options.masterId || null,
+                masterId: recommendationMasterId,
                 specializationId: resolvedRecommendation.primarySpecializationId,
                 planBlocks: resolvedRecommendation.planBlocks.length,
             });
@@ -91,17 +97,17 @@ const createAiOrchestrator = ({
             // Ante JSON invalido o respuesta inesperada preferimos degradar a una recomendacion
             // deterministica antes que propagar datos parciales al usuario.
             log?.warn('Respuesta IA invalida, usando fallback', {
-                masterId: options.masterId,
+                masterId: recommendationMasterId,
                 error: error.message,
             });
             const fallbackRecommendation = resolveUniversityRecommendation({
                 profile,
-                masterId: options.masterId,
+                masterId: recommendationMasterId,
             });
 
             log?.info('Recomendacion generada con fallback de retrieval', {
                 sourceType,
-                masterId: options.masterId || null,
+                masterId: recommendationMasterId,
                 specializationId: fallbackRecommendation.primarySpecializationId,
                 planBlocks: fallbackRecommendation.planBlocks.length,
             });
