@@ -417,14 +417,31 @@
 }
 
 .onboarding-tour-tooltip {
-    width: min(330px, calc(100vw - 32px));
-    border-radius: 12px;
+    width: min(292px, calc(100vw - 36px));
+    max-width: calc(100vw - 36px);
+    max-height: calc(100vh - 56px);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
     background: #E4E5E2;
     color: #2D2926;
-    padding: 18px;
-    box-shadow: 0 22px 55px rgba(45, 41, 38, 0.28);
+    padding: 14px;
+    box-shadow: 0 16px 40px rgba(45, 41, 38, 0.24);
     animation: onboarding-tooltip-in 180ms ease-out both;
     transform-origin: center;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+.onboarding-tour-tooltip-content {
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.react-joyride__floater {
+    max-width: calc(100vw - 36px);
+    max-height: calc(100vh - 56px);
 }
 
 .onboarding-spotlight-glow {
