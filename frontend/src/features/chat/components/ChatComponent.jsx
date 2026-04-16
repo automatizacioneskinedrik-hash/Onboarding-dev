@@ -66,6 +66,11 @@ const ChatComponent = ({
         selectedMasterDisplayName,
     });
 
+    const maxInteractions = 20;
+    const userMessageCount = messages.filter((m) => m.role === 'user').length;
+    const remainingInteractions = Math.max(0, maxInteractions - userMessageCount);
+    const isLimitReached = userMessageCount >= maxInteractions;
+
     useEffect(() => {
         if (typeof messagesEndRef.current?.scrollIntoView === 'function') {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -396,23 +401,40 @@ const ChatComponent = ({
                     isDarkMode ? 'border-white/10 bg-[#111111]/92' : 'border-stone-200 bg-white/92'
                 } backdrop-blur-xl`}
             >
-                {!sending && (
-                    <div className="chat-suggestions animate-in fade-in duration-300 flex flex-wrap gap-2">
-                        {suggestedQuestions.map((question) => (
-                            <button
-                                key={question}
-                                onClick={() => sendMessage(question)}
-                                className={`rounded-xl border px-3 py-2 text-[8px] font-black uppercase tracking-wider transition-all ${
-                                    isDarkMode
-                                        ? 'border-white/10 bg-white/[0.03] text-dark-muted hover:border-orange-accent hover:text-orange-accent'
-                                        : 'border-stone-200 bg-stone-50 text-light-muted hover:border-orange-accent hover:text-orange-accent'
-                                }`}
-                            >
-                                {question}
-                            </button>
-                        ))}
+                <div className="flex min-h-[32px] items-center justify-between gap-4">
+                    <div className="flex-1">
+                        {!sending && (
+                            <div className="chat-suggestions animate-in fade-in duration-300 flex flex-wrap gap-2">
+                                {suggestedQuestions.map((question) => (
+                                    <button
+                                        key={question}
+                                        onClick={() => sendMessage(question)}
+                                        disabled={isLimitReached}
+                                        className={`rounded-xl border px-3 py-2 text-[8px] font-black uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                                            isDarkMode
+                                                ? 'border-white/10 bg-white/[0.03] text-dark-muted hover:border-orange-accent hover:text-orange-accent'
+                                                : 'border-stone-200 bg-stone-50 text-light-muted hover:border-orange-accent hover:text-orange-accent'
+                                        }`}
+                                    >
+                                        {question}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                )}
+                    
+                    {(messages.length > 0 || isLimitReached) && (
+                        <div
+                            className={`flex shrink-0 items-center justify-center rounded-xl border px-3 py-1 text-[9px] font-black uppercase tracking-wider shadow-sm transition-all ${
+                                isLimitReached
+                                    ? 'border-red-500/20 bg-red-500/10 text-red-500'
+                                    : 'border-orange-accent/20 bg-orange-accent/10 text-orange-accent'
+                            }`}
+                        >
+                            {remainingInteractions} de {maxInteractions} interacciones
+                        </div>
+                    )}
+                </div>
 
                 <form
                     onSubmit={(event) => {
@@ -425,17 +447,17 @@ const ChatComponent = ({
                         type="text"
                         value={input}
                         onChange={(event) => setInput(event.target.value)}
-                        placeholder={emptyStateCopy.placeholder}
+                        placeholder={isLimitReached ? 'Límite de interacciones alcanzado' : emptyStateCopy.placeholder}
                         className={`input-field h-12 rounded-2xl border pr-12 text-[13px] font-semibold normal-case tracking-normal transition-all ${
                             !isDarkMode
                                 ? 'border-slate-200 bg-white text-slate-900 placeholder:text-slate-400'
                                 : 'border-white/10 bg-[#181818] text-white placeholder:text-white/35 focus:border-orange-accent/30'
                         } disabled:cursor-not-allowed disabled:opacity-40`}
-                        disabled={sending || !chatEnabled}
+                        disabled={sending || !chatEnabled || isLimitReached}
                     />
                     <button
                         type="submit"
-                        disabled={!input.trim() || sending || !chatEnabled}
+                        disabled={!input.trim() || sending || !chatEnabled || isLimitReached}
                         className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-orange-accent p-2 text-white transition-all hover:opacity-90 disabled:opacity-50"
                     >
                         <Send size={14} />
