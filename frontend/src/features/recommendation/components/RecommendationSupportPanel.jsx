@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, ChevronRight, Clipboard, Loader2, RefreshCw, Sparkles, Target, Upload } from 'lucide-react';
+import { ChevronRight, Loader2, RefreshCw, Sparkles, Target, Upload } from 'lucide-react';
 import { getMasterDisplayName } from '../../../shared/utils/masters';
 
 const SupportListSection = ({ title, items, isDarkMode, icon: Icon }) => {
@@ -30,107 +30,6 @@ const SupportListSection = ({ title, items, isDarkMode, icon: Icon }) => {
     );
 };
 
-const copyTextToClipboard = async (text) => {
-    if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text);
-        return;
-    }
-
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.setAttribute('readonly', '');
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-};
-
-const normalizeCopyableText = (text) => String(text || '').replace(/\s+/g, ' ').trim();
-
-const CopyableTextBlock = ({ title, text, copyEnabled = true, isDarkMode }) => {
-    const feedbackTimeoutRef = React.useRef(null);
-    const [copied, setCopied] = React.useState(false);
-
-    const cleanText = normalizeCopyableText(text);
-    const isProfileBlock = title?.toLowerCase().includes('perfil');
-    const copyButtonText = copied ? 'Copiado' : isProfileBlock ? 'Copiar perfil' : 'Copiar';
-    const copyButtonLabel = isProfileBlock ? 'Copiar perfil profesional' : `Copiar recomendacion de ${title}`;
-
-    React.useEffect(
-        () => () => {
-            if (feedbackTimeoutRef.current) {
-                clearTimeout(feedbackTimeoutRef.current);
-            }
-        },
-        []
-    );
-
-    const handleCopy = async () => {
-        if (!cleanText) {
-            return;
-        }
-
-        try {
-            await copyTextToClipboard(cleanText);
-            setCopied(true);
-            if (feedbackTimeoutRef.current) {
-                clearTimeout(feedbackTimeoutRef.current);
-            }
-            feedbackTimeoutRef.current = setTimeout(() => setCopied(false), 1600);
-        } catch {
-            setCopied(false);
-        }
-    };
-
-    return (
-        <article
-            className={`rounded-[18px] border px-3 py-3 ${isDarkMode ? 'border-white/8 bg-black/20' : 'border-stone-200 bg-stone-50'}`}
-        >
-            <div className="flex items-start justify-between gap-2">
-                <p className={`min-w-0 pt-1 text-[11px] font-bold ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>{title}</p>
-                {copyEnabled && cleanText && (
-                    <div className="flex flex-shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center">
-                        {copied && (
-                            <span className={`text-right text-[9px] font-bold ${isDarkMode ? 'text-white/60' : 'text-stone-500'}`}>
-                                Copiado correctamente
-                            </span>
-                        )}
-                        <button
-                            type="button"
-                            onClick={handleCopy}
-                            className={`inline-flex h-7 items-center gap-1 rounded-lg border px-2 text-[9px] font-bold transition-all ${
-                                isDarkMode
-                                    ? 'border-white/10 bg-white/[0.03] text-white/70 hover:border-orange-accent/40 hover:text-orange-accent'
-                                    : 'border-stone-200 bg-white text-stone-600 hover:border-orange-accent/40 hover:text-orange-accent'
-                            }`}
-                            aria-label={copyButtonLabel}
-                        >
-                            {copied ? <Check size={12} /> : <Clipboard size={12} />}
-                            <span>{copyButtonText}</span>
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            {cleanText && (
-                <div
-                    className={`mt-2.5 rounded-xl px-3 py-3 ${
-                        isDarkMode ? 'bg-white/[0.06] text-white/82' : 'bg-[#E4E5E2] text-stone-700'
-                    }`}
-                >
-                    <p
-                        className="whitespace-normal text-[11px] leading-relaxed"
-                    >
-                        {cleanText}
-                    </p>
-                </div>
-            )}
-        </article>
-    );
-};
-
 const RecommendedChangesSection = ({ items, isDarkMode }) => {
     if (!items?.length) {
         return null;
@@ -146,20 +45,24 @@ const RecommendedChangesSection = ({ items, isDarkMode }) => {
             </div>
             <div className="mt-3 space-y-2.5">
                 {items.map((item) => (
-                    <CopyableTextBlock
+                    <article
                         key={`${item.title}-${item.suggestion}`}
-                        title={item.title}
-                        text={item.suggestion}
-                        copyEnabled
-                        isDarkMode={isDarkMode}
-                    />
+                        className={`rounded-[18px] border px-3 py-3 ${isDarkMode ? 'border-white/8 bg-black/20' : 'border-stone-200 bg-stone-50'}`}
+                    >
+                        <p className={`text-[11px] font-bold ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>{item.title}</p>
+                        {item.suggestion && (
+                            <p className={`mt-1.5 text-[11px] leading-relaxed ${isDarkMode ? 'text-white/72' : 'text-stone-600'}`}>
+                                {item.suggestion}
+                            </p>
+                        )}
+                    </article>
                 ))}
             </div>
         </section>
     );
 };
 
-const SelectedMasterBar = ({ isDarkMode, onChangeMaster, selectedMaster }) => (
+const SelectedMasterBar = ({ isDarkMode, onChangeMaster, selectedMaster, selectedMasterVisual }) => (
     <div
         data-tour="selected-master"
         className={`rounded-[20px] border px-4 py-3.5 ${isDarkMode ? 'border-white/10 bg-white/[0.02]' : 'border-stone-200 bg-stone-50/80'}`}
@@ -218,6 +121,7 @@ const RecommendationSupportPanel = ({
     onOpenMasterSelection,
     onUpload,
     selectedMaster,
+    selectedMasterVisual,
     showMasterSelectionModal,
     uploading,
 }) => {
@@ -325,6 +229,7 @@ const RecommendationSupportPanel = ({
                     isDarkMode={isDarkMode}
                     onChangeMaster={onChangeMaster}
                     selectedMaster={selectedMaster}
+                    selectedMasterVisual={selectedMasterVisual}
                 />
 
                 <div
@@ -414,6 +319,7 @@ const RecommendationSupportPanel = ({
                 isDarkMode={isDarkMode}
                 onChangeMaster={onChangeMaster}
                 selectedMaster={selectedMaster}
+                selectedMasterVisual={selectedMasterVisual}
             />
 
             {(supportContent.strengths.length > 0 ||
