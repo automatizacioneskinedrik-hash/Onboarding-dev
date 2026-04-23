@@ -48,6 +48,7 @@ const createAiOrchestrator = ({
             const fallbackRecommendation = resolveUniversityRecommendation({
                 profile,
                 masterId: recommendationMasterId,
+                sourceMasterId: options.masterId || null,
             });
 
             log?.info('Recomendacion generada con fallback local', {
@@ -81,6 +82,7 @@ const createAiOrchestrator = ({
             const resolvedRecommendation = resolveUniversityRecommendation({
                 profile,
                 masterId: recommendationMasterId,
+                sourceMasterId: options.masterId || null,
                 aiRecommendation: result,
             });
 
@@ -103,6 +105,7 @@ const createAiOrchestrator = ({
             const fallbackRecommendation = resolveUniversityRecommendation({
                 profile,
                 masterId: recommendationMasterId,
+                sourceMasterId: options.masterId || null,
             });
 
             log?.info('Recomendacion generada con fallback de retrieval', {

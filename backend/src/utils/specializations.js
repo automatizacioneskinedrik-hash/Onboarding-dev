@@ -227,6 +227,14 @@ const MASTER_SPECIALIZATION_TOPICS = {
             'Gobierno Corporativo Avanzado del Dato en Entornos Multijurisdiccionales',
             'Diseño de Estrategias de Ventaja Competitiva Basadas en Analítica Avanzada',
         ],
+        'ciencia-datos-aplicada': [
+            'Entorno y Arquitectura para Data Science',
+            'Modelado Predictivo y Machine Learning',
+            'Ingeniería de Datos y Arquitecturas Escalables',
+            'Inteligencia Artificial y Deep Learning Aplicado',
+            'Analítica Estratégica en Áreas Clave del Negocio',
+            'Industrialización de Modelos y MLOps',
+        ],
     },
 };
 
@@ -303,6 +311,14 @@ const SPECIALIZATION_METADATA = {
         sprintUrl: 'https://lar.university/sprints/analitica-datos',
         keywords: ['datos', 'analitica', 'data', 'analytics', 'machine learning', 'bi', 'power bi', 'sql'],
     },
+    'ciencia-datos-aplicada': {
+        id: 'ciencia-datos-aplicada',
+        name: 'CIENCIA DE DATOS APLICADA',
+        description: 'Especialización avanzada para diseñar, desplegar y escalar soluciones de Data Science con impacto empresarial.',
+        color: '#0ea5a8',
+        sprintUrl: 'https://lar.university/sprints/ciencia-datos-aplicada',
+        keywords: ['ciencia de datos', 'data science', 'mlops', 'machine learning', 'deep learning', 'ingenieria de datos', 'arquitectura de datos'],
+    },
 };
 
 const MODULE_TO_SPECIALIZATION_ID = {
@@ -341,7 +357,10 @@ const buildSpecialization = (specializationId, masterId) => {
     }
 
     const topicsByMaster = MASTER_SPECIALIZATION_TOPICS[normalizeMasterId(masterId)] || MASTER_SPECIALIZATION_TOPICS[DEFAULT_MASTER_ID];
-    const subjects = topicsByMaster?.[specializationId] || MASTER_SPECIALIZATION_TOPICS[DEFAULT_MASTER_ID][specializationId] || [];
+    const subjects = topicsByMaster?.[specializationId] || [];
+    if (!subjects.length) {
+        return null;
+    }
     const blocks = toBlocks(specializationId, subjects);
 
     return {

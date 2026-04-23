@@ -8,35 +8,37 @@ const MAX_ROUTE_BLOCKS = 6;
 
 const PRIORITY_BY_MASTER = {
     mtecmba: [
-        'tecnología',
-        'analítica-datos',
+        'ciencia-datos-aplicada',
+        'tecnologia',
+        'analitica-datos',
         'talento',
-        'comunicación',
-        'ia-automatización',
+        'comunicacion',
+        'ia-automatizacion',
         'operaciones',
         'mercado-cliente',
         'finanzas',
         'emprendimiento',
     ],
     mintear: [
-        'ia-automatización',
-        'tecnología',
-        'analítica-datos',
+        'ia-automatizacion',
+        'tecnologia',
+        'analitica-datos',
         'operaciones',
         'mercado-cliente',
-        'comunicación',
+        'comunicacion',
         'talento',
         'emprendimiento',
         'finanzas',
     ],
     'datalar-mba': [
-        'analítica-datos',
-        'ia-automatización',
-        'tecnología',
+        'analitica-datos',
+        'ciencia-datos-aplicada',
+        'ia-automatizacion',
+        'tecnologia',
         'finanzas',
         'operaciones',
         'mercado-cliente',
-        'comunicación',
+        'comunicacion',
         'talento',
         'emprendimiento',
     ],
@@ -103,11 +105,12 @@ const buildBlockReason = ({ block, specialization, profile }) => {
     return `Este sprint de ${specialization.name} complementa ${role} con una perspectiva aplicada a tu desarrollo ejecutivo.`;
 };
 
-const buildFallbackCandidates = ({ profile, masterId }) => {
+const buildFallbackCandidates = ({ profile, masterId, sourceMasterId = null }) => {
     const specializations = getAllSpecializations(masterId);
     const profileText = normalizeText(buildProfileText(profile));
     const profileTokens = new Set(tokenize(profileText));
-    const masterPriority = PRIORITY_BY_MASTER[masterId] || PRIORITY_BY_MASTER.mtecmba;
+    const priorityKey = sourceMasterId || masterId;
+    const masterPriority = PRIORITY_BY_MASTER[priorityKey] || PRIORITY_BY_MASTER[masterId] || PRIORITY_BY_MASTER.mtecmba;
 
     return specializations
         .map((specialization) => {
@@ -140,7 +143,12 @@ const buildFallbackCandidates = ({ profile, masterId }) => {
                 return right.score - left.score;
             }
 
-            return masterPriority.indexOf(left.specialization.id) - masterPriority.indexOf(right.specialization.id);
+            const leftPriorityIndex = masterPriority.indexOf(left.specialization.id);
+            const rightPriorityIndex = masterPriority.indexOf(right.specialization.id);
+            const leftRank = leftPriorityIndex === -1 ? Number.MAX_SAFE_INTEGER : leftPriorityIndex;
+            const rightRank = rightPriorityIndex === -1 ? Number.MAX_SAFE_INTEGER : rightPriorityIndex;
+
+            return leftRank - rightRank;
         });
 };
 
@@ -245,8 +253,8 @@ const buildReasoning = ({ aiReasoning, primarySpecialization, planBlocks }) => {
     return `Se recomienda una ruta personalizada de 6 sprints con foco principal en ${primarySpecialization.name}. La selección combina especializaciones del Master para fortalecer tu perfil con un plan equilibrado y accionable. Los primeros sprints destacados son ${visibleBlocks}.`;
 };
 
-const resolveUniversityRecommendation = ({ profile, masterId, aiRecommendation = {} }) => {
-    const fallbackCandidates = buildFallbackCandidates({ profile, masterId });
+const resolveUniversityRecommendation = ({ profile, masterId, sourceMasterId = null, aiRecommendation = {} }) => {
+    const fallbackCandidates = buildFallbackCandidates({ profile, masterId, sourceMasterId });
     const aiBlocks = aiRecommendation.planBlocks || aiRecommendation.routeBlocks || aiRecommendation.blocks || [];
     const planBlocks = mergePlanBlocks({
         aiBlocks,

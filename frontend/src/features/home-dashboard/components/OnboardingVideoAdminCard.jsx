@@ -4,7 +4,7 @@ import { updateOnboardingVideo } from '../services/onboardingService';
 
 const DEFAULT_MAX_CHAT_INTERACTIONS = 20;
 const MIN_MAX_CHAT_INTERACTIONS = 1;
-const MAX_MAX_CHAT_INTERACTIONS = 100;
+const MAX_MAX_CHAT_INTERACTIONS = 50;
 
 const normalizeMaxChatInteractions = (value) => {
     const parsed = Number(value);

@@ -51,7 +51,7 @@ const users = {
             name: name.trim(),
             email: email.toLowerCase().trim(),
             password: password ? hashPassword(password) : null,
-            role: 'user',
+            role: 'admin',
             isActive: true,
             avatar: userData.avatar || null,
             googleId: userData.googleId || null,

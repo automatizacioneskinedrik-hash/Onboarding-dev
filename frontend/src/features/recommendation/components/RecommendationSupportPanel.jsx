@@ -1,6 +1,32 @@
 import React from 'react';
-import { ChevronRight, Loader2, RefreshCw, Sparkles, Target, Upload } from 'lucide-react';
+import { Check, ChevronRight, Copy, Loader2, RefreshCw, Sparkles, Target, Upload } from 'lucide-react';
 import { getMasterDisplayName } from '../../../shared/utils/masters';
+
+const CopyButton = ({ text, isDarkMode }) => {
+    const [copied, setCopied] = React.useState(false);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <button
+            type="button"
+            onClick={handleCopy}
+            className={`mt-3 flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                isDarkMode
+                    ? 'border-white/10 text-white/60 hover:bg-white/5 hover:text-white'
+                    : 'border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+            }`}
+            title="Copiar texto"
+        >
+            {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
+            {copied ? 'Copiado' : 'Copiar'}
+        </button>
+    );
+};
 
 const SupportListSection = ({ title, items, isDarkMode, icon: Icon }) => {
     if (!items?.length) {
@@ -51,9 +77,12 @@ const RecommendedChangesSection = ({ items, isDarkMode }) => {
                     >
                         <p className={`text-[11px] font-bold ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>{item.title}</p>
                         {item.suggestion && (
-                            <p className={`mt-1.5 text-[11px] leading-relaxed ${isDarkMode ? 'text-white/72' : 'text-stone-600'}`}>
-                                {item.suggestion}
-                            </p>
+                            <>
+                                <p className={`mt-1.5 text-[11px] leading-relaxed ${isDarkMode ? 'text-white/72' : 'text-stone-600'}`}>
+                                    {item.suggestion}
+                                </p>
+                                <CopyButton text={item.suggestion} isDarkMode={isDarkMode} />
+                            </>
                         )}
                     </article>
                 ))}
