@@ -10,8 +10,43 @@ const {
     evaluateChatScope,
     sanitizeMessagesForModel,
 } = require('../ai/chat-scope-guard');
+const {
+    DEFAULT_MAX_CHAT_INTERACTIONS,
+    readOnboardingSettings,
+} = require('../services/settings/onboarding-settings.service');
 
-const MAX_USER_INTERACTIONS = 20;
+const SETTINGS_CACHE_TTL_MS = 30000;
+
+const maxInteractionsCache = {
+    value: DEFAULT_MAX_CHAT_INTERACTIONS,
+    expiresAt: 0,
+};
+
+const normalizeMaxInteractions = (value) => {
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 1) {
+        return DEFAULT_MAX_CHAT_INTERACTIONS;
+    }
+
+    return parsed;
+};
+
+const resolveMaxUserInteractions = async () => {
+    if (Date.now() < maxInteractionsCache.expiresAt) {
+        return maxInteractionsCache.value;
+    }
+
+    try {
+        const settings = await readOnboardingSettings();
+        maxInteractionsCache.value = normalizeMaxInteractions(settings?.maxChatInteractions);
+    } catch {
+        maxInteractionsCache.value = maxInteractionsCache.value || DEFAULT_MAX_CHAT_INTERACTIONS;
+    } finally {
+        maxInteractionsCache.expiresAt = Date.now() + SETTINGS_CACHE_TTL_MS;
+    }
+
+    return maxInteractionsCache.value;
+};
 
 const createChatUseCases = ({
     chatRepo,
@@ -172,10 +207,11 @@ const createChatUseCases = ({
         }
 
         const nextUserMessageCount = chat.messages.filter((message) => message.role === 'user').length + 1;
+        const maxUserInteractions = await resolveMaxUserInteractions();
 
-        if (nextUserMessageCount > MAX_USER_INTERACTIONS) {
-            const remainingInteractions = Math.max(0, MAX_USER_INTERACTIONS - (nextUserMessageCount - 1));
-            const aiContent = 'Has alcanzado el limite de 20 interacciones para definir tu ruta de sprints. Si quieres, puedo ayudarte a resumir lo avanzado y priorizar los siguientes pasos con lo que ya tenemos.';
+        if (nextUserMessageCount > maxUserInteractions) {
+            const remainingInteractions = Math.max(0, maxUserInteractions - (nextUserMessageCount - 1));
+            const aiContent = `Has alcanzado el limite de ${maxUserInteractions} interacciones para definir tu ruta de sprints. Si quieres, puedo ayudarte a resumir lo avanzado y priorizar los siguientes pasos con lo que ya tenemos.`;
 
             const assistantMessage = await chatRepo.addMessage(chatId, {
                 role: 'assistant',
@@ -188,7 +224,7 @@ const createChatUseCases = ({
                         policy: 'interaction_limit_20',
                     },
                     interactionLimit: {
-                        max: MAX_USER_INTERACTIONS,
+                        max: maxUserInteractions,
                         remaining: remainingInteractions,
                     },
                 },
@@ -207,6 +243,7 @@ const createChatUseCases = ({
             userProfile,
             recommendation,
             userMessageCount: nextUserMessageCount,
+            maxUserInteractions,
         });
         const classification = classifyChatIntent({
             message: content,

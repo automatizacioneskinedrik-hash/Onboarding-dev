@@ -1,6 +1,20 @@
 import React from 'react';
-import { CheckCircle2, Loader2, PlayCircle, Save, Video } from 'lucide-react';
+import { CheckCircle2, Loader2, MessageSquareMore, PlayCircle, Save, Video } from 'lucide-react';
 import { updateOnboardingVideo } from '../services/onboardingService';
+
+const DEFAULT_MAX_CHAT_INTERACTIONS = 20;
+const MIN_MAX_CHAT_INTERACTIONS = 1;
+const MAX_MAX_CHAT_INTERACTIONS = 100;
+
+const normalizeMaxChatInteractions = (value) => {
+    const parsed = Number(value);
+
+    if (!Number.isInteger(parsed)) {
+        return DEFAULT_MAX_CHAT_INTERACTIONS;
+    }
+
+    return Math.min(MAX_MAX_CHAT_INTERACTIONS, Math.max(MIN_MAX_CHAT_INTERACTIONS, parsed));
+};
 
 const transformYouTubeUrl = (url = '') => {
     try {
@@ -47,10 +61,14 @@ const OnboardingVideoAdminCard = ({
     isDarkMode,
     initialVideoUrl = '',
     initialEnabled = false,
+    initialMaxChatInteractions = DEFAULT_MAX_CHAT_INTERACTIONS,
     onSaved,
 }) => {
     const [videoUrl, setVideoUrl] = React.useState(initialVideoUrl || '');
     const [enabled, setEnabled] = React.useState(Boolean(initialEnabled));
+    const [maxChatInteractions, setMaxChatInteractions] = React.useState(
+        normalizeMaxChatInteractions(initialMaxChatInteractions)
+    );
     const [saving, setSaving] = React.useState(false);
     const [feedback, setFeedback] = React.useState(null);
     const previewUrl = React.useMemo(() => resolvePreviewUrl(videoUrl), [videoUrl]);
@@ -58,17 +76,24 @@ const OnboardingVideoAdminCard = ({
     React.useEffect(() => {
         setVideoUrl(initialVideoUrl || '');
         setEnabled(Boolean(initialEnabled));
-    }, [initialEnabled, initialVideoUrl]);
+        setMaxChatInteractions(normalizeMaxChatInteractions(initialMaxChatInteractions));
+    }, [initialEnabled, initialMaxChatInteractions, initialVideoUrl]);
 
-    const saveVideoConfig = async ({ nextEnabled = enabled, nextVideoUrl = videoUrl } = {}) => {
+    const saveVideoConfig = async ({
+        nextEnabled = enabled,
+        nextVideoUrl = videoUrl,
+        nextMaxChatInteractions = maxChatInteractions,
+    } = {}) => {
         setSaving(true);
         setFeedback(null);
 
         try {
             const finalUrl = transformYouTubeUrl(nextVideoUrl.trim());
+            const normalizedMaxChatInteractions = normalizeMaxChatInteractions(nextMaxChatInteractions);
             const payload = {
                 introVideoUrl: finalUrl,
                 introVideoEnabled: nextEnabled,
+                maxChatInteractions: normalizedMaxChatInteractions,
             };
 
             const response = await updateOnboardingVideo(payload);
@@ -118,6 +143,16 @@ const OnboardingVideoAdminCard = ({
         if (!saved) {
             setEnabled(previousEnabled);
         }
+    };
+
+    const handleMaxChatInteractionsBlur = async () => {
+        const normalizedValue = normalizeMaxChatInteractions(maxChatInteractions);
+
+        if (normalizedValue !== maxChatInteractions) {
+            setMaxChatInteractions(normalizedValue);
+        }
+
+        await saveVideoConfig({ nextMaxChatInteractions: normalizedValue });
     };
 
     return (
@@ -257,6 +292,51 @@ const OnboardingVideoAdminCard = ({
                         </label>
                     </>
                 )}
+
+                <div
+                    className={`overflow-hidden rounded-[8px] border ${
+                        isDarkMode ? 'border-white/10 bg-black/24' : 'border-stone-200 bg-stone-50'
+                    }`}
+                >
+                    <div className="flex items-start gap-3 border-b px-3 py-3" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#E7E5E4' }}>
+                        <div
+                            className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[8px] ${
+                                isDarkMode ? 'bg-orange-accent/12 text-orange-accent' : 'bg-orange-50 text-orange-accent'
+                            }`}
+                        >
+                            <MessageSquareMore size={15} />
+                        </div>
+                        <div className="min-w-0">
+                            <p className={`text-[10px] font-black uppercase tracking-[0.14em] ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
+                                Límite de interacciones por chat
+                            </p>
+                            <p className={`mt-1 text-[10px] leading-relaxed ${isDarkMode ? 'text-white/50' : 'text-stone-600'}`}>
+                                Define cuántos mensajes de usuario se permiten antes de bloquear nuevas interacciones.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="px-3 py-3">
+                        <label className="block">
+                            <span className={`text-[10px] font-black uppercase tracking-[0.14em] ${isDarkMode ? 'text-white/70' : 'text-stone-700'}`}>
+                                Máximo permitido ({MIN_MAX_CHAT_INTERACTIONS} a {MAX_MAX_CHAT_INTERACTIONS})
+                            </span>
+                            <input
+                                type="number"
+                                min={MIN_MAX_CHAT_INTERACTIONS}
+                                max={MAX_MAX_CHAT_INTERACTIONS}
+                                step="1"
+                                value={maxChatInteractions}
+                                onChange={(event) => setMaxChatInteractions(event.target.value)}
+                                onBlur={handleMaxChatInteractionsBlur}
+                                className={`mt-2 h-11 w-full rounded-[8px] border px-3 text-[12px] font-semibold outline-none transition-all ${
+                                    isDarkMode
+                                        ? 'border-white/10 bg-black/30 text-white placeholder:text-white/30 focus:border-orange-accent/55'
+                                        : 'border-stone-200 bg-white text-stone-900 placeholder:text-stone-400 focus:border-orange-accent/65'
+                                }`}
+                            />
+                        </label>
+                    </div>
+                </div>
 
                 <button
                     type="submit"

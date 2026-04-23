@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Loader2, Send, User, Wand2 } from 'lucide-react';
+import { Loader2, Send, User, Wand2, Copy, Check } from 'lucide-react';
 import { useTheme } from '../../theme';
 import { getMasterDisplayName } from '../../../shared/utils/masters';
 import MarkdownMessage from '../../../shared/ui/MarkdownMessage';
@@ -32,6 +32,31 @@ const LarAnalysisSymbol = () => (
     </svg>
 );
 
+const CopyButton = ({ text, isDarkMode }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <button
+            onClick={handleCopy}
+            className={`mt-3 flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                isDarkMode 
+                    ? 'border-white/10 text-white/60 hover:bg-white/5 hover:text-white' 
+                    : 'border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+            }`}
+            title="Copiar texto"
+        >
+            {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
+            {copied ? 'Copiado' : 'Copiar'}
+        </button>
+    );
+};
+
 const ChatComponent = ({
     chatId,
     cvAnalysisId,
@@ -39,6 +64,7 @@ const ChatComponent = ({
     recommendation = null,
     suggestedSubjects = [],
     routeBlocks = [],
+    maxInteractions = 20,
     chatEnabled = true,
     onChatContextChange,
     onEnsureChat,
@@ -66,10 +92,12 @@ const ChatComponent = ({
         selectedMasterDisplayName,
     });
 
-    const maxInteractions = 20;
+    const resolvedMaxInteractions = Number.isInteger(maxInteractions) && maxInteractions > 0
+        ? maxInteractions
+        : 20;
     const userMessageCount = messages.filter((m) => m.role === 'user').length;
-    const remainingInteractions = Math.max(0, maxInteractions - userMessageCount);
-    const isLimitReached = userMessageCount >= maxInteractions;
+    const remainingInteractions = Math.max(0, resolvedMaxInteractions - userMessageCount);
+    const isLimitReached = userMessageCount >= resolvedMaxInteractions;
 
     useEffect(() => {
         if (typeof messagesEndRef.current?.scrollIntoView === 'function') {
@@ -360,7 +388,12 @@ const ChatComponent = ({
                                                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-orange-accent/40 [animation-delay:0.4s]" />
                                                 </div>
                                             ) : message.role === 'assistant' ? (
-                                                <MarkdownMessage content={message.content} />
+                                                <div className="flex flex-col items-start gap-1">
+                                                    <MarkdownMessage content={message.content} />
+                                                    {!isStreamingAssistant && message.content && (
+                                                        <CopyButton text={message.content} isDarkMode={isDarkMode} />
+                                                    )}
+                                                </div>
                                             ) : (
                                                 message.content
                                             )}
@@ -431,7 +464,7 @@ const ChatComponent = ({
                                     : 'border-orange-accent/20 bg-orange-accent/10 text-orange-accent'
                             }`}
                         >
-                            {remainingInteractions} de {maxInteractions} interacciones
+                            {remainingInteractions} de {resolvedMaxInteractions} interacciones
                         </div>
                     )}
                 </div>

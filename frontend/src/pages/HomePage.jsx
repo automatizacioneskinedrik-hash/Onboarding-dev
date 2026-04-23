@@ -10,8 +10,19 @@ import ConfirmDialog from '../shared/ui/ConfirmDialog';
 const ONBOARDING_STORAGE_KEY = 'lar_onboarding_seen';
 const TOUR_VIEWPORT_PADDING = 28;
 const TOUR_TOOLTIP_GAP = 14;
+const DEFAULT_MAX_CHAT_INTERACTIONS = 20;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), Math.max(min, max));
+
+const normalizeMaxChatInteractions = (value) => {
+    const parsed = Number(value);
+
+    if (!Number.isInteger(parsed) || parsed < 1) {
+        return DEFAULT_MAX_CHAT_INTERACTIONS;
+    }
+
+    return parsed;
+};
 
 const keepTourTooltipInViewport = () => ({
     name: 'keepTourTooltipInViewport',
@@ -229,6 +240,7 @@ const HomePage = () => {
     const [onboardingFlowStarted, setOnboardingFlowStarted] = React.useState(false);
     const [onboardingVideoHandled, setOnboardingVideoHandled] = React.useState(false);
     const [isAdminPanelOpen, setIsAdminPanelOpen] = React.useState(false);
+    const [maxChatInteractions, setMaxChatInteractions] = React.useState(DEFAULT_MAX_CHAT_INTERACTIONS);
     const isNewUser = history.length === 0;
     const canAutoStartOnboarding =
         onboardingReady &&
@@ -245,6 +257,31 @@ const HomePage = () => {
 
         setOnboardingReady(true);
     }, [analysisLoading, historyLoading]);
+
+    React.useEffect(() => {
+        let isMounted = true;
+
+        const loadChatSettings = async () => {
+            try {
+                const response = await getOnboardingVideo();
+                const videoConfig = response.data || {};
+
+                if (!isMounted) {
+                    return;
+                }
+
+                setMaxChatInteractions(normalizeMaxChatInteractions(videoConfig.maxChatInteractions));
+            } catch (error) {
+                console.error('Error fetching chat settings:', error);
+            }
+        };
+
+        loadChatSettings();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     React.useEffect(() => {
         if (typeof window === 'undefined') {
@@ -309,6 +346,7 @@ const HomePage = () => {
                     ...videoConfig,
                     introVideoUrl,
                 });
+                setMaxChatInteractions(normalizeMaxChatInteractions(videoConfig.maxChatInteractions));
 
                 if (videoConfig.introVideoEnabled === true && hasValidVideoUrl) {
                     setShowOnboardingVideo(true);
@@ -345,6 +383,7 @@ const HomePage = () => {
 
                 if (isMounted) {
                     setOnboardingVideoConfig(response.data || {});
+                    setMaxChatInteractions(normalizeMaxChatInteractions(response.data?.maxChatInteractions));
                 }
             } catch (error) {
                 console.error('Error fetching onboarding video:', error);
@@ -521,6 +560,7 @@ const HomePage = () => {
                                     recommendation={recommendation}
                                     suggestedSubjects={suggestedSubjects}
                                     routeBlocks={routeBlocks}
+                                    maxInteractions={maxChatInteractions}
                                     chatEnabled
                                     onChatContextChange={actions.handleChatContextChange}
                                     onEnsureChat={actions.ensureActiveChat}
@@ -631,10 +671,14 @@ const HomePage = () => {
                                 isDarkMode={isDarkMode}
                                 initialVideoUrl={onboardingVideoConfig?.introVideoUrl || ''}
                                 initialEnabled={Boolean(onboardingVideoConfig?.introVideoEnabled)}
-                                onSaved={(nextConfig) => setOnboardingVideoConfig((previousConfig) => ({
-                                    ...(previousConfig || {}),
-                                    ...nextConfig,
-                                }))}
+                                initialMaxChatInteractions={maxChatInteractions}
+                                onSaved={(nextConfig) => {
+                                    setOnboardingVideoConfig((previousConfig) => ({
+                                        ...(previousConfig || {}),
+                                        ...nextConfig,
+                                    }));
+                                    setMaxChatInteractions(normalizeMaxChatInteractions(nextConfig?.maxChatInteractions));
+                                }}
                             />
                         </div>
                     </div>

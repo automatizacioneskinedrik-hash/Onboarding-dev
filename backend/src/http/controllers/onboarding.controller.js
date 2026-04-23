@@ -3,15 +3,25 @@
  * MVP: reads and updates global onboarding settings directly from Firestore.
  */
 
-const { createFirestoreClient } = require('../../infra/firestore.client');
 const { sendSuccess, sendError } = require('../respond');
+const {
+    DEFAULT_MAX_CHAT_INTERACTIONS,
+    readOnboardingSettings,
+    writeOnboardingSettings,
+} = require('../../services/settings/onboarding-settings.service');
 
-const { db } = createFirestoreClient();
+const MIN_MAX_CHAT_INTERACTIONS = 1;
+const MAX_MAX_CHAT_INTERACTIONS = 100;
 
-const SETTINGS_COLLECTION = 'settings';
-const ONBOARDING_VIDEO_DOC = 'onboardingVideo';
+const normalizeMaxChatInteractions = (value) => {
+    const parsed = Number(value);
 
-const getOnboardingVideoRef = () => db.collection(SETTINGS_COLLECTION).doc(ONBOARDING_VIDEO_DOC);
+    if (!Number.isInteger(parsed)) {
+        return DEFAULT_MAX_CHAT_INTERACTIONS;
+    }
+
+    return Math.min(MAX_MAX_CHAT_INTERACTIONS, Math.max(MIN_MAX_CHAT_INTERACTIONS, parsed));
+};
 
 const normalizeUpdatedAt = (updatedAt) => {
     if (!updatedAt) return null;
@@ -23,23 +33,13 @@ const normalizeUpdatedAt = (updatedAt) => {
 
 const getOnboardingVideo = async (req, res, next) => {
     try {
-        const doc = await getOnboardingVideoRef().get();
-
-        if (!doc.exists) {
-            return sendSuccess(res, {
-                data: {
-                    introVideoUrl: null,
-                    introVideoEnabled: false,
-                },
-            });
-        }
-
-        const data = doc.data();
+        const data = await readOnboardingSettings();
 
         return sendSuccess(res, {
             data: {
                 introVideoUrl: data.introVideoUrl || null,
                 introVideoEnabled: Boolean(data.introVideoEnabled),
+                maxChatInteractions: normalizeMaxChatInteractions(data.maxChatInteractions),
                 updatedAt: normalizeUpdatedAt(data.updatedAt),
             },
         });
@@ -50,7 +50,7 @@ const getOnboardingVideo = async (req, res, next) => {
 
 const updateOnboardingVideo = async (req, res, next) => {
     try {
-        const { introVideoUrl, introVideoEnabled } = req.body;
+        const { introVideoUrl, introVideoEnabled, maxChatInteractions } = req.body;
 
         if (req.user?.role !== 'admin') {
             return sendError(res, {
@@ -76,6 +76,22 @@ const updateOnboardingVideo = async (req, res, next) => {
             });
         }
 
+        if (maxChatInteractions !== undefined) {
+            const parsedMaxInteractions = Number(maxChatInteractions);
+
+            if (
+                !Number.isInteger(parsedMaxInteractions)
+                || parsedMaxInteractions < MIN_MAX_CHAT_INTERACTIONS
+                || parsedMaxInteractions > MAX_MAX_CHAT_INTERACTIONS
+            ) {
+                return sendError(res, {
+                    statusCode: 400,
+                    message: `maxChatInteractions debe ser un entero entre ${MIN_MAX_CHAT_INTERACTIONS} y ${MAX_MAX_CHAT_INTERACTIONS}.`,
+                    requestId: req.requestId,
+                });
+            }
+        }
+
         if (introVideoEnabled === true) {
             const trimmedIntroVideoUrl = introVideoUrl.trim();
 
@@ -98,15 +114,19 @@ const updateOnboardingVideo = async (req, res, next) => {
             }
         }
 
-        await getOnboardingVideoRef().set(
-            {
-                introVideoUrl,
-                introVideoEnabled,
-                updatedBy: req.user.id || req.user.email || null,
-                updatedAt: new Date().toISOString(),
-            },
-            { merge: true }
-        );
+        const updatePayload = {
+            introVideoUrl,
+            introVideoEnabled,
+        };
+
+        if (maxChatInteractions !== undefined) {
+            updatePayload.maxChatInteractions = Number(maxChatInteractions);
+        }
+
+        await writeOnboardingSettings({
+            patch: updatePayload,
+            updatedBy: req.user.id || req.user.email || null,
+        });
 
         return sendSuccess(res, {
             message: 'Configuracion actualizada',

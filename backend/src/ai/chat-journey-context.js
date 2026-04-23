@@ -81,6 +81,7 @@ const resolveChatJourneyContext = ({
     userProfile = null,
     recommendation = null,
     userMessageCount = 0,
+    maxUserInteractions = MAX_USER_INTERACTIONS,
 } = {}) => {
     const hasSelectedMaster = Boolean(selectedMasterId);
     const hasUserProfile = Boolean(userProfile);
@@ -97,6 +98,10 @@ const resolveChatJourneyContext = ({
 
     const config = STAGE_CONFIG[stage];
 
+    const normalizedMaxInteractions = Number.isInteger(maxUserInteractions) && maxUserInteractions > 0
+        ? maxUserInteractions
+        : MAX_USER_INTERACTIONS;
+
     return {
         key: stage,
         label: config.label,
@@ -108,9 +113,9 @@ const resolveChatJourneyContext = ({
         hasUserProfile,
         hasRecommendation,
         userMessageCount,
-        maxUserInteractions: MAX_USER_INTERACTIONS,
-        remainingInteractions: Math.max(0, MAX_USER_INTERACTIONS - userMessageCount),
-        isOutOfInteractions: userMessageCount >= MAX_USER_INTERACTIONS,
+        maxUserInteractions: normalizedMaxInteractions,
+        remainingInteractions: Math.max(0, normalizedMaxInteractions - userMessageCount),
+        isOutOfInteractions: userMessageCount >= normalizedMaxInteractions,
         shouldSendWelcome: userMessageCount <= 1,
         assistantGoals: config.assistantGoals,
         nextStep: config.nextStep,
