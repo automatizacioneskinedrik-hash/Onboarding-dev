@@ -86,8 +86,19 @@ const SPRINT_SPECIALIZATIONS = [
         difficulty: 4,
         estimated_hours: 35,
         description: 'Uso de datos y analítica avanzada para toma de decisiones empresariales.',
-    },
+    }
 ];
+
+const DATALAR_SPRINT_OVERRIDES = {
+    analitica_datos: {
+        title: 'Arquitectura Analitica Avanzada',
+        order: 1,
+        difficulty: 5,
+        estimated_hours: 40,
+        description:
+            'Tope tecnologico del Master Data Science para disenar arquitecturas analiticas avanzadas, gobernar sistemas complejos y tomar decisiones estrategicas basadas en datos.',
+    },
+};
 
 const MTECMBA_SPRINT_TOPICS = {
     comunicacion: [
@@ -620,8 +631,42 @@ const buildSprintTopicId = (masterId, key, order) =>
         ? `topic_${LEGACY_SPRINT_TOPIC_PREFIX[key]}_${order}`
         : `${masterId}_topic_${key}_${order}`;
 
+const getSprintModuleDefinition = (masterId, module) => {
+    const override = masterId === DATALAR_ID ? DATALAR_SPRINT_OVERRIDES[module.key] : null;
+
+    return {
+        ...module,
+        ...(override || {}),
+    };
+};
+
+const getSprintTopics = (masterId, moduleKey, topicsByKey) => {
+    const titles = topicsByKey[moduleKey] || [];
+
+    if (masterId !== DATALAR_ID || moduleKey !== 'analitica_datos') {
+        return titles;
+    }
+
+    const isAdvancedArchitecture = (title) => {
+        const normalized = String(title || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+
+        return normalized.includes('arquitectura') && normalized.includes('analitica') && normalized.includes('avanzada');
+    };
+
+    return [
+        ...titles.filter(isAdvancedArchitecture),
+        ...titles.filter((title) => !isAdvancedArchitecture(title)),
+    ];
+};
+
 const buildSprintContent = (masterId, topicsByKey) => {
-    const modules = SPRINT_SPECIALIZATIONS.map((module) => ({
+    const modules = SPRINT_SPECIALIZATIONS.map((rawModule) => {
+        const module = getSprintModuleDefinition(masterId, rawModule);
+
+        return {
         id: buildSprintModuleId(masterId, module.key),
         master_id: masterId,
         catalog_type: 'sprint',
@@ -631,10 +676,11 @@ const buildSprintContent = (masterId, topicsByKey) => {
         difficulty: module.difficulty,
         estimated_hours: module.estimated_hours,
         description: module.description,
-    }));
+        };
+    });
 
     const topics = SPRINT_SPECIALIZATIONS.flatMap((module) =>
-        (topicsByKey[module.key] || []).map((title, index) => ({
+        getSprintTopics(masterId, module.key, topicsByKey).map((title, index) => ({
             id: buildSprintTopicId(masterId, module.key, index + 1),
             master_id: masterId,
             catalog_type: 'sprint',

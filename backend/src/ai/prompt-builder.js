@@ -93,6 +93,43 @@ Responde unicamente con un JSON valido:
 
 Los IDs validos son: comunicacion, emprendimiento, finanzas, talento, tecnologia, ia-automatizacion, mercado-cliente, operaciones, analitica-datos, ciencia-datos-aplicada`;
 
+const buildRecommendationPromptWithDataScienceRule = (params) => {
+    const prompt = buildRecommendationPrompt(params);
+    const selectedMasterId = params?.options?.sourceMasterId || params?.options?.masterId;
+    const isDataScienceMaster = String(selectedMasterId || '').trim().toLowerCase() === 'datalar-mba';
+
+    if (!isDataScienceMaster) {
+        return prompt;
+    }
+
+    const dataScienceInstructions = `REGLA ESPECIAL PARA DATA SCIENCE:
+- Arquitectura Analitica Avanzada debe ser siempre el primer sprint, la recomendacion principal y el tope tecnologico de la ruta.
+- Los otros 5 sprints deben elegirse segun el mejor ajuste al perfil del candidato dentro del catalogo valido.
+- No dupliques Arquitectura Analitica Avanzada ni lo sustituyas por otro sprint principal.`;
+
+    return prompt.replace('PERFIL DEL CANDIDATO:', `${dataScienceInstructions}\n\nPERFIL DEL CANDIDATO:`);
+};
+
+const resolvePrioritySprintTitle = (recommendation = {}) => {
+    const firstBlock =
+        recommendation?.sprint?.blocks?.[0] ||
+        recommendation?.planBlocks?.[0] ||
+        recommendation?.recommendedCourses?.[0] ||
+        null;
+
+    return firstBlock?.blockTitle || firstBlock?.title || recommendation?.subjects?.[0] || null;
+};
+
+const hasAdvancedAnalyticsPriority = (recommendation = {}) => {
+    const priorityTitle = resolvePrioritySprintTitle(recommendation) || '';
+    const normalizedTitle = priorityTitle
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+
+    return normalizedTitle.includes('arquitectura') && normalizedTitle.includes('analitica') && normalizedTitle.includes('avanzada');
+};
+
 const buildChatMessages = (
     messages,
     userProfile = null,
@@ -119,9 +156,11 @@ ${userProfile ? `PERFIL DEL USUARIO:
 ` : ''}
 
 ${recommendation ? `RECOMENDACION ACTUAL:
-- Especializacion principal: ${recommendation.specialization?.name || recommendation.primarySpecialization}
+- Sprint prioritario: ${resolvePrioritySprintTitle(recommendation) || 'No definido'}
+- Especializacion contenedora: ${recommendation.specialization?.name || recommendation.primarySpecialization}
 - Score de compatibilidad: ${recommendation.matchScore}%
 - Ruta de 6 sprints: ${(recommendation.subjects || []).join(', ')}
+${hasAdvancedAnalyticsPriority(recommendation) ? '- Regla critica: si el usuario pregunta que sprint priorizar primero, responde Arquitectura Analitica Avanzada. No presentes Analitica de Datos y Decision Empresarial como el sprint prioritario; esa es la especializacion contenedora.' : ''}
 ` : ''}
 
 ${retrieval?.matches?.length ? `CONTEXTO RECUPERADO DEL CATALOGO:
@@ -154,13 +193,13 @@ INSTRUCCIONES:
 
 const createPromptBuilder = () => ({
     buildProfileExtractionPrompt,
-    buildRecommendationPrompt,
+    buildRecommendationPrompt: buildRecommendationPromptWithDataScienceRule,
     buildChatMessages,
 });
 
 module.exports = {
     buildProfileExtractionPrompt,
-    buildRecommendationPrompt,
+    buildRecommendationPrompt: buildRecommendationPromptWithDataScienceRule,
     buildChatMessages,
     createPromptBuilder,
 };

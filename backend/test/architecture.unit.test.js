@@ -6,6 +6,8 @@ const { createContextManager } = require('../src/ai/context-manager');
 const { createAiOrchestrator } = require('../src/ai/orchestrator');
 const { createRegenerateRecommendationUseCases } = require('../src/use-cases/regenerate-recommendation');
 const { buildAppContainer } = require('../src/composition-root');
+const { resolveUniversityRecommendation } = require('../src/ai/university-route-planner');
+const { learningModules, topics } = require('../src/utils/seed-learning-content');
 
 test('prompt builder keeps centralized AI prompts available', () => {
     const prompt = buildProfileExtractionPrompt('CV de ejemplo');
@@ -104,6 +106,73 @@ test('ai orchestrator falls back cleanly when OpenAI is unavailable', async () =
     assert.equal(recommendation.planBlocks.length, 6);
     assert.ok(recommendation.recommendedCourses.length >= 1);
     assert.match(recommendation.reasoning, /respaldo|recomienda/i);
+});
+
+test('university route planner pins Arquitectura Analitica Avanzada for Data Science', () => {
+    const recommendation = resolveUniversityRecommendation({
+        profile: {
+            currentRole: 'Data Engineer',
+            skills: ['Python', 'MLOps', 'Arquitectura de datos'],
+            summary: 'Perfil tecnico senior de data science.',
+        },
+        masterId: 'datalar-mba',
+        sourceMasterId: 'datalar-mba',
+        aiRecommendation: {
+            planBlocks: [
+                {
+                    specializationId: 'ciencia-datos-aplicada',
+                    blockTitle: 'Industrializacion de Modelos y MLOps',
+                },
+            ],
+        },
+    });
+
+    const blockIds = recommendation.planBlocks.map((block) => block.blockId);
+
+    assert.equal(recommendation.primarySpecializationId, 'analitica-datos');
+    assert.equal(recommendation.planBlocks.length, 6);
+    assert.equal(recommendation.planBlocks[0].specializationId, 'analitica-datos');
+    assert.match(recommendation.planBlocks[0].blockTitle, /Arquitectura .*Avanzada/i);
+    assert.equal(new Set(blockIds).size, blockIds.length);
+    assert.ok(recommendation.planBlocks.some((block) => block.specializationId !== 'analitica-datos'));
+});
+
+test('university route planner does not pin Data Science top block for redirected MTECH MBA', () => {
+    const recommendation = resolveUniversityRecommendation({
+        profile: {
+            currentRole: 'Product Manager',
+            skills: ['Producto', 'Liderazgo'],
+        },
+        masterId: 'datalar-mba',
+        sourceMasterId: 'mtecmba',
+    });
+
+    assert.equal(recommendation.planBlocks.length, 6);
+    assert.notEqual(recommendation.planBlocks[0].blockTitle, 'Arquitectura Analitica Avanzada');
+});
+
+test('learning content seed prioritizes advanced analytics architecture for Data Science', () => {
+    const datalarAnalyticsModule = learningModules.find(
+        (module) =>
+            module.master_id === 'datalar-mba' &&
+            module.catalog_type === 'sprint' &&
+            module.specialization_id === 'analitica-datos'
+    );
+    const invalidAdvancedModule = learningModules.find(
+        (module) => module.specialization_id === 'analitica-datos-Avanzada'
+    );
+    const datalarAnalyticsTopics = topics
+        .filter(
+            (topic) =>
+                topic.master_id === 'datalar-mba' &&
+                topic.catalog_type === 'sprint' &&
+                topic.specialization_id === 'analitica-datos'
+        )
+        .sort((left, right) => left.order - right.order);
+
+    assert.equal(invalidAdvancedModule, undefined);
+    assert.match(datalarAnalyticsModule.title, /Arquitectura Analitica Avanzada|Arquitectura Anal.tica Avanzada/i);
+    assert.match(datalarAnalyticsTopics[0].title, /Arquitectura .*Avanzada/i);
 });
 
 test('regenerate recommendation use case normalizes and persists recommendation data', async () => {

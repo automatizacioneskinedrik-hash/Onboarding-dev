@@ -67,6 +67,7 @@ const createAiOrchestrator = ({
             options: {
                 ...options,
                 masterId: recommendationMasterId,
+                sourceMasterId: options.masterId || null,
             },
             specializationsList: getSpecializationNamesForPrompt(recommendationMasterId),
         });

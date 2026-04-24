@@ -5,6 +5,9 @@ const {
 } = require('../utils/specializations');
 
 const MAX_ROUTE_BLOCKS = 6;
+const DATA_SCIENCE_MASTER_ID = 'datalar-mba';
+const DATA_SCIENCE_TOP_SPECIALIZATION_ID = 'analitica-datos';
+const DATA_SCIENCE_TOP_BLOCK_TITLE = 'Arquitectura Analitica Avanzada';
 
 const PRIORITY_BY_MASTER = {
     mtecmba: [
@@ -50,6 +53,11 @@ const normalizeText = (value = '') =>
         .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase()
         .trim();
+
+const normalizeMasterId = (value = null) => String(value || '').trim().toLowerCase();
+
+const shouldApplyDataScienceTopRule = ({ masterId, sourceMasterId = null }) =>
+    normalizeMasterId(sourceMasterId || masterId) === DATA_SCIENCE_MASTER_ID;
 
 const tokenize = (value = '') =>
     normalizeText(value)
@@ -231,6 +239,84 @@ const mergePlanBlocks = ({ aiBlocks = [], fallbackCandidates = [], masterId, pro
     }));
 };
 
+const getDataScienceTopBlock = ({ masterId, profile }) => {
+    const specialization = getSpecializationById(DATA_SCIENCE_TOP_SPECIALIZATION_ID, masterId);
+    const block =
+        resolveCatalogBlock({
+            masterId,
+            specializationId: DATA_SCIENCE_TOP_SPECIALIZATION_ID,
+            title: DATA_SCIENCE_TOP_BLOCK_TITLE,
+        }) ||
+        specialization?.blocks?.find((item) => {
+            const normalizedTitle = normalizeText(item.title);
+            return normalizedTitle.includes('arquitectura') && normalizedTitle.includes('avanzada');
+        });
+
+    if (!block || !specialization) {
+        return null;
+    }
+
+    return {
+        id: block.id,
+        blockId: block.id,
+        title: block.title,
+        blockTitle: block.title,
+        specializationId: specialization.id,
+        specializationName: specialization.name,
+        order: 1,
+        rationale: `Este sprint posiciona ${specialization.name} como el tope tecnologico del Master y eleva tu perfil hacia arquitectura analitica avanzada.`,
+        sprintUrl: specialization.sprintUrl,
+    };
+};
+
+const mergeDataSciencePlanBlocks = ({ aiBlocks = [], fallbackCandidates = [], masterId, profile }) => {
+    const topBlock = getDataScienceTopBlock({ masterId, profile });
+
+    if (!topBlock) {
+        return mergePlanBlocks({ aiBlocks, fallbackCandidates, masterId, profile });
+    }
+
+    const byBlockId = new Map([[topBlock.blockId, topBlock]]);
+    const addBlock = (block) => {
+        if (!block || byBlockId.size >= MAX_ROUTE_BLOCKS || byBlockId.has(block.blockId)) {
+            return;
+        }
+
+        byBlockId.set(block.blockId, block);
+    };
+
+    for (const rawBlock of aiBlocks) {
+        addBlock(normalizePlanBlock({ rawBlock, masterId, profile }));
+    }
+
+    for (const candidate of fallbackCandidates) {
+        if (!candidate?.specialization || !candidate?.block) {
+            continue;
+        }
+
+        addBlock({
+            id: candidate.block.id,
+            blockId: candidate.block.id,
+            title: candidate.block.title,
+            blockTitle: candidate.block.title,
+            specializationId: candidate.specialization.id,
+            specializationName: candidate.specialization.name,
+            order: byBlockId.size + 1,
+            rationale: buildBlockReason({
+                block: candidate.block,
+                specialization: candidate.specialization,
+                profile,
+            }),
+            sprintUrl: candidate.specialization.sprintUrl,
+        });
+    }
+
+    return [...byBlockId.values()].slice(0, MAX_ROUTE_BLOCKS).map((block, index) => ({
+        ...block,
+        order: index + 1,
+    }));
+};
+
 const buildRecommendedCoursesFromPlan = (planBlocks = []) =>
     planBlocks.map((block) => ({
         id: block.blockId,
@@ -253,17 +339,39 @@ const buildReasoning = ({ aiReasoning, primarySpecialization, planBlocks }) => {
     return `Se recomienda una ruta personalizada de 6 sprints con foco principal en ${primarySpecialization.name}. La selección combina especializaciones del Master para fortalecer tu perfil con un plan equilibrado y accionable. Los primeros sprints destacados son ${visibleBlocks}.`;
 };
 
+const buildDataScienceReasoning = ({ aiReasoning, planBlocks }) => {
+    if (aiReasoning) {
+        return aiReasoning;
+    }
+
+    const complementaryBlocks = planBlocks
+        .slice(1, 4)
+        .map((block) => block.blockTitle)
+        .join(', ');
+
+    return `Se recomienda Arquitectura Analitica Avanzada como sprint principal y tope tecnologico para un perfil de Data Science con alto conocimiento tecnico. Los demas sprints complementan ese foco segun el ajuste del perfil${complementaryBlocks ? `, especialmente ${complementaryBlocks}` : ''}.`;
+};
+
 const resolveUniversityRecommendation = ({ profile, masterId, sourceMasterId = null, aiRecommendation = {} }) => {
     const fallbackCandidates = buildFallbackCandidates({ profile, masterId, sourceMasterId });
     const aiBlocks = aiRecommendation.planBlocks || aiRecommendation.routeBlocks || aiRecommendation.blocks || [];
-    const planBlocks = mergePlanBlocks({
-        aiBlocks,
-        fallbackCandidates,
-        masterId,
-        profile,
-    });
+    const appliesDataScienceTopRule = shouldApplyDataScienceTopRule({ masterId, sourceMasterId });
+    const planBlocks = appliesDataScienceTopRule
+        ? mergeDataSciencePlanBlocks({
+              aiBlocks,
+              fallbackCandidates,
+              masterId,
+              profile,
+          })
+        : mergePlanBlocks({
+              aiBlocks,
+              fallbackCandidates,
+              masterId,
+              profile,
+          });
 
     const primarySpecialization =
+        (appliesDataScienceTopRule && getSpecializationById(DATA_SCIENCE_TOP_SPECIALIZATION_ID, masterId)) ||
         getSpecializationById(planBlocks[0]?.specializationId, masterId) ||
         getSpecializationById(aiRecommendation.primarySpecializationId, masterId) ||
         fallbackCandidates[0]?.specialization ||
@@ -281,11 +389,16 @@ const resolveUniversityRecommendation = ({ profile, masterId, sourceMasterId = n
         primarySpecializationId: primarySpecialization?.id || null,
         secondarySpecializations,
         matchScore,
-        reasoning: buildReasoning({
-            aiReasoning: aiRecommendation.reasoning,
-            primarySpecialization,
-            planBlocks,
-        }),
+        reasoning: appliesDataScienceTopRule
+            ? buildDataScienceReasoning({
+                  aiReasoning: aiRecommendation.reasoning,
+                  planBlocks,
+              })
+            : buildReasoning({
+                  aiReasoning: aiRecommendation.reasoning,
+                  primarySpecialization,
+                  planBlocks,
+              }),
         keyStrengths: (aiRecommendation.keyStrengths || profile.skills || []).slice(0, 4),
         growthAreas: (aiRecommendation.growthAreas || []).slice(0, 3),
         specialization: primarySpecialization || null,
@@ -306,6 +419,8 @@ const resolveUniversityRecommendation = ({ profile, masterId, sourceMasterId = n
 };
 
 module.exports = {
+    DATA_SCIENCE_TOP_BLOCK_TITLE,
+    DATA_SCIENCE_TOP_SPECIALIZATION_ID,
     MAX_ROUTE_BLOCKS,
     buildFallbackCandidates,
     resolveUniversityRecommendation,

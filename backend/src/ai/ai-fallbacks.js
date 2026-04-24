@@ -152,6 +152,12 @@ const buildChatResponseFallback = (
 ) => {
     const lastUserMessage = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
     const topCourse = retrieval?.matches?.[0];
+    const prioritySprint =
+        recommendation?.sprint?.blocks?.[0]?.blockTitle ||
+        recommendation?.planBlocks?.[0]?.blockTitle ||
+        recommendation?.recommendedCourses?.[0]?.title ||
+        recommendation?.subjects?.[0] ||
+        null;
 
     if (chatJourneyContext?.shouldSendWelcome) {
         const welcomeMessage = buildWelcomeAssistantMessage({
@@ -173,7 +179,7 @@ const buildChatResponseFallback = (
         return `Recibido. Ya tengo tu mensaje: "${lastUserMessage}". Para darte una ruta personalizada, adjunta tu hoja de vida en PDF y continuare con el análisis.`;
     }
 
-    return `Gracias por tu mensaje. Con base en tu perfil, tu ruta académica actual combina sprints con foco principal en ${recommendation.primarySpecialization || recommendation.specialization?.name}. Si quieres, te explico por qué se eligieron esos 6 sprints y como aplicarlos en tu trabajo.`;
+    return `Gracias por tu mensaje. Con base en tu perfil, el sprint que deberias priorizar primero es ${prioritySprint || recommendation.primarySpecialization || recommendation.specialization?.name}. Si quieres, te explico por que ese sprint abre mejor tu ruta y como aplicarlo en tu trabajo.`;
 };
 
 module.exports = {
