@@ -31,6 +31,11 @@ test('GET /api/recommendations/specializations redirects mtecmba catalog to data
     // El flujo comercial redirige MTECH MBA al catalogo de Datalar para recomendaciones.
     assert.match(dataSpecialization.subjects.join(' | '), /Arquitectura Anal[ií]tica Avanzada/i);
 
+    const architectureSpecialization = response.body.data.specializations.find((item) => item.id === 'arquitectura-analitica-avanzada');
+    assert.ok(architectureSpecialization);
+    assert.equal(architectureSpecialization.name, 'ARQUITECTURA ANALÍTICA AVANZADA');
+    assert.match(architectureSpecialization.subjects[0], /Arquitectura Anal[ií]tica Avanzada/i);
+
     const appliedDataScience = response.body.data.specializations.find((item) => item.id === 'ciencia-datos-aplicada');
     assert.ok(appliedDataScience);
     assert.match(appliedDataScience.subjects.join(' | '), /Entorno y Arquitectura para Data Science/i);

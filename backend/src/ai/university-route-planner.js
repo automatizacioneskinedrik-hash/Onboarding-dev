@@ -6,7 +6,7 @@ const {
 
 const MAX_ROUTE_BLOCKS = 6;
 const DATA_SCIENCE_MASTER_ID = 'datalar-mba';
-const DATA_SCIENCE_TOP_SPECIALIZATION_ID = 'analitica-datos';
+const DATA_SCIENCE_TOP_SPECIALIZATION_ID = 'arquitectura-analitica-avanzada';
 const DATA_SCIENCE_TOP_BLOCK_TITLE = 'Arquitectura Analitica Avanzada';
 
 const PRIORITY_BY_MASTER = {
@@ -34,6 +34,7 @@ const PRIORITY_BY_MASTER = {
         'finanzas',
     ],
     'datalar-mba': [
+        'arquitectura-analitica-avanzada',
         'analitica-datos',
         'ciencia-datos-aplicada',
         'ia-automatizacion',

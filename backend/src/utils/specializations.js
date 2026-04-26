@@ -72,6 +72,15 @@ const MASTER_SPECIALIZATION_TOPICS = {
             'Gobierno del dato y calidad de la información',
             'Data-Driven management y cultura analítica',
         ],
+        'arquitectura-analitica-avanzada': [
+            'Arquitectura Analítica Avanzada',
+            'Evaluación Crítica de Sistemas Analíticos Complejos',
+            'Decisión Ejecutiva Bajo Incertidumbre Algorítmica',
+            'Gestión de Trade-offs Técnicos, Financieros y Operativos en IA',
+            'Responsabilidad Ejecutiva en Modelos Predictivos y Automatización',
+            'Gobierno Corporativo Avanzado del Dato en Entornos Multijurisdiccionales',
+            'Diseño de Estrategias de Ventaja Competitiva Basadas en Analítica Avanzada',
+        ],
     },
     mintear: {
         comunicacion: [
@@ -311,6 +320,14 @@ const SPECIALIZATION_METADATA = {
         sprintUrl: 'https://lar.university/sprints/analitica-datos',
         keywords: ['datos', 'analitica', 'data', 'analytics', 'machine learning', 'bi', 'power bi', 'sql'],
     },
+    'arquitectura-analitica-avanzada': {
+        id: 'arquitectura-analitica-avanzada',
+        name: 'ARQUITECTURA ANALÍTICA AVANZADA',
+        description: 'Lleva el criterio ejecutivo de Data Science al diseño, gobierno y ventaja competitiva basada en analítica avanzada.',
+        color: '#0f766e',
+        sprintUrl: 'https://lar.university/sprints/arquitectura-analitica-avanzada',
+        keywords: ['arquitectura analitica', 'analitica avanzada', 'sistemas analiticos complejos', 'incertidumbre algoritmica', 'mlops', 'gobierno del dato', 'ventaja competitiva'],
+    },
     'ciencia-datos-aplicada': {
         id: 'ciencia-datos-aplicada',
         name: 'CIENCIA DE DATOS APLICADA',
@@ -331,6 +348,7 @@ const MODULE_TO_SPECIALIZATION_ID = {
     module_mercado_cliente: 'mercado-cliente',
     module_operaciones: 'operaciones',
     module_analitica_datos: 'analitica-datos',
+    module_arquitectura_analitica_avanzada: 'arquitectura-analitica-avanzada',
 };
 
 const DEFAULT_MASTER_ID = 'mtecmba';

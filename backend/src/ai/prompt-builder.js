@@ -91,7 +91,7 @@ Responde unicamente con un JSON valido:
   ]
 }
 
-Los IDs validos son: comunicacion, emprendimiento, finanzas, talento, tecnologia, ia-automatizacion, mercado-cliente, operaciones, analitica-datos, ciencia-datos-aplicada`;
+Los IDs validos son: comunicacion, emprendimiento, finanzas, talento, tecnologia, ia-automatizacion, mercado-cliente, operaciones, analitica-datos, arquitectura-analitica-avanzada, ciencia-datos-aplicada`;
 
 const buildRecommendationPromptWithDataScienceRule = (params) => {
     const prompt = buildRecommendationPrompt(params);
