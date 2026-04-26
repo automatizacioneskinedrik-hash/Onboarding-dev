@@ -72,14 +72,13 @@ const MASTER_SPECIALIZATION_TOPICS = {
             'Gobierno del dato y calidad de la información',
             'Data-Driven management y cultura analítica',
         ],
-        'arquitectura-analitica-avanzada': [
-            'Arquitectura Analítica Avanzada',
-            'Evaluación Crítica de Sistemas Analíticos Complejos',
-            'Decisión Ejecutiva Bajo Incertidumbre Algorítmica',
-            'Gestión de Trade-offs Técnicos, Financieros y Operativos en IA',
-            'Responsabilidad Ejecutiva en Modelos Predictivos y Automatización',
-            'Gobierno Corporativo Avanzado del Dato en Entornos Multijurisdiccionales',
-            'Diseño de Estrategias de Ventaja Competitiva Basadas en Analítica Avanzada',
+        'ciencia-datos-aplicada': [
+            'Entorno y Arquitectura para Data Science',
+            'Modelado Predictivo y Machine Learning',
+            'Ingeniería de Datos y Arquitecturas Escalables',
+            'Inteligencia Artificial y Deep Learning Aplicado',
+            'Analítica Estratégica en Áreas Clave del Negocio',
+            'Industrialización de Modelos y MLOps',
         ],
     },
     mintear: {
@@ -228,6 +227,8 @@ const MASTER_SPECIALIZATION_TOPICS = {
             'Analítica predictiva aplicada al negocio',
             'Gobierno del dato y calidad de la información',
             'Data-Driven management y cultura analítica',
+        ],
+        'arquitectura-analitica-avanzada': [
             'Arquitectura Analítica Avanzada',
             'Evaluación Crítica de Sistemas Analíticos Complejos',
             'Decisión Ejecutiva Bajo Incertidumbre Algorítmica',
@@ -235,14 +236,6 @@ const MASTER_SPECIALIZATION_TOPICS = {
             'Responsabilidad Ejecutiva en Modelos Predictivos y Automatización',
             'Gobierno Corporativo Avanzado del Dato en Entornos Multijurisdiccionales',
             'Diseño de Estrategias de Ventaja Competitiva Basadas en Analítica Avanzada',
-        ],
-        'ciencia-datos-aplicada': [
-            'Entorno y Arquitectura para Data Science',
-            'Modelado Predictivo y Machine Learning',
-            'Ingeniería de Datos y Arquitecturas Escalables',
-            'Inteligencia Artificial y Deep Learning Aplicado',
-            'Analítica Estratégica en Áreas Clave del Negocio',
-            'Industrialización de Modelos y MLOps',
         ],
     },
 };

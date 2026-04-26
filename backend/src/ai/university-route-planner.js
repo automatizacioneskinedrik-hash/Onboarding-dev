@@ -354,6 +354,59 @@ const buildDataScienceReasoning = ({ aiReasoning, planBlocks }) => {
 };
 
 const resolveUniversityRecommendation = ({ profile, masterId, sourceMasterId = null, aiRecommendation = {} }) => {
+    const rawMasterId = normalizeMasterId(sourceMasterId || masterId);
+    
+    let forcedSpecializationId = null;
+    if (rawMasterId === 'datalar-mba') {
+        forcedSpecializationId = 'arquitectura-analitica-avanzada';
+    } else if (rawMasterId === 'mtecmba') {
+        forcedSpecializationId = 'ciencia-datos-aplicada';
+    }
+
+    if (forcedSpecializationId) {
+        const spec = require('../utils/specializations').getSpecializationById(forcedSpecializationId, masterId) 
+                     || require('../utils/specializations').getSpecializationById(forcedSpecializationId, 'datalar-mba') 
+                     || require('../utils/specializations').getSpecializationById(forcedSpecializationId, 'mtecmba');
+        
+        if (spec) {
+            const planBlocks = spec.blocks.slice(0, MAX_ROUTE_BLOCKS).map((block, index) => ({
+                id: block.id,
+                blockId: block.id,
+                title: block.title,
+                blockTitle: block.title,
+                specializationId: spec.id,
+                specializationName: spec.name,
+                order: index + 1,
+                rationale: `Sprint destacado de la especialización ${spec.name}.`,
+                sprintUrl: spec.sprintUrl
+            }));
+
+            return {
+                primarySpecialization: spec.name,
+                primarySpecializationId: spec.id,
+                secondarySpecializations: [],
+                matchScore: 99,
+                reasoning: `Se ha determinado que la ruta más adecuada para potenciar fundamentalmente tu perfil en este Master es ${spec.name}, asegurando un estándar avanzado técnico y estratégico liderando a un nivel de Arquitectura Analitica Avanzada o Ciencia de Datos Aplicada.`,
+                keyStrengths: (aiRecommendation?.keyStrengths || profile?.skills || []).slice(0, 4),
+                growthAreas: (aiRecommendation?.growthAreas || []).slice(0, 3),
+                specialization: spec,
+                subjects: planBlocks.map((block) => block.blockTitle),
+                sprintUrl: spec.sprintUrl,
+                recommendedCourses: buildRecommendedCoursesFromPlan(planBlocks),
+                planBlocks,
+                sprint: {
+                    id: 'ruta-recomendada',
+                    title: `Ruta de 6 sprints - ${spec.name}`,
+                    url: spec.sprintUrl,
+                    blocks: planBlocks,
+                    courses: planBlocks,
+                    totalBlocks: planBlocks.length,
+                    totalCourses: planBlocks.length,
+                },
+            };
+        }
+    }
+
     const fallbackCandidates = buildFallbackCandidates({ profile, masterId, sourceMasterId });
     const aiBlocks = aiRecommendation.planBlocks || aiRecommendation.routeBlocks || aiRecommendation.blocks || [];
     const appliesDataScienceTopRule = shouldApplyDataScienceTopRule({ masterId, sourceMasterId });
