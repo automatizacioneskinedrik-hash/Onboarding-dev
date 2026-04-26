@@ -385,7 +385,7 @@ const resolveUniversityRecommendation = ({ profile, masterId, sourceMasterId = n
                 primarySpecialization: spec.name,
                 primarySpecializationId: spec.id,
                 secondarySpecializations: [],
-                matchScore: 99,
+                matchScore: Math.floor(Math.random() * 20) + 80,
                 reasoning: `Se ha determinado que la ruta más adecuada para potenciar fundamentalmente tu perfil en este Master es ${spec.name}, asegurando un estándar avanzado técnico y estratégico liderando a un nivel de Arquitectura Analitica Avanzada o Ciencia de Datos Aplicada.`,
                 keyStrengths: (aiRecommendation?.keyStrengths || profile?.skills || []).slice(0, 4),
                 growthAreas: (aiRecommendation?.growthAreas || []).slice(0, 3),
