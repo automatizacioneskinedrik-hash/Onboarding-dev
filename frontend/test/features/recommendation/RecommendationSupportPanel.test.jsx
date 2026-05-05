@@ -30,7 +30,7 @@ describe('RecommendationSupportPanel', () => {
     it('shows selection guidance before a master is fully defined', () => {
         render(<RecommendationSupportPanel {...baseProps} />);
 
-        expect(screen.getByText('Selecciona tu MBA')).toBeInTheDocument();
+        expect(screen.getByText('Selecciona tu Máster')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Abrir selección/i })).toBeInTheDocument();
     });
 
@@ -61,11 +61,11 @@ describe('RecommendationSupportPanel', () => {
             />
         );
 
-        expect(screen.getByText(/MBA seleccionado/i)).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Cambiar MBA/i })).toBeInTheDocument();
+        expect(screen.getByText(/Máster seleccionado/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Cambiar Máster/i })).toBeInTheDocument();
         expect(screen.getAllByText(/TECH MBA/i).length).toBeGreaterThan(0);
         expect(screen.queryByText(/Tu perfil actual/i)).not.toBeInTheDocument();
-        expect(screen.getByText(/Como mejorar tu CV para este Master/i)).toBeInTheDocument();
+        expect(screen.getByText(/Como mejorar tu CV para este Máster/i)).toBeInTheDocument();
         expect(screen.getByText(/Fortalezas/i)).toBeInTheDocument();
         expect(screen.getByText(/Lo que debes reforzar/i)).toBeInTheDocument();
         expect(screen.getByText(/Cambios recomendados/i)).toBeInTheDocument();

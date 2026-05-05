@@ -99,7 +99,7 @@ const SelectedMasterBar = ({ isDarkMode, onChangeMaster, selectedMaster, selecte
         <div className="flex w-full flex-col gap-3">
             <div className="flex items-center justify-between gap-4">
                 <p className={`text-[9px] font-bold uppercase tracking-[0.18em] ${isDarkMode ? 'text-white/45' : 'text-stone-500'}`}>
-                    MBA seleccionado
+                    Máster seleccionado
                 </p>
                 <button
                     onClick={onChangeMaster}
@@ -116,7 +116,7 @@ const SelectedMasterBar = ({ isDarkMode, onChangeMaster, selectedMaster, selecte
                         event.currentTarget.style.backgroundColor = 'transparent';
                     }}
                 >
-                    <span>Cambiar MBA</span>
+                    <span>Cambiar Máster</span>
                     <RefreshCw size={11} className="ml-1.5" />
                 </button>
             </div>
@@ -221,7 +221,7 @@ const RecommendationSupportPanel = ({
                 </div>
                 <div className="mt-5 max-w-[240px] space-y-2">
                     <h3 className={`text-[1.05rem] font-black uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-stone-900'}`}>
-                        Selecciona tu MBA
+                        Selecciona tu Máster
                     </h3>
                     <p className={`text-[11px] uppercase tracking-[0.16em] leading-relaxed ${isDarkMode ? 'text-white/45' : 'text-stone-500'}`}>
                         El panel derecho se convertira en tu area de apoyo cuando definas el contexto.
