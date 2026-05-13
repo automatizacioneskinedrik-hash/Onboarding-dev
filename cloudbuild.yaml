@@ -25,7 +25,7 @@
       - deploy
       - backend-dev
       - --image=${_BACKEND_IMAGE}:${SHORT_SHA}
-      - --region=europe-southwest1
+      - --region=us-central1
       - --platform=managed
       - --quiet
 
@@ -57,7 +57,7 @@
       - deploy
       - frontend-dev
       - --image=${_FRONTEND_IMAGE}:${SHORT_SHA}
-      - --region=europe-southwest1
+      - --region=us-central1
       - --platform=managed
       - --quiet
 
