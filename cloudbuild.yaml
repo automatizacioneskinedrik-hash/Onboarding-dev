@@ -25,7 +25,7 @@
       - deploy
       - backend-dev
       - --image=${_BACKEND_IMAGE}:${SHORT_SHA}
-      - --region=europe-southwest1
+      - --region=us-central1
       - --platform=managed
       - --quiet
 
@@ -57,7 +57,7 @@
       - deploy
       - frontend-dev
       - --image=${_FRONTEND_IMAGE}:${SHORT_SHA}
-      - --region=europe-southwest1
+      - --region=us-central1
       - --platform=managed
       - --quiet
 
@@ -65,9 +65,9 @@
 # Nota: Cloud Build NO permite referenciar una sustitución dentro de otra
 # (_BACKEND_IMAGE: ${_AR_REPO}/backend no funciona), así que se definen completas.
 substitutions:
-  _BACKEND_IMAGE: europe-southwest1-docker.pkg.dev/onboarding-dev-487716/repo-onboarding-dev/backend
-  _FRONTEND_IMAGE: europe-southwest1-docker.pkg.dev/onboarding-dev-487716/repo-onboarding-dev/frontend
-  _VITE_API_URL: https://backend-dev-866351374703.europe-southwest1.run.app
+  _BACKEND_IMAGE: us-central1-docker.pkg.dev/lar-education-hub-onboarding/repo-onboarding-dev/backend
+  _FRONTEND_IMAGE: us-central1-docker.pkg.dev/lar-education-hub-onboarding/repo-onboarding-dev/frontend
+  _VITE_API_URL: https://backend-dev-124474933614.us-central1.run.app
 
 images:
   - ${_BACKEND_IMAGE}:${SHORT_SHA}
