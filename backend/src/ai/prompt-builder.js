@@ -47,8 +47,7 @@ const buildRecommendationPrompt = ({
 }) => `Eres un asesor academico experto de LÄR University, una institucion de educacion ejecutiva de elite.
 
 Tu tarea es analizar la hoja de vida de un candidato y construir una ruta academica personalizada.
-La ruta debe tener exactamente 6 sprints y cada sprint debe salir del catalogo oficial del Master seleccionado.
-Regla critica: usa como maximo 1 sprint por especializacion para construir una ruta balanceada.
+La ruta debe tener exactamente 6 sprints y todos deben salir del catalogo oficial de una sola especializacion principal del Master seleccionado.
 No uses modulos externos ni inventes cursos.
 
 PERFIL DEL CANDIDATO:
@@ -65,13 +64,12 @@ ${specializationsList}
 
 INSTRUCCIONES:
 1. Construye una ruta personalizada de exactamente 6 sprints.
-2. Cada sprint debe pertenecer al Master seleccionado.
-3. Debe haber como maximo 1 sprint por especializacion.
-4. Selecciona sprints que complementen el perfil actual y cubran vacios relevantes.
+2. Analiza el CV y selecciona una unica especializacion principal entre las opciones disponibles.
+3. Todos los sprints de la ruta deben pertenecer a esa especializacion principal.
+4. Selecciona los sprints que mejor complementen el perfil actual y cubran vacios relevantes dentro de esa especializacion.
 5. No inventes titulos: usa los nombres exactos del catalogo.
-6. Identifica una especializacion principal, pero la ruta puede mezclar varias especializaciones.
-7. Proporciona un score de compatibilidad del 0 al 100.
-8. Explica el razonamiento en 3-4 oraciones con lenguaje academico y accionable.
+6. Proporciona un score de compatibilidad del 0 al 100.
+7. Explica el razonamiento en 3-4 oraciones con lenguaje academico y accionable.
 
 Responde unicamente con un JSON valido:
 {
@@ -93,23 +91,6 @@ Responde unicamente con un JSON valido:
 
 Los IDs validos son: comunicacion, emprendimiento, finanzas, talento, tecnologia, ia-automatizacion, mercado-cliente, operaciones, analitica-datos, arquitectura-analitica-avanzada, ciencia-datos-aplicada`;
 
-const buildRecommendationPromptWithDataScienceRule = (params) => {
-    const prompt = buildRecommendationPrompt(params);
-    const selectedMasterId = params?.options?.sourceMasterId || params?.options?.masterId;
-    const isDataScienceMaster = String(selectedMasterId || '').trim().toLowerCase() === 'datalar-mba';
-
-    if (!isDataScienceMaster) {
-        return prompt;
-    }
-
-    const dataScienceInstructions = `REGLA ESPECIAL PARA DATA SCIENCE:
-- Arquitectura Analitica Avanzada debe ser siempre el primer sprint, la recomendacion principal y el tope tecnologico de la ruta.
-- Los otros 5 sprints deben elegirse segun el mejor ajuste al perfil del candidato dentro del catalogo valido.
-- No dupliques Arquitectura Analitica Avanzada ni lo sustituyas por otro sprint principal.`;
-
-    return prompt.replace('PERFIL DEL CANDIDATO:', `${dataScienceInstructions}\n\nPERFIL DEL CANDIDATO:`);
-};
-
 const resolvePrioritySprintTitle = (recommendation = {}) => {
     const firstBlock =
         recommendation?.sprint?.blocks?.[0] ||
@@ -118,16 +99,6 @@ const resolvePrioritySprintTitle = (recommendation = {}) => {
         null;
 
     return firstBlock?.blockTitle || firstBlock?.title || recommendation?.subjects?.[0] || null;
-};
-
-const hasAdvancedAnalyticsPriority = (recommendation = {}) => {
-    const priorityTitle = resolvePrioritySprintTitle(recommendation) || '';
-    const normalizedTitle = priorityTitle
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
-
-    return normalizedTitle.includes('arquitectura') && normalizedTitle.includes('analitica') && normalizedTitle.includes('avanzada');
 };
 
 const buildChatMessages = (
@@ -160,7 +131,6 @@ ${recommendation ? `RECOMENDACION ACTUAL:
 - Especializacion contenedora: ${recommendation.specialization?.name || recommendation.primarySpecialization}
 - Score de compatibilidad: ${recommendation.matchScore}%
 - Ruta de 6 sprints: ${(recommendation.subjects || []).join(', ')}
-${hasAdvancedAnalyticsPriority(recommendation) ? '- Regla critica: si el usuario pregunta que sprint priorizar primero, responde Arquitectura Analitica Avanzada. No presentes Analitica de Datos y Decision Empresarial como el sprint prioritario; esa es la especializacion contenedora.' : ''}
 ` : ''}
 
 ${retrieval?.matches?.length ? `CONTEXTO RECUPERADO DEL CATALOGO:
@@ -193,13 +163,13 @@ INSTRUCCIONES:
 
 const createPromptBuilder = () => ({
     buildProfileExtractionPrompt,
-    buildRecommendationPrompt: buildRecommendationPromptWithDataScienceRule,
+    buildRecommendationPrompt,
     buildChatMessages,
 });
 
 module.exports = {
     buildProfileExtractionPrompt,
-    buildRecommendationPrompt: buildRecommendationPromptWithDataScienceRule,
+    buildRecommendationPrompt,
     buildChatMessages,
     createPromptBuilder,
 };

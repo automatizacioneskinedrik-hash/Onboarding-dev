@@ -108,7 +108,7 @@ test('ai orchestrator falls back cleanly when OpenAI is unavailable', async () =
     assert.match(recommendation.reasoning, /respaldo|recomienda/i);
 });
 
-test('university route planner pins Arquitectura Analitica Avanzada for Data Science', () => {
+test('university route planner builds a full route from the selected specialization', () => {
     const recommendation = resolveUniversityRecommendation({
         profile: {
             currentRole: 'Data Engineer',
@@ -118,26 +118,34 @@ test('university route planner pins Arquitectura Analitica Avanzada for Data Sci
         masterId: 'datalar-mba',
         sourceMasterId: 'datalar-mba',
         aiRecommendation: {
+            primarySpecializationId: 'analitica-datos',
             planBlocks: [
                 {
-                    specializationId: 'ciencia-datos-aplicada',
-                    blockTitle: 'Industrializacion de Modelos y MLOps',
+                    specializationId: 'tecnologia',
+                    blockTitle: 'Estrategia de Ciberseguridad',
+                },
+                {
+                    specializationId: 'analitica-datos',
+                    blockTitle: 'Analítica de datos para directivos',
                 },
             ],
         },
     });
 
-    const blockIds = recommendation.planBlocks.map((block) => block.blockId);
-
     assert.equal(recommendation.primarySpecializationId, 'analitica-datos');
     assert.equal(recommendation.planBlocks.length, 6);
-    assert.equal(recommendation.planBlocks[0].specializationId, 'analitica-datos');
-    assert.match(recommendation.planBlocks[0].blockTitle, /Arquitectura .*Avanzada/i);
-    assert.equal(new Set(blockIds).size, blockIds.length);
-    assert.ok(recommendation.planBlocks.some((block) => block.specializationId !== 'analitica-datos'));
+    assert.ok(recommendation.planBlocks.every((block) => block.specializationId === 'analitica-datos'));
+    assert.deepEqual(recommendation.planBlocks.map((block) => block.blockTitle), [
+        'Analítica de datos para directivos',
+        'Machine learning para la toma de decisiones empresariales',
+        'Visualización de datos y cuadros de mando ejecutivos',
+        'Analítica predictiva aplicada al negocio',
+        'Gobierno del dato y calidad de la información',
+        'Data-Driven management y cultura analítica',
+    ]);
 });
 
-test('university route planner does not pin Data Science top block for redirected MTECH MBA', () => {
+test('university route planner respects the selected specialization for redirected MTECH MBA', () => {
     const recommendation = resolveUniversityRecommendation({
         profile: {
             currentRole: 'Product Manager',
@@ -145,10 +153,15 @@ test('university route planner does not pin Data Science top block for redirecte
         },
         masterId: 'datalar-mba',
         sourceMasterId: 'mtecmba',
+        aiRecommendation: {
+            primarySpecializationId: 'tecnologia',
+        },
     });
 
     assert.equal(recommendation.planBlocks.length, 6);
-    assert.notEqual(recommendation.planBlocks[0].blockTitle, 'Arquitectura Analitica Avanzada');
+    assert.equal(recommendation.primarySpecializationId, 'tecnologia');
+    assert.ok(recommendation.planBlocks.every((block) => block.specializationId === 'tecnologia'));
+    assert.equal(recommendation.planBlocks[0].blockTitle, 'Estrategia de Ciberseguridad');
 });
 
 test('learning content seed prioritizes advanced analytics architecture for Data Science', () => {

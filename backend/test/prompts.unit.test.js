@@ -14,7 +14,7 @@ test('profile extraction prompt includes CV text', () => {
     assert.match(prompt, /JSON valido/);
 });
 
-test('recommendation prompt enforces a 6-sprint route inside the selected MBA', () => {
+test('recommendation prompt requires a single specialization route', () => {
     const prompt = buildRecommendationPrompt({
         profile: {
             name: 'Ana',
@@ -29,11 +29,12 @@ test('recommendation prompt enforces a 6-sprint route inside the selected MBA', 
     });
 
     assert.match(prompt, /exactamente 6 sprints/);
-    assert.match(prompt, /maximo 1 sprint por especializacion/);
+    assert.match(prompt, /una sola especializacion principal/);
+    assert.match(prompt, /Todos los sprints de la ruta deben pertenecer a esa especializacion principal/);
     assert.match(prompt, /Master seleccionado: mtecmba/);
 });
 
-test('recommendation prompt pins Arquitectura Analitica Avanzada for Data Science', () => {
+test('recommendation prompt does not inject a special Data Science rule', () => {
     const prompt = buildRecommendationPrompt({
         profile: {
             name: 'Ana',
@@ -47,9 +48,8 @@ test('recommendation prompt pins Arquitectura Analitica Avanzada for Data Scienc
         specializationsList: 'analitica-datos',
     });
 
-    assert.match(prompt, /REGLA ESPECIAL PARA DATA SCIENCE/);
-    assert.match(prompt, /Arquitectura Analitica Avanzada debe ser siempre el primer sprint/);
-    assert.match(prompt, /Los otros 5 sprints deben elegirse segun el mejor ajuste/);
+    assert.doesNotMatch(prompt, /REGLA ESPECIAL PARA DATA SCIENCE/);
+    assert.doesNotMatch(prompt, /Arquitectura Analitica Avanzada debe ser siempre el primer sprint/);
 });
 
 test('recommendation prompt does not pin Data Science rule for redirected MTECH MBA', () => {
@@ -89,7 +89,7 @@ test('chat prompt keeps system role and user messages', () => {
     assert.match(messages[0].content, /maximo de 20 interacciones/i);
 });
 
-test('chat prompt prioritizes advanced analytics architecture over containing specialization', () => {
+test('chat prompt keeps the sprint context aligned with the chosen specialization', () => {
     const messages = buildChatMessages(
         [{ role: 'user', content: 'Que sprint deberia priorizar primero?' }],
         { name: 'Sergio', currentRole: 'Analista de Integraciones', industry: 'Tecnologia', skills: ['C#', 'Python'] },
@@ -109,5 +109,6 @@ test('chat prompt prioritizes advanced analytics architecture over containing sp
     );
 
     assert.match(messages[0].content, /Sprint prioritario: Arquitectura Analitica Avanzada/);
-    assert.match(messages[0].content, /No presentes Analitica de Datos y Decision Empresarial como el sprint prioritario/);
+    assert.match(messages[0].content, /Especializacion contenedora: ANALITICA DE DATOS Y DECISION EMPRESARIAL/);
+    assert.doesNotMatch(messages[0].content, /Regla critica/);
 });

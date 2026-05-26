@@ -85,6 +85,19 @@ test('POST /api/cv/linkedin pins Arquitectura Analitica Avanzada for Data Scienc
                             profile,
                             masterId: options.masterId,
                             sourceMasterId: options.masterId,
+                            aiRecommendation: {
+                                primarySpecializationId: 'analitica-datos',
+                                planBlocks: [
+                                    {
+                                        specializationId: 'tecnologia',
+                                        blockTitle: 'Estrategia de Ciberseguridad',
+                                    },
+                                    {
+                                        specializationId: 'analitica-datos',
+                                        blockTitle: 'Analítica de datos para directivos',
+                                    },
+                                ],
+                            },
                         }),
                     analyzeLinkedIn: async () => ({ requiresManualInput: true }),
                 }),
@@ -109,5 +122,13 @@ test('POST /api/cv/linkedin pins Arquitectura Analitica Avanzada for Data Scienc
     assert.equal(response.body.data.recommendation.specialization.id, 'analitica-datos');
     assert.equal(response.body.data.recommendation.sprint.blocks.length, 6);
     assert.equal(response.body.data.recommendation.sprint.courses.length, 6);
-    assert.match(response.body.data.recommendation.sprint.blocks[0].blockTitle, /Arquitectura .*Avanzada/i);
+    assert.ok(response.body.data.recommendation.sprint.blocks.every((block) => block.specializationId === 'analitica-datos'));
+    assert.deepEqual(response.body.data.recommendation.sprint.blocks.map((block) => block.blockTitle), [
+        'Analítica de datos para directivos',
+        'Machine learning para la toma de decisiones empresariales',
+        'Visualización de datos y cuadros de mando ejecutivos',
+        'Analítica predictiva aplicada al negocio',
+        'Gobierno del dato y calidad de la información',
+        'Data-Driven management y cultura analítica',
+    ]);
 });
