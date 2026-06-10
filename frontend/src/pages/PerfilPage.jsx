@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Award,
+    BadgeCheck,
     Briefcase,
     CheckCircle2,
+    FileDown,
     FileCheck,
     GraduationCap,
     Languages,
@@ -147,6 +149,358 @@ const summarizeExperience = (experience = {}) => {
 
 const formatLanguage = (language = '') => String(language || '').trim();
 
+const REPORT_NOTE = 'Los sprints recomendados serán matriculados luego de culminar el módulo 8 del máster.';
+
+const formatPdfDate = (date = new Date()) =>
+    new Intl.DateTimeFormat('es-ES', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+    }).format(date);
+
+const buildFileName = (prefix, name = 'perfil') => {
+    const safeName = String(name || 'perfil')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .toLowerCase();
+
+    return `${prefix}-${safeName || 'perfil'}.pdf`;
+};
+
+const loadLogoSvg = async () => {
+    const response = await fetch('/lar-hub.svg');
+
+    if (!response.ok) {
+        throw new Error('No se pudo cargar el logo para el certificado.');
+    }
+
+    return response.text();
+};
+
+const loadPdfMake = async () => {
+    const [{ default: pdfMake }, pdfFonts] = await Promise.all([
+        import('pdfmake/build/pdfmake'),
+        import('pdfmake/build/vfs_fonts'),
+    ]);
+
+    pdfMake.vfs = pdfFonts.default || pdfFonts;
+
+    return pdfMake;
+};
+
+const buildSkillRows = (displaySkills = []) =>
+    displaySkills.map((skill) => [
+        { text: skill.label, style: 'tableStrong' },
+        { text: `${skill.level}%`, alignment: 'right', style: 'tableStrong' },
+        { text: skill.caption, color: '#64748B' },
+    ]);
+
+const buildRouteRows = (recommendedRoute = []) =>
+    recommendedRoute.map((block, index) => [
+        { text: `Sprint ${index + 1}`, style: 'tableStrong' },
+        { text: block.blockTitle || block.title || 'Sprint sugerido', style: 'tableStrong' },
+        { text: block.specializationName || 'Ruta recomendada', color: '#64748B' },
+    ]);
+
+const buildModuleRows = (availableModules = []) =>
+    availableModules.map((module, index) => [
+        { text: `Módulo ${index + 1}`, style: 'tableStrong' },
+        { text: module.title || 'Módulo', style: 'tableStrong' },
+        { text: module.description || 'Contenido del máster', color: '#64748B' },
+    ]);
+
+const buildProfilePdfDefinition = ({
+    logoSvg,
+    generatedAt,
+    extractedProfile,
+    selectedMasterName,
+    scoreValue,
+    scoreLabel,
+    profileHighlights,
+    displaySkills,
+    visibleLanguages,
+    recommendedRoute,
+    availableModules,
+}) => ({
+    pageSize: 'A4',
+    pageMargins: [42, 40, 42, 40],
+    defaultStyle: {
+        fontSize: 10,
+        color: '#1F2937',
+    },
+    styles: {
+        title: { fontSize: 20, bold: true, color: '#16110F' },
+        subtitle: { fontSize: 11, color: '#64748B' },
+        sectionTitle: { fontSize: 12, bold: true, color: '#16110F', margin: [0, 0, 0, 8] },
+        tableHeader: { bold: true, color: '#16110F' },
+        tableStrong: { bold: true, color: '#16110F' },
+        note: { fontSize: 10.5, color: '#0C5258', bold: true },
+        certTitle: { fontSize: 22, bold: true, color: '#16110F', alignment: 'center' },
+        certSubtitle: { fontSize: 11, color: '#64748B', alignment: 'center' },
+        certBody: { fontSize: 14, color: '#16110F', alignment: 'center', lineHeight: 1.45 },
+        certName: { fontSize: 24, bold: true, color: '#0C5258', alignment: 'center' },
+        certMeta: { fontSize: 11, color: '#475569', alignment: 'center' },
+    },
+    content: [
+        {
+            columns: [
+                logoSvg ? { svg: logoSvg, width: 140 } : { text: 'LÄR UNIVERSITY', style: 'title' },
+                { text: 'PERFIL PROFESIONAL Y ONBOARDING', alignment: 'right', style: 'subtitle', margin: [0, 10, 0, 0] },
+            ],
+            margin: [0, 0, 0, 16],
+        },
+        { canvas: [{ type: 'rect', x: 0, y: 0, w: 515, h: 1.2, color: '#E5E7EB' }], margin: [0, 0, 0, 18] },
+        { text: 'Resumen del perfil', style: 'title', margin: [0, 0, 0, 4] },
+        { text: generatedAt, style: 'subtitle', margin: [0, 0, 0, 14] },
+        {
+            table: {
+                widths: ['50%', '50%'],
+                body: [[
+                    {
+                        stack: [
+                            { text: 'Nombre', style: 'tableHeader' },
+                            { text: extractedProfile.name || 'Perfil analizado', margin: [0, 4, 0, 0] },
+                            { text: 'Rol actual', style: 'tableHeader', margin: [0, 10, 0, 0] },
+                            { text: extractedProfile.currentRole || 'Rol no especificado', margin: [0, 4, 0, 0] },
+                            { text: 'Máster', style: 'tableHeader', margin: [0, 10, 0, 0] },
+                            { text: selectedMasterName, margin: [0, 4, 0, 0] },
+                        ],
+                        fillColor: '#F8FAFC',
+                        margin: [8, 8, 8, 8],
+                    },
+                    {
+                        stack: [
+                            { text: 'Score de compatibilidad', style: 'tableHeader' },
+                            { text: `${scoreValue}%`, fontSize: 24, bold: true, color: '#F45A22', margin: [0, 4, 0, 0] },
+                            { text: scoreLabel, margin: [0, 2, 0, 0] },
+                            { text: extractedProfile.industry || 'Industria no especificada', color: '#64748B', margin: [0, 12, 0, 0] },
+                        ],
+                        fillColor: '#FFF7F2',
+                        margin: [8, 8, 8, 8],
+                    },
+                ]],
+            },
+            layout: {
+                hLineColor: () => '#E5E7EB',
+                vLineColor: () => '#E5E7EB',
+                paddingLeft: () => 0,
+                paddingRight: () => 0,
+                paddingTop: () => 0,
+                paddingBottom: () => 0,
+            },
+            margin: [0, 0, 0, 18],
+        },
+        { text: 'Fortalezas clave', style: 'sectionTitle' },
+        { ul: profileHighlights.length ? profileHighlights : ['Perfil en proceso de consolidación'], margin: [0, 0, 0, 12] },
+        { text: 'Habilidades destacadas', style: 'sectionTitle' },
+        displaySkills.length
+            ? {
+                  table: {
+                      headerRows: 1,
+                      widths: ['30%', '12%', '58%'],
+                      body: [
+                          [
+                              { text: 'Habilidad', style: 'tableHeader' },
+                              { text: 'Nivel', style: 'tableHeader', alignment: 'right' },
+                              { text: 'Descripción', style: 'tableHeader' },
+                          ],
+                          ...buildSkillRows(displaySkills),
+                      ],
+                  },
+                  layout: 'lightHorizontalLines',
+                  margin: [0, 0, 0, 14],
+              }
+            : { text: 'No se detectaron habilidades destacadas suficientes para el reporte.', color: '#64748B', margin: [0, 0, 0, 14] },
+        { text: 'Experiencia laboral', style: 'sectionTitle' },
+        {
+            ul: (extractedProfile.experience || []).map((experience) =>
+                [experience.title, experience.company, summarizeExperience(experience) || 'Experiencia aplicada']
+                    .filter(Boolean)
+                    .join(' · ')
+            ),
+            margin: [0, 0, 0, 12],
+        },
+        { text: 'Educación', style: 'sectionTitle' },
+        {
+            ul: (extractedProfile.education || []).map((education) =>
+                [education.degree, education.institution || education.field, education.year].filter(Boolean).join(' · ')
+            ),
+            margin: [0, 0, 0, 12],
+        },
+        { text: 'Idiomas', style: 'sectionTitle' },
+        { text: visibleLanguages.length ? visibleLanguages.join(' · ') : 'Sin idiomas registrados', margin: [0, 0, 0, 14] },
+        { text: 'Ruta recomendada', style: 'sectionTitle' },
+        recommendedRoute.length
+            ? {
+                  table: {
+                      headerRows: 1,
+                      widths: ['16%', '54%', '30%'],
+                      body: [
+                          [
+                              { text: 'Sprint', style: 'tableHeader' },
+                              { text: 'Bloque', style: 'tableHeader' },
+                              { text: 'Especialización', style: 'tableHeader' },
+                          ],
+                          ...buildRouteRows(recommendedRoute),
+                      ],
+                  },
+                  layout: 'lightHorizontalLines',
+                  margin: [0, 0, 0, 14],
+              }
+            : { text: 'No hay ruta recomendada disponible.', color: '#64748B', margin: [0, 0, 0, 14] },
+        { text: 'Módulos del máster', style: 'sectionTitle' },
+        availableModules.length
+            ? {
+                  table: {
+                      headerRows: 1,
+                      widths: ['16%', '34%', '50%'],
+                      body: [
+                          [
+                              { text: 'Módulo', style: 'tableHeader' },
+                              { text: 'Título', style: 'tableHeader' },
+                              { text: 'Descripción', style: 'tableHeader' },
+                          ],
+                          ...buildModuleRows(availableModules),
+                      ],
+                  },
+                  layout: 'lightHorizontalLines',
+                  margin: [0, 0, 0, 14],
+              }
+            : { text: 'No hay módulos cargados para este máster.', color: '#64748B', margin: [0, 0, 0, 14] },
+        {
+            table: {
+                widths: ['100%'],
+                body: [[{ text: REPORT_NOTE, style: 'note', fillColor: '#E6F3EE', margin: [10, 8, 10, 8] }]],
+            },
+            layout: 'noBorders',
+            margin: [0, 4, 0, 0],
+        },
+        {
+            pageBreak: 'before',
+            stack: [
+                { svg: logoSvg, width: 132, alignment: 'center', margin: [0, 4, 0, 18] },
+                { text: 'CERTIFICADO DE ONBOARDING', style: 'certTitle', margin: [0, 0, 0, 4] },
+                { text: 'LÄR University', style: 'certSubtitle', margin: [0, 0, 0, 24] },
+                {
+                    table: {
+                        widths: ['100%'],
+                        body: [[{ text: 'CONSTANCIA OFICIAL', alignment: 'center', color: '#0C5258', bold: true, margin: [0, 6, 0, 6] }]],
+                    },
+                    layout: {
+                        hLineColor: () => '#D9E7E4',
+                        vLineColor: () => '#D9E7E4',
+                        paddingLeft: () => 0,
+                        paddingRight: () => 0,
+                        paddingTop: () => 0,
+                        paddingBottom: () => 0,
+                    },
+                    margin: [0, 0, 0, 24],
+                },
+                {
+                    text: [
+                        'Se hace constar que ',
+                        { text: extractedProfile.name || 'el participante', bold: true },
+                        ' ha culminado el proceso de onboarding de LÄR University con una presentación profesional de su perfil y ruta formativa.',
+                    ],
+                    style: 'certBody',
+                    margin: [16, 0, 16, 18],
+                },
+                { text: selectedMasterName, style: 'certName', margin: [0, 0, 0, 10] },
+                { text: REPORT_NOTE, style: 'certMeta', margin: [0, 0, 0, 18] },
+                {
+                    columns: [
+                        { text: `Emitido el ${generatedAt}`, style: 'certMeta' },
+                        { text: 'LÄR University', style: 'certMeta', alignment: 'right' },
+                    ],
+                    margin: [0, 24, 0, 0],
+                },
+            ],
+            margin: [0, 18, 0, 0],
+        },
+    ],
+});
+
+const buildCertificatePdfDefinition = ({ logoSvg, generatedAt, extractedProfile, selectedMasterName }) => ({
+    pageSize: 'A4',
+    pageMargins: [46, 44, 46, 44],
+    defaultStyle: {
+        color: '#16110F',
+        fontSize: 11,
+    },
+    styles: {
+        certTitle: { fontSize: 24, bold: true, color: '#16110F', alignment: 'center' },
+        certSubtitle: { fontSize: 11, color: '#64748B', alignment: 'center' },
+        certBody: { fontSize: 14, color: '#16110F', alignment: 'center', lineHeight: 1.45 },
+        certName: { fontSize: 26, bold: true, color: '#0C5258', alignment: 'center' },
+        certMeta: { fontSize: 11, color: '#475569', alignment: 'center' },
+    },
+    content: [
+        {
+            canvas: [
+                { type: 'rect', x: 0, y: 0, w: 515, h: 715, lineWidth: 1.4, lineColor: '#0C5258' },
+                { type: 'rect', x: 12, y: 12, w: 491, h: 691, lineWidth: 0.7, lineColor: '#F45A22' },
+            ],
+            absolutePosition: { x: 46, y: 44 },
+        },
+        {
+            stack: [
+                { svg: logoSvg, width: 140, alignment: 'center', margin: [0, 18, 0, 10] },
+                { text: 'CERTIFICADO DE ONBOARDING', style: 'certTitle', margin: [0, 6, 0, 4] },
+                { text: 'LÄR University', style: 'certSubtitle', margin: [0, 0, 0, 24] },
+                {
+                    table: {
+                        widths: ['100%'],
+                        body: [[{ text: 'CONSTANCIA OFICIAL', alignment: 'center', color: '#0C5258', bold: true, margin: [0, 6, 0, 6] }]],
+                    },
+                    layout: {
+                        hLineColor: () => '#D9E7E4',
+                        vLineColor: () => '#D9E7E4',
+                        paddingLeft: () => 0,
+                        paddingRight: () => 0,
+                        paddingTop: () => 0,
+                        paddingBottom: () => 0,
+                    },
+                    margin: [0, 0, 0, 28],
+                },
+                {
+                    text: [
+                        'Se hace constar que ',
+                        { text: extractedProfile.name || 'el participante', bold: true },
+                        ' ha culminado el proceso de onboarding de LÄR University con una presentación profesional de su perfil y ruta formativa.',
+                    ],
+                    style: 'certBody',
+                    margin: [20, 0, 20, 18],
+                },
+                { text: selectedMasterName, style: 'certName', margin: [0, 0, 0, 10] },
+                { text: REPORT_NOTE, style: 'certMeta', margin: [0, 0, 0, 18] },
+                {
+                    columns: [
+                        {
+                            stack: [
+                                { text: 'Fecha de emisión', style: 'certMeta' },
+                                { text: generatedAt, style: 'certSubtitle', margin: [0, 4, 0, 0] },
+                            ],
+                            width: '50%',
+                        },
+                        {
+                            stack: [
+                                { text: 'LÄR University', style: 'certMeta' },
+                                { text: 'Onboarding completado', style: 'certSubtitle', margin: [0, 4, 0, 0] },
+                            ],
+                            width: '50%',
+                            alignment: 'right',
+                        },
+                    ],
+                    margin: [0, 38, 0, 0],
+                },
+            ],
+            margin: [40, 58, 40, 48],
+        },
+    ],
+});
+
 const PerfilPage = () => {
     const { user, masters } = useAuth();
     const { analysis, analysisLoading: loading } = useCvAnalysis({
@@ -154,6 +508,8 @@ const PerfilPage = () => {
         masters,
         selectedMaster: null,
     });
+    const [exportingProfilePdf, setExportingProfilePdf] = useState(false);
+    const [exportingCertificatePdf, setExportingCertificatePdf] = useState(false);
     const resolvedMasterId = analysis?.masterId || user?.selectedMasterId || null;
     const selectedMaster = findMasterById(masters, resolvedMasterId);
     const { moduleItems: availableModules } = useMasterModules(selectedMaster?.id || resolvedMasterId);
@@ -210,6 +566,57 @@ const PerfilPage = () => {
         .filter(Boolean)
         .slice(0, 3);
 
+    const handleDownloadProfilePdf = async () => {
+        setExportingProfilePdf(true);
+
+        try {
+            const [pdfMake, logoSvg] = await Promise.all([loadPdfMake(), loadLogoSvg()]);
+            const generatedAt = formatPdfDate();
+            const documentDefinition = buildProfilePdfDefinition({
+                logoSvg,
+                generatedAt,
+                extractedProfile,
+                selectedMasterName: masterDisplayName,
+                scoreValue,
+                scoreLabel,
+                profileHighlights,
+                displaySkills,
+                visibleLanguages,
+                recommendedRoute,
+                availableModules,
+            });
+
+            pdfMake.createPdf(documentDefinition).download(buildFileName('perfil', extractedProfile.name || 'perfil'));
+        } catch (error) {
+            console.error('Error generating profile PDF:', error);
+        } finally {
+            setExportingProfilePdf(false);
+        }
+    };
+
+    const handleDownloadCertificatePdf = async () => {
+        setExportingCertificatePdf(true);
+
+        try {
+            const [pdfMake, logoSvg] = await Promise.all([loadPdfMake(), loadLogoSvg()]);
+            const generatedAt = formatPdfDate();
+            const documentDefinition = buildCertificatePdfDefinition({
+                logoSvg,
+                generatedAt,
+                extractedProfile,
+                selectedMasterName: masterDisplayName,
+            });
+
+            pdfMake
+                .createPdf(documentDefinition)
+                .download(buildFileName('certificado-onboarding', extractedProfile.name || 'perfil'));
+        } catch (error) {
+            console.error('Error generating certificate PDF:', error);
+        } finally {
+            setExportingCertificatePdf(false);
+        }
+    };
+
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-700">
             <header className="space-y-4">
@@ -219,6 +626,27 @@ const PerfilPage = () => {
                     <p className="mt-2 max-w-3xl text-sm text-dark-muted">
                         Información extraída de tu último CV analizado y alineada con el máster seleccionado.
                     </p>
+                    <div className="mt-5 flex flex-wrap gap-3">
+                        <button
+                            type="button"
+                            onClick={handleDownloadProfilePdf}
+                            disabled={exportingProfilePdf}
+                            className="inline-flex items-center gap-2 rounded-full border border-[#F45A22]/25 bg-[#F45A22] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_30px_rgba(240,90,40,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#E34F19] disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {exportingProfilePdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+                            Descargar perfil en PDF
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={handleDownloadCertificatePdf}
+                            disabled={exportingCertificatePdf}
+                            className="inline-flex items-center gap-2 rounded-full border border-[#0C5258]/20 bg-white px-5 py-3 text-sm font-semibold text-[#0C5258] shadow-[0_16px_28px_rgba(12,82,88,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#0C5258]/35 hover:bg-[#F4FAFA] disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {exportingCertificatePdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}
+                            Descargar certificado
+                        </button>
+                    </div>
                 </div>
 
                 <section className="profile-hero-shell">
@@ -491,6 +919,98 @@ const PerfilPage = () => {
                             </div>
                         </div>
                     )}
+
+                    <div className="profile-premium-card overflow-hidden p-0">
+                        <div className="grid gap-0 lg:grid-cols-[1.15fr_0.85fr]">
+                            <div className="p-6 md:p-8">
+                                <p className="profile-section-kicker">CERTIFICADO OFICIAL</p>
+                                <h3 className="mt-2 text-2xl font-bold text-[#16110F]">
+                                    Constancia de onboarding de LÄR University
+                                </h3>
+                                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
+                                    Este certificado resume la culminación del proceso de onboarding y acompaña el perfil con
+                                    una presentación formal, lista para descargar y compartir.
+                                </p>
+
+                                <div className="mt-6 rounded-[26px] border border-[#0C5258]/10 bg-[#F8FCFB] p-5">
+                                    <div className="flex items-start gap-4">
+                                        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#0C5258]/10 text-[#0C5258]">
+                                            <BadgeCheck size={22} />
+                                        </div>
+
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#0C5258]/70">
+                                                Acreditación
+                                            </p>
+                                            <h4 className="mt-2 text-lg font-bold text-[#16110F]">
+                                                El proceso de onboarding ha sido completado
+                                            </h4>
+                                            <p className="mt-2 text-sm leading-6 text-slate-600">{REPORT_NOTE}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-5 flex flex-wrap gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={handleDownloadCertificatePdf}
+                                        disabled={exportingCertificatePdf}
+                                        className="inline-flex items-center gap-2 rounded-full bg-[#0C5258] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_30px_rgba(12,82,88,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#0A454A] disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                        {exportingCertificatePdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}
+                                        Descargar constancia PDF
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="relative overflow-hidden border-t border-[#E9ECEB] bg-[radial-gradient(circle_at_top,_rgba(12,82,88,0.14),_transparent_42%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFA_100%)] p-6 md:p-8 lg:border-l lg:border-t-0">
+                                <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-[#F45A22]/10 blur-3xl" />
+                                <div className="relative flex h-full flex-col justify-between rounded-[28px] border border-dashed border-[#0C5258]/15 bg-white/80 p-5 shadow-[0_20px_40px_rgba(17,24,39,0.06)] backdrop-blur">
+                                    <div>
+                                        <div className="flex items-center justify-center">
+                                            <img src="/lar-hub.svg" alt="LÄR University" className="h-10 w-auto object-contain" />
+                                        </div>
+
+                                        <p className="mt-5 text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-[#0C5258]/70">
+                                            Certificado de onboarding
+                                        </p>
+                                        <h4 className="mt-3 text-center text-2xl font-bold tracking-tight text-[#16110F]">
+                                            {extractedProfile.name || 'Perfil analizado'}
+                                        </h4>
+                                        <p className="mt-2 text-center text-sm font-medium text-slate-500">
+                                            {masterDisplayName}
+                                        </p>
+
+                                        <div className="mt-5 rounded-[22px] bg-[#F4FAFA] px-4 py-4 text-center">
+                                            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#0C5258]/60">
+                                                Constancia
+                                            </p>
+                                            <p className="mt-2 text-sm leading-6 text-slate-600">
+                                                Se certifica la realización del proceso de onboarding de LÄR University con
+                                                una presentación profesional del perfil y de la ruta recomendada.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                                        <div className="rounded-[18px] border border-slate-200 bg-white px-4 py-3">
+                                            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                                Emitido
+                                            </p>
+                                            <p className="mt-1 text-sm font-semibold text-[#16110F]">{formatPdfDate()}</p>
+                                        </div>
+
+                                        <div className="rounded-[18px] border border-slate-200 bg-white px-4 py-3">
+                                            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                                Estado
+                                            </p>
+                                            <p className="mt-1 text-sm font-semibold text-[#0C5258]">Onboarding completado</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
