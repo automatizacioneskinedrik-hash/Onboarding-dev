@@ -185,7 +185,17 @@ const loadPdfMake = async () => {
         import('pdfmake/build/vfs_fonts'),
     ]);
 
-    pdfMake.vfs = pdfFonts.default || pdfFonts;
+    const resolvedVfs =
+        pdfFonts?.default?.pdfMake?.vfs ||
+        pdfFonts?.pdfMake?.vfs ||
+        pdfFonts?.default ||
+        pdfFonts;
+
+    if (pdfMake?.addVirtualFileSystem && resolvedVfs) {
+        pdfMake.addVirtualFileSystem(resolvedVfs);
+    } else {
+        pdfMake.vfs = resolvedVfs;
+    }
 
     return pdfMake;
 };
