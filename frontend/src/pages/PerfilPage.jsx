@@ -377,48 +377,6 @@ const buildProfilePdfDefinition = ({
             layout: 'noBorders',
             margin: [0, 4, 0, 0],
         },
-        {
-            pageBreak: 'before',
-            stack: [
-                { svg: logoSvg, width: 132, alignment: 'center', margin: [0, 4, 0, 18] },
-                { text: 'CERTIFICADO DE ONBOARDING', style: 'certTitle', margin: [0, 0, 0, 4] },
-                { text: 'LÄR University', style: 'certSubtitle', margin: [0, 0, 0, 24] },
-                {
-                    table: {
-                        widths: ['100%'],
-                        body: [[{ text: 'CONSTANCIA OFICIAL', alignment: 'center', color: '#0C5258', bold: true, margin: [0, 6, 0, 6] }]],
-                    },
-                    layout: {
-                        hLineColor: () => '#D9E7E4',
-                        vLineColor: () => '#D9E7E4',
-                        paddingLeft: () => 0,
-                        paddingRight: () => 0,
-                        paddingTop: () => 0,
-                        paddingBottom: () => 0,
-                    },
-                    margin: [0, 0, 0, 24],
-                },
-                {
-                    text: [
-                        'Se hace constar que ',
-                        { text: extractedProfile.name || 'el participante', bold: true },
-                        ' ha culminado el proceso de onboarding de LÄR University con una presentación profesional de su perfil y ruta formativa.',
-                    ],
-                    style: 'certBody',
-                    margin: [16, 0, 16, 18],
-                },
-                { text: selectedMasterName, style: 'certName', margin: [0, 0, 0, 10] },
-                { text: REPORT_NOTE, style: 'certMeta', margin: [0, 0, 0, 18] },
-                {
-                    columns: [
-                        { text: `Emitido el ${generatedAt}`, style: 'certMeta' },
-                        { text: 'LÄR University', style: 'certMeta', alignment: 'right' },
-                    ],
-                    margin: [0, 24, 0, 0],
-                },
-            ],
-            margin: [0, 18, 0, 0],
-        },
     ],
 });
 
