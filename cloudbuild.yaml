@@ -23,7 +23,7 @@
     args:
       - run
       - deploy
-      - backend-dev
+      - ${_BACKEND_SERVICE}
       - --image=${_BACKEND_IMAGE}:${SHORT_SHA}
       - --region=us-central1
       - --platform=managed
@@ -55,7 +55,7 @@
     args:
       - run
       - deploy
-      - frontend-dev
+      - ${_FRONTEND_SERVICE}
       - --image=${_FRONTEND_IMAGE}:${SHORT_SHA}
       - --region=us-central1
       - --platform=managed
