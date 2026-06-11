@@ -34,9 +34,9 @@ export const getMasterVisual = (masterId) =>
     };
 
 const HARDCODED_MASTER_POSTERS = {
-    'mtecmba': 'https://storage.googleapis.com/assets_onboarding/MBAS/MTEC_MBA.png',
-    'mintear': 'https://storage.googleapis.com/assets_onboarding/MBAS/MINTEAR_MBA.png',
-    'datalar-mba': 'https://storage.googleapis.com/assets_onboarding/MBAS/MDATASC_MBA.png',
+    'mtecmba': 'https://storage.googleapis.com/assets_onboarding_us/MBAS/MTEC_MBA.png',
+    'mintear': 'https://storage.googleapis.com/assets_onboarding_us/MBAS/MINTEAR_MBA.png',
+    'datalar-mba': 'https://storage.googleapis.com/assets_onboarding_us/MBAS/MDATASC_MBA.png',
 };
 
 const MASTER_SELECTION_THEMES = {

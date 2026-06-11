@@ -3,7 +3,7 @@ import ConstellationBackground from './ConstellationBackground';
 import LazyImage from './LazyImage';
 
 const HARDCODED_AUTH_BACKGROUND_URL =
-    'https://storage.googleapis.com/assets_onboarding/Auth/Disen%CC%83o%20sin%20ti%CC%81tulo%20(58).png';
+    'https://storage.googleapis.com/assets_onboarding_us/Auth/Disen%CC%83o%20sin%20ti%CC%81tulo%20(58).png';
 
 const BrandMark = ({ isDarkMode }) => (
     <div

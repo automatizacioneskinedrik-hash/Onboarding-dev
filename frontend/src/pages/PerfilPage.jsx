@@ -256,7 +256,7 @@ const buildProfilePdfDefinition = ({
     content: [
         {
             columns: [
-                logoSvg ? { svg: logoSvg, width: 140 } : { text: 'LÄR UNIVERSITY', style: 'title' },
+                logoSvg ? { svg: logoSvg, width: 140 } : { text: 'LÄR ONBOARDING', style: 'title' },
                 { text: 'PERFIL PROFESIONAL Y ONBOARDING', alignment: 'right', style: 'subtitle', margin: [0, 10, 0, 0] },
             ],
             margin: [0, 0, 0, 16],
@@ -416,7 +416,7 @@ const buildCertificatePdfDefinition = ({ logoSvg, generatedAt, extractedProfile,
             stack: [
                 { svg: logoSvg, width: 140, alignment: 'center', margin: [0, 18, 0, 10] },
                 { text: 'CERTIFICADO DE ONBOARDING', style: 'certTitle', margin: [0, 6, 0, 4] },
-                { text: 'LÄR University', style: 'certSubtitle', margin: [0, 0, 0, 24] },
+                { text: 'LÄR onboarding', style: 'certSubtitle', margin: [0, 0, 0, 24] },
                 {
                     table: {
                         widths: ['100%'],
@@ -436,7 +436,7 @@ const buildCertificatePdfDefinition = ({ logoSvg, generatedAt, extractedProfile,
                     text: [
                         'Se hace constar que ',
                         { text: extractedProfile.name || 'el participante', bold: true },
-                        ' ha culminado el proceso de onboarding de LÄR University con una presentación profesional de su perfil y ruta formativa.',
+                        ' ha culminado el proceso de onboarding de LÄR onboarding con una presentación profesional de su perfil y ruta formativa.',
                     ],
                     style: 'certBody',
                     margin: [20, 0, 20, 18],
@@ -454,7 +454,7 @@ const buildCertificatePdfDefinition = ({ logoSvg, generatedAt, extractedProfile,
                         },
                         {
                             stack: [
-                                { text: 'LÄR University', style: 'certMeta' },
+                                { text: 'LÄR onboarding', style: 'certMeta' },
                                 { text: 'Onboarding completado', style: 'certSubtitle', margin: [0, 4, 0, 0] },
                             ],
                             width: '50%',
@@ -605,7 +605,7 @@ const PerfilPage = () => {
                             Descargar perfil en PDF
                         </button>
 
-                        <button
+                        {/* <button
                             type="button"
                             onClick={handleDownloadCertificatePdf}
                             disabled={exportingCertificatePdf}
@@ -613,7 +613,7 @@ const PerfilPage = () => {
                         >
                             {exportingCertificatePdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}
                             Descargar certificado
-                        </button>
+                        </button> */}
                     </div>
                 </div>
 
@@ -888,7 +888,7 @@ const PerfilPage = () => {
                         </div>
                     )}
 
-                    <div className="profile-premium-card overflow-hidden p-0">
+                    {/* <div className="profile-premium-card overflow-hidden p-0">
                         <div className="grid gap-0 lg:grid-cols-[1.15fr_0.85fr]">
                             <div className="p-6 md:p-8">
                                 <p className="profile-section-kicker">CERTIFICADO OFICIAL</p>
@@ -978,7 +978,7 @@ const PerfilPage = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </div>
