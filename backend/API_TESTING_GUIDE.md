@@ -1,4 +1,4 @@
-# 🚀 LAR University - Guía de Pruebas de API (Backend)
+# 🚀 LÄR University - Guía de Pruebas de API (Backend)
 
 Esta guía te ayudará a probar todas las funcionalidades del backend sin necesidad de un frontend, usando herramientas como **Postman**, **Insomnia** o simplemente **cURL**.
 
@@ -73,12 +73,10 @@ Esta guía te ayudará a probar todas las funcionalidades del backend sin necesi
 
 ---
 
-## 4. Scripts de Prueba Automatizados (Node.js)
+## 4. Pruebas Automatizadas
 
-He creado un script que hace todo este flujo por ti para que veas que el chat responde bien:
+La suite actual vive en `backend/test` y valida contratos HTTP y piezas internas sin depender de scripts manuales sueltos.
 
 ```bash
-node test-full-flow.js
+npm test
 ```
-
-*(El script `test-full-flow.js` se encargará de registrarse, loguearse y enviarle una pregunta al chat usando tu API Key).*

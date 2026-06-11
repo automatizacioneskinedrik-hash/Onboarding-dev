@@ -1,25 +1,41 @@
 ﻿steps:
+  # ─── BACKEND ────────────────────────────────────────────────────────────────
   - id: build-backend
     name: gcr.io/cloud-builders/docker
+    waitFor: ["-"]   # empieza de inmediato
     args:
       - build
+      - --cache-from=${_BACKEND_IMAGE}:latest   # reutiliza layer cache
       - --file=backend/Dockerfile
       - --tag=${_BACKEND_IMAGE}:${SHORT_SHA}
       - --tag=${_BACKEND_IMAGE}:latest
       - backend
 
-  - id: push-backend-short-sha
+  - id: push-backend
     name: gcr.io/cloud-builders/docker
-    args: ["push", "${_BACKEND_IMAGE}:${SHORT_SHA}"]
+    waitFor: [build-backend]
+    args: ["push", "--all-tags", "${_BACKEND_IMAGE}"]   # un solo push para ambos tags
 
-  - id: push-backend-latest
-    name: gcr.io/cloud-builders/docker
-    args: ["push", "${_BACKEND_IMAGE}:latest"]
+  - id: deploy-backend-dev
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    waitFor: [push-backend]
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - backend-dev
+      - --image=${_BACKEND_IMAGE}:${SHORT_SHA}
+      - --region=us-central1
+      - --platform=managed
+      - --quiet
 
+  # ─── FRONTEND ───────────────────────────────────────────────────────────────
   - id: build-frontend
     name: gcr.io/cloud-builders/docker
+    waitFor: ["-"]   # corre en paralelo con build-backend
     args:
       - build
+      - --cache-from=${_FRONTEND_IMAGE}:latest   # reutiliza layer cache
       - --file=frontend/Dockerfile
       - --build-arg
       - VITE_API_URL=${_VITE_API_URL}
@@ -27,19 +43,31 @@
       - --tag=${_FRONTEND_IMAGE}:latest
       - frontend
 
-  - id: push-frontend-short-sha
+  - id: push-frontend
     name: gcr.io/cloud-builders/docker
-    args: ["push", "${_FRONTEND_IMAGE}:${SHORT_SHA}"]
+    waitFor: [build-frontend]
+    args: ["push", "--all-tags", "${_FRONTEND_IMAGE}"]   # un solo push para ambos tags
 
-  - id: push-frontend-latest
-    name: gcr.io/cloud-builders/docker
-    args: ["push", "${_FRONTEND_IMAGE}:latest"]
+  - id: deploy-frontend-dev
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    waitFor: [push-frontend]
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - frontend-dev
+      - --image=${_FRONTEND_IMAGE}:${SHORT_SHA}
+      - --region=us-central1
+      - --platform=managed
+      - --quiet
 
+# ─── SUSTITUCIONES ────────────────────────────────────────────────────────────
+# Nota: Cloud Build NO permite referenciar una sustitución dentro de otra
+# (_BACKEND_IMAGE: ${_AR_REPO}/backend no funciona), así que se definen completas.
 substitutions:
-  _AR_REPO: europe-southwest1-docker.pkg.dev/onboarding-dev-487716/repo-onboarding-dev
-  _BACKEND_IMAGE: ${_AR_REPO}/backend
-  _FRONTEND_IMAGE: ${_AR_REPO}/frontend
-  _VITE_API_URL: https://backend-onboarding-866351374703.europe-southwest1.run.app/api
+  _BACKEND_IMAGE: us-central1-docker.pkg.dev/lar-education-hub-onboarding/repo-onboarding-dev/backend
+  _FRONTEND_IMAGE: us-central1-docker.pkg.dev/lar-education-hub-onboarding/repo-onboarding-dev/frontend
+  _VITE_API_URL: https://backend-dev-124474933614.us-central1.run.app
 
 images:
   - ${_BACKEND_IMAGE}:${SHORT_SHA}

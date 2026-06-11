@@ -1,0 +1,183 @@
+<svg width="1680" height="1180" viewBox="0 0 1680 1180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="80" x2="1560" y2="1100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7F4EC"/>
+      <stop offset="0.55" stop-color="#EEF4F1"/>
+      <stop offset="1" stop-color="#E8EFF6"/>
+    </linearGradient>
+    <linearGradient id="panelFrontend" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FFF9F1"/>
+      <stop offset="1" stop-color="#FFF1DF"/>
+    </linearGradient>
+    <linearGradient id="panelBackend" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#F6FAFF"/>
+      <stop offset="1" stop-color="#E8F1FF"/>
+    </linearGradient>
+    <linearGradient id="panelInfra" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#F6FBF7"/>
+      <stop offset="1" stop-color="#E6F5EB"/>
+    </linearGradient>
+    <linearGradient id="cardSoft" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F5F7FA"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#17324D" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1 1L10 6L1 11" stroke="#2160D8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1 1L10 6L1 11" stroke="#C96A12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1 1L10 6L1 11" stroke="#1D8A4B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      .title { font: 700 40px 'IBM Plex Sans', 'Segoe UI', sans-serif; fill: #13263A; }
+      .subtitle { font: 500 18px 'IBM Plex Sans', 'Segoe UI', sans-serif; fill: #456077; }
+      .laneTitle { font: 700 24px 'IBM Plex Sans', 'Segoe UI', sans-serif; fill: #163047; }
+      .laneMeta { font: 500 14px 'IBM Plex Sans', 'Segoe UI', sans-serif; fill: #5D7389; letter-spacing: 0.06em; text-transform: uppercase; }
+      .cardTitle { font: 700 18px 'IBM Plex Sans', 'Segoe UI', sans-serif; fill: #17324D; }
+      .cardText { font: 500 14px 'IBM Plex Sans', 'Segoe UI', sans-serif; fill: #385269; }
+      .small { font: 600 12px 'IBM Plex Sans', 'Segoe UI', sans-serif; fill: #5C7084; letter-spacing: 0.04em; text-transform: uppercase; }
+      .legend { font: 600 13px 'IBM Plex Sans', 'Segoe UI', sans-serif; fill: #2B445B; }
+      .step { font: 700 14px 'IBM Plex Sans', 'Segoe UI', sans-serif; fill: #FFFFFF; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1680" height="1180" fill="url(#bg)"/>
+  <circle cx="1500" cy="160" r="170" fill="#FFFFFF" fill-opacity="0.45"/>
+  <circle cx="180" cy="1020" r="210" fill="#FFFFFF" fill-opacity="0.35"/>
+  <circle cx="1380" cy="980" r="140" fill="#DFF2E4" fill-opacity="0.4"/>
+
+  <text x="96" y="86" class="title">Flujo actual de datos</text>
+  <text x="96" y="118" class="subtitle">Onboarding LAR University: frontend React, backend Express, persistencia y capa de IA</text>
+
+  <rect x="96" y="154" width="472" height="884" rx="32" fill="url(#panelFrontend)" stroke="#E8D2B6"/>
+  <rect x="604" y="154" width="512" height="884" rx="32" fill="url(#panelBackend)" stroke="#CFE0F9"/>
+  <rect x="1152" y="154" width="432" height="884" rx="32" fill="url(#panelInfra)" stroke="#CFE8D6"/>
+
+  <text x="132" y="200" class="laneMeta">Frontend</text>
+  <text x="132" y="230" class="laneTitle">UI, hooks y servicios</text>
+  <text x="640" y="200" class="laneMeta">Backend</text>
+  <text x="640" y="230" class="laneTitle">HTTP, casos de uso y orquestación</text>
+  <text x="1188" y="200" class="laneMeta">Infra / AI</text>
+  <text x="1188" y="230" class="laneTitle">Persistencia, modelos y búsqueda</text>
+
+  <rect x="132" y="270" width="400" height="152" rx="24" fill="url(#cardSoft)" stroke="#E7D9C6" filter="url(#shadow)"/>
+  <text x="160" y="305" class="cardTitle">1. Bootstrap y autenticación</text>
+  <text x="160" y="334" class="cardText">`AuthProvider` rehidrata token, llama `refreshUser`</text>
+  <text x="160" y="357" class="cardText">y `loadMasters`, luego propaga `user`, `masters`</text>
+  <text x="160" y="380" class="cardText">y `selectedMaster` a Home y features.</text>
+  <text x="160" y="408" class="small">AuthContext • authService • api-client</text>
+
+  <rect x="132" y="452" width="400" height="196" rx="24" fill="url(#cardSoft)" stroke="#E7D9C6" filter="url(#shadow)"/>
+  <text x="160" y="487" class="cardTitle">2. Análisis de CV y recomendación</text>
+  <text x="160" y="516" class="cardText">`RecommendationSupportPanel` y `useCvAnalysis`</text>
+  <text x="160" y="539" class="cardText">suben PDF + `masterId` vía `uploadCv`</text>
+  <text x="160" y="562" class="cardText">como `multipart/form-data`.</text>
+  <text x="160" y="590" class="cardText">La respuesta actualiza análisis, recomendación,</text>
+  <text x="160" y="613" class="cardText">route blocks y contexto activo del dashboard.</text>
+  <text x="160" y="641" class="small">HomeDashboard • cvAnalysisService</text>
+
+  <rect x="132" y="678" width="400" height="214" rx="24" fill="url(#cardSoft)" stroke="#E7D9C6" filter="url(#shadow)"/>
+  <text x="160" y="713" class="cardTitle">3. Chat contextual con streaming</text>
+  <text x="160" y="742" class="cardText">`ChatComponent` usa `useChatSession` para</text>
+  <text x="160" y="765" class="cardText">crear chat si hace falta, pedir historial y</text>
+  <text x="160" y="788" class="cardText">enviar mensajes por `fetch` al endpoint SSE.</text>
+  <text x="160" y="816" class="cardText">Los eventos `start`, `token` y `done`</text>
+  <text x="160" y="839" class="cardText">actualizan el placeholder y luego el mensaje final.</text>
+  <text x="160" y="867" class="small">useChatSession • chatService • SSE parser</text>
+
+  <rect x="132" y="922" width="400" height="80" rx="20" fill="#FFF7EB" stroke="#E7D9C6"/>
+  <text x="160" y="957" class="cardTitle">Respuesta al frontend</text>
+  <text x="160" y="982" class="cardText">JSON para auth/CV/recomendación y SSE para chat.</text>
+
+  <rect x="640" y="270" width="440" height="152" rx="24" fill="url(#cardSoft)" stroke="#D7E4F8" filter="url(#shadow)"/>
+  <text x="668" y="305" class="cardTitle">1. Entrada HTTP y validación</text>
+  <text x="668" y="334" class="cardText">`app.js` monta `/api/auth`, `/api/users`, `/api/cv`,</text>
+  <text x="668" y="357" class="cardText">`/api/chat` y `/api/recommendations` con CORS,</text>
+  <text x="668" y="380" class="cardText">rate limit, middlewares y serializadores.</text>
+  <text x="668" y="408" class="small">routes • controllers • validators • respond</text>
+
+  <rect x="640" y="452" width="440" height="220" rx="24" fill="url(#cardSoft)" stroke="#D7E4F8" filter="url(#shadow)"/>
+  <text x="668" y="487" class="cardTitle">2. Caso de uso: `uploadCvAnalysis`</text>
+  <text x="668" y="516" class="cardText">Crea trazabilidad en `analysisRepo`, parsea PDF,</text>
+  <text x="668" y="539" class="cardText">extrae perfil con `aiOrchestrator.extractProfile`,</text>
+  <text x="668" y="562" class="cardText">genera recomendación y persiste `analysis`,</text>
+  <text x="668" y="585" class="cardText">`recommendation` y `journeyContext` del usuario.</text>
+  <text x="668" y="613" class="cardText">Si OpenAI falta, aplica fallbacks locales.</text>
+  <text x="668" y="641" class="small">analyze-cv.js • recommendation serializer</text>
+
+  <rect x="640" y="702" width="440" height="256" rx="24" fill="url(#cardSoft)" stroke="#D7E4F8" filter="url(#shadow)"/>
+  <text x="668" y="737" class="cardTitle">3. Caso de uso: `streamUserChatMessage`</text>
+  <text x="668" y="766" class="cardText">Resuelve análisis asociado, aplica guardrails de</text>
+  <text x="668" y="789" class="cardText">dominio y aplica retrieval local por master.</text>
+  <text x="668" y="817" class="cardText">Guarda mensaje del usuario, genera respuesta por</text>
+  <text x="668" y="840" class="cardText">stream, persiste mensaje assistant y emite SSE.</text>
+  <text x="668" y="868" class="cardText">Cuando el prompt sale del dominio, responde bloqueado</text>
+  <text x="668" y="891" class="cardText">sin llegar al modelo externo.</text>
+  <text x="668" y="919" class="small">send-message.js • chat.controller.js • sse.js</text>
+
+  <rect x="640" y="978" width="440" height="80" rx="20" fill="#F2F7FF" stroke="#D7E4F8"/>
+  <text x="668" y="1013" class="cardTitle">Composition root</text>
+  <text x="668" y="1038" class="cardText">Inyecta repos, `contextManager` y `aiOrchestrator`.</text>
+
+  <rect x="1188" y="270" width="360" height="138" rx="24" fill="url(#cardSoft)" stroke="#D2E9D7" filter="url(#shadow)"/>
+  <text x="1216" y="305" class="cardTitle">Persistencia principal</text>
+  <text x="1216" y="334" class="cardText">Repositorios de usuarios, chats, análisis</text>
+  <text x="1216" y="357" class="cardText">y catálogo en Firestore o memoria.</text>
+  <text x="1216" y="385" class="small">userRepo • chatRepo • analysisRepo • catalogRepo</text>
+
+  <rect x="1188" y="438" width="360" height="182" rx="24" fill="url(#cardSoft)" stroke="#D2E9D7" filter="url(#shadow)"/>
+  <text x="1216" y="473" class="cardTitle">IA generativa</text>
+  <text x="1216" y="502" class="cardText">`openAiClient` usa `gpt-4o` para extraer perfil,</text>
+  <text x="1216" y="525" class="cardText">recomendación y respuesta de chat.</text>
+  <text x="1216" y="553" class="cardText">También genera embeddings con</text>
+  <text x="1216" y="576" class="cardText">`text-embedding-3-large`.</text>
+  <text x="1216" y="604" class="small">openai.client.js • orchestrator.js</text>
+
+  <rect x="1188" y="650" width="360" height="196" rx="24" fill="url(#cardSoft)" stroke="#D2E9D7" filter="url(#shadow)"/>
+  <text x="1216" y="685" class="cardTitle">Recuperación semántica</text>
+  <text x="1216" y="714" class="cardText">`contextManager` hace ranking local en Firestore</text>
+  <text x="1216" y="737" class="cardText">y luego reconstruye cursos reales desde catálogo.</text>
+  <text x="1216" y="765" class="cardText">Si no hay índice o resultados, cae a un ranking</text>
+  <text x="1216" y="788" class="cardText">de módulos desde Firestore.</text>
+  <text x="1216" y="816" class="small">vertex.client.js • retrieval fallback</text>
+
+  <rect x="1188" y="876" width="360" height="126" rx="24" fill="url(#cardSoft)" stroke="#D2E9D7" filter="url(#shadow)"/>
+  <text x="1216" y="911" class="cardTitle">Salida al usuario</text>
+  <text x="1216" y="940" class="cardText">Recomendación estructurada, historial persistido,</text>
+  <text x="1216" y="963" class="cardText">metadata de retrieval y tokens de chat.</text>
+
+  <path d="M532 346H620" stroke="#2160D8" stroke-width="4" stroke-linecap="round" marker-end="url(#arrowBlue)"/>
+  <path d="M532 550H620" stroke="#2160D8" stroke-width="4" stroke-linecap="round" marker-end="url(#arrowBlue)"/>
+  <path d="M532 786H620" stroke="#C96A12" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 10" marker-end="url(#arrowOrange)"/>
+
+  <path d="M1080 346H1168" stroke="#2160D8" stroke-width="4" stroke-linecap="round" marker-end="url(#arrowBlue)"/>
+  <path d="M1080 562H1168" stroke="#1D8A4B" stroke-width="4" stroke-linecap="round" marker-end="url(#arrowGreen)"/>
+  <path d="M1080 830H1168" stroke="#C96A12" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 10" marker-end="url(#arrowOrange)"/>
+
+  <path d="M1188 922C1108 922 1100 922 1080 922" stroke="#1D8A4B" stroke-width="4" stroke-linecap="round" marker-end="url(#arrowGreen)"/>
+  <path d="M640 1018C590 1018 586 962 532 962" stroke="#2160D8" stroke-width="4" stroke-linecap="round" marker-end="url(#arrowBlue)"/>
+
+  <path d="M1242 620C1218 620 1160 620 1080 620" stroke="#1D8A4B" stroke-width="3" stroke-dasharray="8 8" stroke-linecap="round" marker-end="url(#arrowGreen)"/>
+  <path d="M1242 770C1218 770 1160 770 1080 770" stroke="#1D8A4B" stroke-width="3" stroke-dasharray="8 8" stroke-linecap="round" marker-end="url(#arrowGreen)"/>
+
+  <circle cx="576" cy="346" r="18" fill="#2160D8"/>
+  <text x="571" y="351" class="step">1</text>
+  <circle cx="576" cy="550" r="18" fill="#2160D8"/>
+  <text x="571" y="555" class="step">2</text>
+  <circle cx="576" cy="786" r="18" fill="#C96A12"/>
+  <text x="571" y="791" class="step">3</text>
+
+  <rect x="96" y="1070" width="520" height="56" rx="18" fill="#FFFFFF" fill-opacity="0.82" stroke="#D8E0E8"/>
+  <path d="M124 1098H174" stroke="#2160D8" stroke-width="4" stroke-linecap="round" marker-end="url(#arrowBlue)"/>
+  <text x="188" y="1103" class="legend">JSON / request-response</text>
+  <path d="M370 1098H420" stroke="#C96A12" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 10" marker-end="url(#arrowOrange)"/>
+  <text x="434" y="1103" class="legend">SSE / streaming</text>
+
+  <rect x="642" y="1070" width="850" height="56" rx="18" fill="#FFFFFF" fill-opacity="0.82" stroke="#D8E0E8"/>
+  <text x="670" y="1103" class="legend">Fuentes verificadas en código: `frontend/docs/architecture.md`, `useHomeDashboard`, `useChatSession`, `analyze-cv.js`, `send-message.js`, `context-manager.js`.</text>
+</svg>

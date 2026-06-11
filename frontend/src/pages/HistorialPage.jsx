@@ -1,42 +1,53 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, Calendar, ChevronRight, Loader2, Search, Trash2, GraduationCap, Plus } from 'lucide-react';
-import api from '../services/api';
-import { useTheme } from '../context/ThemeContext';
+import { Calendar, ChevronRight, GraduationCap, Loader2, MessageSquare, Search, Trash2 } from 'lucide-react';
+import { useTheme } from '../features/theme';
+import { useChatHistory } from '../features/chat';
+import ConfirmDialog from '../shared/ui/ConfirmDialog';
 
 const HistorialPage = () => {
+    const { history: chats, historyLoading: loading, deleteChat } = useChatHistory({ enabled: true });
     const { isDarkMode } = useTheme();
-    const [chats, setChats] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [chatPendingDelete, setChatPendingDelete] = useState(null);
+    const [isDeletingChat, setIsDeletingChat] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchChats = async () => {
-            try {
-                const response = await api.get('/chat');
-                if (response.data.success) {
-                    setChats(response.data.data.chats);
-                }
-            } catch (err) {
-                console.error('Error fetching chats:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const filteredChats = useMemo(
+        () => chats.filter((chat) => chat.title.toLowerCase().includes(searchTerm.toLowerCase())),
+        [chats, searchTerm]
+    );
 
-        fetchChats();
-    }, []);
+    const handleDeleteChat = (event, chatId, chatTitle) => {
+        event.stopPropagation();
+        setChatPendingDelete({
+            id: chatId,
+            title: chatTitle,
+        });
+    };
 
-    const handleDeleteChat = async (e, id) => {
-        e.stopPropagation();
-        if (window.confirm('¿Estás seguro de que deseas eliminar este chat?')) {
-            try {
-                await api.delete(`/chat/${id}`);
-                setChats(chats.filter(chat => chat.id !== id));
-            } catch (err) {
-                console.error('Error deleting chat:', err);
-            }
+    const handleCancelDeleteChat = () => {
+        if (isDeletingChat) {
+            return;
+        }
+
+        setChatPendingDelete(null);
+    };
+
+    const handleConfirmDeleteChat = async () => {
+        if (!chatPendingDelete?.id || isDeletingChat) {
+            return;
+        }
+
+        setIsDeletingChat(true);
+
+        try {
+            await deleteChat(chatPendingDelete.id);
+            setChatPendingDelete(null);
+        } catch (error) {
+            console.error('Error deleting chat:', error);
+        } finally {
+            setIsDeletingChat(false);
         }
     };
 
@@ -47,17 +58,13 @@ const HistorialPage = () => {
             month: 'short',
             year: 'numeric',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
         });
     };
 
-    const filteredChats = chats.filter(chat =>
-        chat.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+            <div className="flex flex-col items-center justify-center space-y-4 py-20">
                 <Loader2 className="animate-spin text-orange-accent" size={40} />
                 <p className="text-dark-muted">Cargando tus conversaciones...</p>
             </div>
@@ -65,55 +72,50 @@ const HistorialPage = () => {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="animate-in fade-in space-y-8 duration-700">
+            <header className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div>
-                    <h1 className="text-3xl font-bold mb-2">Historial de Consultas</h1>
-                    <p className="text-muted text-sm">Todas tus conversaciones guardadas con el Asistente Lär University</p>
+                    <h1 className="mb-2 text-3xl font-bold">Historial de Consultas</h1>
+                    <p className="text-sm text-muted">Todas tus conversaciones guardadas con el Asistente LÄR University</p>
                 </div>
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
                     <input
                         type="text"
-                        placeholder="Buscar por título..."
+                        placeholder="Buscar por titulo..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(event) => setSearchTerm(event.target.value)}
                         className="input-field pl-10 md:w-64"
                     />
                 </div>
             </header>
 
             {filteredChats.length === 0 ? (
-                <div className="card-premium text-center py-20 flex flex-col items-center justify-center">
+                <div className="card-premium flex flex-col items-center justify-center py-20 text-center">
                     <div className="relative mb-8">
-                        {/* Floating Dots */}
-                        <div className="absolute -top-4 -right-4 w-3 h-3 bg-orange-accent rounded-full animate-float-1 opacity-60"></div>
-                        <div className="absolute -bottom-2 -left-6 w-2 h-2 bg-orange-accent rounded-full animate-float-2 opacity-40"></div>
+                        <div className="animate-float-1 absolute -right-4 -top-4 h-3 w-3 rounded-full bg-orange-accent opacity-60" />
+                        <div className="animate-float-2 absolute -bottom-2 -left-6 h-2 w-2 rounded-full bg-orange-accent opacity-40" />
 
-                        {/* Squircle Chat Icon */}
-                        <div className="w-24 h-24 bg-[#121212] rounded-[2rem] border border-orange-accent/20 flex items-center justify-center text-orange-accent shadow-2xl relative z-10">
+                        <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-[2rem] border border-orange-accent/20 bg-[#121212] text-orange-accent shadow-2xl">
                             <MessageSquare size={44} strokeWidth={1.5} />
                         </div>
                     </div>
 
-                    <div className="space-y-2 mb-8">
+                    <div className="mb-8 space-y-2">
                         <h2 className="text-2xl font-black text-white">No se encontraron conversaciones</h2>
                         <div className="space-y-1">
-                            <p className="text-stone-400 max-w-sm mx-auto">
-                                Parece que aún no has iniciado ninguna charla o no coincide con tu búsqueda.
+                            <p className="mx-auto max-w-sm text-stone-400">
+                                Parece que aún no has iniciado ninguna charla o no coincide con tu busqueda.
                             </p>
-                            <p className="text-orange-accent/80 font-bold text-sm italic">
-                                ¡Empieza a trazar tu ruta profesional hoy!
+                            <p className="text-sm font-bold italic text-orange-accent/80">
+                                Empieza a trazar tu ruta profesional hoy.
                             </p>
                         </div>
                     </div>
 
-                    <button
-                        onClick={() => navigate('/')}
-                        className="btn-primary"
-                    >
-                        <span className="text-xl mr-2 leading-none">⊕</span>
-                        <span>Comenzar nueva asesoría</span>
+                    <button onClick={() => navigate('/')} className="btn-primary">
+                        <span className="mr-2 text-xl leading-none">+</span>
+                        <span>Comenzar nueva asesoria</span>
                     </button>
                 </div>
             ) : (
@@ -122,14 +124,14 @@ const HistorialPage = () => {
                         <div
                             key={chat.id}
                             onClick={() => navigate('/', { state: { openChatId: chat.id } })}
-                            className="group card hover:border-orange-accent/30 transition-all cursor-pointer flex items-center gap-4 p-4"
+                            className="group card flex cursor-pointer items-center gap-4 p-4 transition-all hover:border-orange-accent/30"
                         >
-                            <div className="w-12 h-12 bg-dark-border rounded-xl flex items-center justify-center text-orange-accent group-hover:bg-orange-accent group-hover:text-white transition-colors">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-dark-border text-orange-accent transition-colors group-hover:bg-orange-accent group-hover:text-white">
                                 <MessageSquare size={24} />
                             </div>
 
-                            <div className="flex-1 min-w-0">
-                                <h3 className="font-bold text-lg truncate group-hover:text-orange-accent transition-colors">
+                            <div className="min-w-0 flex-1">
+                                <h3 className="truncate text-lg font-bold transition-colors group-hover:text-orange-accent">
                                     {chat.title}
                                 </h3>
                                 <div className="flex items-center gap-1">
@@ -144,18 +146,37 @@ const HistorialPage = () => {
 
                             <div className="flex items-center gap-3">
                                 <button
-                                    onClick={(e) => handleDeleteChat(e, chat.id)}
-                                    className="p-2 text-dark-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                                    title="Eliminar conversación"
+                                    onClick={(event) => handleDeleteChat(event, chat.id, chat.title)}
+                                    className={`rounded-lg p-2 transition-all ${
+                                        isDarkMode
+                                            ? 'text-dark-muted hover:bg-red-500/10 hover:text-red-500'
+                                            : 'text-light-muted hover:bg-red-500/10 hover:text-red-500'
+                                    }`}
+                                    title="Eliminar conversacion"
                                 >
                                     <Trash2 size={18} />
                                 </button>
-                                <ChevronRight className="text-dark-muted group-hover:text-orange-accent transition-transform group-hover:translate-x-1" size={20} />
+                                <ChevronRight
+                                    className="text-dark-muted transition-transform group-hover:translate-x-1 group-hover:text-orange-accent"
+                                    size={20}
+                                />
                             </div>
                         </div>
                     ))}
                 </div>
             )}
+
+            <ConfirmDialog
+                open={Boolean(chatPendingDelete)}
+                isDarkMode={isDarkMode}
+                title="Eliminar conversacion"
+                description={`Se eliminara "${chatPendingDelete?.title || 'este chat'}" de tu historial. Esta accion no se puede deshacer.`}
+                confirmLabel="Eliminar chat"
+                cancelLabel="Conservar"
+                loading={isDeletingChat}
+                onCancel={handleCancelDeleteChat}
+                onConfirm={handleConfirmDeleteChat}
+            />
         </div>
     );
 };

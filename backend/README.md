@@ -1,152 +1,197 @@
-# LAR University Backend API
+# LÄR University Backend API
 
-Backend Node.js/Express para el sistema de recomendación de especializaciones de LAR University.
+Backend Node.js/Express para analisis de CV, recomendacion de sprints y chat asistido para LÄR University.
 
-## 🚀 Stack Tecnológico
+## Stack
 
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Base de Datos**: MongoDB + Mongoose
-- **IA**: OpenAI GPT-4o
-- **Autenticación**: JWT (jsonwebtoken)
-- **Upload**: Multer
-- **PDF Parsing**: pdf-parse
-- **Seguridad**: Helmet, CORS, Rate Limiting
+- Runtime: Node.js
+- Framework: Express.js
+- Base de datos: Firebase Firestore
+- IA: OpenAI (`gpt-4o` por defecto)
+- Retrieval de catalogo: ranking lexico local sobre Firestore (sin embeddings)
+- Autenticacion: JWT
+- Upload: Multer
+- Parsing de PDF: `pdf-parse`
 
-## 📁 Estructura del Proyecto
+## Estructura
 
-```
+```text
 backend/
-├── server.js                    # Entry point
-├── .env                         # Variables de entorno (no commitear)
-├── .env.example                 # Template de variables
-├── src/
-│   ├── config/
-│   │   ├── database.js          # Conexión MongoDB
-│   │   └── openai.js            # Cliente OpenAI
-│   ├── controllers/
-│   │   ├── auth.controller.js   # Registro, login, perfil
-│   │   ├── chat.controller.js   # Historial de conversaciones
-│   │   ├── cv.controller.js     # Upload y análisis de CV
-│   │   ├── recommendation.controller.js  # Recomendaciones
-│   │   └── user.controller.js   # Gestión de usuario
-│   ├── middleware/
-│   │   ├── auth.middleware.js   # JWT verification
-│   │   ├── errorHandler.js      # Error handling global
-│   │   └── upload.middleware.js # Multer file upload
-│   ├── models/
-│   │   ├── User.js              # Modelo de usuario
-│   │   ├── Chat.js              # Modelo de chat/conversación
-│   │   └── CVAnalysis.js        # Modelo de análisis de CV
-│   ├── routes/
-│   │   ├── auth.routes.js
-│   │   ├── chat.routes.js
-│   │   ├── cv.routes.js
-│   │   ├── recommendation.routes.js
-│   │   └── user.routes.js
-│   ├── services/
-│   │   ├── openai.service.js    # Lógica de IA (análisis CV, recomendaciones, chat)
-│   │   └── pdf.service.js       # Extracción de texto de PDFs
-│   └── utils/
-│       └── specializations.js   # Catálogo de especializaciones
-└── uploads/                     # CVs subidos (gitignored)
+|-- server.js
+|-- seed-learning-content.js
+`-- src/
+    |-- app.js
+    |-- composition-root.js
+    |-- ai/
+    |-- http/
+    |   |-- controllers/
+    |   |-- middleware/
+    |   |-- routes/
+    |   |-- serializers/
+    |   |-- validators/
+    |   |-- respond.js
+    |   |-- sse.js
+    |   `-- validate.js
+    |-- infra/
+    |-- repositories/
+    |-- services/
+    |   |-- auth/
+    |   |   `-- jwt.service.js
+    |   |-- documents/
+    |   |   `-- pdf-parser.service.js
+    |   |-- errors/
+    |   |   `-- app-error.js
+    |   |-- observability/
+    |   |   |-- logger.js
+    |   |   `-- request-context.service.js
+    |   `-- serialization/
+    |       |-- analysis-serializer.js
+    |       `-- recommendation-serializer.js
+    |-- use-cases/
+    `-- utils/
+|-- test/
+    `-- *.test.js
 ```
 
-## ⚙️ Configuración
+## Configuracion
+
+Arquitectura runtime:
+
+- `http/`: capa HTTP completa (`routes`, `controllers`, `middleware`, `validators`, `serializers`, `respond`, `sse`).
+- `use-cases/`: logica de negocio.
+- `ai/`: orquestacion de prompts, contexto y retrieval local de catalogo.
+- `repositories/`: acceso de dominio a persistencia.
+- `services/`: servicios auxiliares agrupados por responsabilidad (`auth`, `documents`, `errors`, `observability`, `serialization`).
+- `infra/`: adaptadores externos (Firestore, OpenAI).
 
 ### 1. Instalar dependencias
+
 ```bash
 npm install
 ```
 
-### 2. Configurar variables de entorno
-Edita el archivo `.env` con tus valores:
+### 2. Variables de entorno
+
+Configura `.env` con al menos:
+
 ```env
-MONGODB_URI=mongodb://localhost:27017/lar-university
-OPENAI_API_KEY=sk-tu-api-key-aqui
-JWT_SECRET=tu-secreto-jwt-seguro
+OPENAI_API_KEY=tu_api_key
+OPENAI_MODEL=gpt-4o
+
+GOOGLE_APPLICATION_CREDENTIALS=./service-account.json
+FIREBASE_PROJECT_ID=tu_proyecto_firebase
 ```
 
-### 3. Iniciar MongoDB
-Asegúrate de tener MongoDB corriendo localmente, o usa MongoDB Atlas.
+Notas:
 
-### 4. Ejecutar el servidor
+- Si `OPENAI_API_KEY` no esta configurada, el backend sigue funcionando con un modo de respaldo para extraccion, recomendacion y chat.
+- El retrieval del chat usa ranking lexico local sobre modulos y topics del master seleccionado.
+
+### 3. Ejecutar el servidor
+
 ```bash
-# Desarrollo (con hot reload)
 npm run dev
+```
 
-# Producción
+Para produccion:
+
+```bash
 npm start
 ```
 
-## 📡 API Endpoints
-
-### Auth
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| POST | `/api/auth/register` | Registrar usuario |
-| POST | `/api/auth/login` | Iniciar sesión |
-| GET | `/api/auth/me` | Obtener perfil actual |
-| PUT | `/api/auth/update-profile` | Actualizar perfil |
-| PUT | `/api/auth/change-password` | Cambiar contraseña |
-
-### CV Analysis
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| POST | `/api/cv/upload` | Subir y analizar CV (PDF) |
-| POST | `/api/cv/linkedin` | Analizar perfil LinkedIn |
-| GET | `/api/cv/my-analysis` | Obtener último análisis |
-| GET | `/api/cv/history` | Historial de análisis |
-
-### Chat
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/api/chat` | Listar todos los chats |
-| POST | `/api/chat` | Crear nuevo chat |
-| GET | `/api/chat/:id` | Obtener chat específico |
-| POST | `/api/chat/:id/message` | Enviar mensaje |
-| DELETE | `/api/chat/:id` | Eliminar chat |
-| PUT | `/api/chat/:id/title` | Renombrar chat |
-
-### Recommendations
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/api/recommendations/specializations` | Catálogo completo |
-| GET | `/api/recommendations/specializations/:id` | Una especialización |
-| GET | `/api/recommendations/my-recommendation` | Mi recomendación |
-| POST | `/api/recommendations/regenerate` | Regenerar recomendación |
-
-### Health Check
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/health` | Estado del servidor |
-
-## 🎯 Especializaciones Disponibles
-
-1. **COMUNICACIÓN** - Liderazgo comunicacional
-2. **EMPRENDIMIENTO** - Startups y negocios
-3. **FINANZAS** - Finanzas corporativas avanzadas
-4. **TALENTO** - Gestión de personas y equipos
-5. **TECNOLOGÍA** - Transformación digital
-6. **IA Y AUTOMATIZACIÓN** - Inteligencia Artificial
-7. **MERCADO Y CLIENTE** - Marketing avanzado
-8. **OPERACIONES Y ENTORNO** - Supply chain y operaciones
-9. **ANALÍTICA DE DATOS** - Data science para directivos
-
-## 🔐 Autenticación
-
-Todas las rutas protegidas requieren el header:
-```
-Authorization: Bearer <jwt_token>
-```
-
-## 📦 Despliegue (Google Cloud Run)
+## Scripts utiles
 
 ```bash
-# Build Docker image
+npm run seed:learning-content
+npm test
+```
+
+Que hace cada uno:
+
+- `seed:learning-content`: sincroniza masters, modulos y topics en Firestore.
+- `test`: corre la suite de contratos HTTP y pruebas unitarias del backend.
+
+## Flujo de recomendacion
+
+1. El usuario selecciona un master.
+2. Sube su CV o comparte resumen de LinkedIn.
+3. El backend extrae un perfil estructurado.
+4. El sistema obtiene contexto del catalogo del master con ranking lexico local sobre Firestore.
+5. OpenAI genera la recomendacion usando el perfil y el contexto recuperado.
+6. Se guardan perfil, recomendacion, materias sugeridas y cursos recomendados en `analyses`.
+
+## Masters disponibles
+
+- `mtecmba`
+- `mintear`
+- `datalar-mba`
+
+## Endpoints principales
+
+### Auth
+
+| Metodo | Ruta | Descripcion |
+|---|---|---|
+| POST | `/api/auth/register` | Registrar usuario |
+| POST | `/api/auth/login` | Iniciar sesion |
+| POST | `/api/auth/google` | Login con Google |
+| GET | `/api/auth/me` | Obtener usuario autenticado |
+
+### Usuarios
+
+| Metodo | Ruta | Descripcion |
+|---|---|---|
+| GET | `/api/users/profile` | Perfil del usuario |
+| GET | `/api/users/masters` | Masters disponibles |
+| PUT | `/api/users/master` | Seleccionar master |
+| DELETE | `/api/users/account` | Desactivar cuenta |
+
+### CV
+
+| Metodo | Ruta | Descripcion |
+|---|---|---|
+| POST | `/api/cv/upload` | Subir y analizar CV PDF |
+| POST | `/api/cv/linkedin` | Analizar perfil LinkedIn |
+| GET | `/api/cv/my-analysis` | Ultimo analisis completado |
+| GET | `/api/cv/history` | Historial de analisis |
+
+### Recomendaciones
+
+| Metodo | Ruta | Descripcion |
+|---|---|---|
+| GET | `/api/recommendations/specializations` | Catalogo de especializaciones |
+| GET | `/api/recommendations/specializations/:id` | Especializacion puntual |
+| GET | `/api/recommendations/my-recommendation` | Recomendacion del usuario |
+| POST | `/api/recommendations/regenerate` | Regenerar recomendacion |
+
+### Chat
+
+| Metodo | Ruta | Descripcion |
+|---|---|---|
+| GET | `/api/chat` | Listar chats |
+| POST | `/api/chat` | Crear chat |
+| GET | `/api/chat/:id` | Obtener chat |
+| POST | `/api/chat/:id/message` | Enviar mensaje |
+| PUT | `/api/chat/:id/title` | Renombrar chat |
+| DELETE | `/api/chat/:id` | Eliminar chat |
+
+### Health
+
+| Metodo | Ruta | Descripcion |
+|---|---|---|
+| GET | `/health` | Estado del servidor |
+
+## Recomendaciones operativas
+
+- Ejecuta `npm run seed:learning-content` cuando agregues o cambies masters, modulos o topics.
+
+## Despliegue
+
+Ejemplo basico con Cloud Run:
+
+```bash
 docker build -t lar-university-backend .
 
-# Deploy to Cloud Run
 gcloud run deploy lar-university-backend \
   --image lar-university-backend \
   --platform managed \

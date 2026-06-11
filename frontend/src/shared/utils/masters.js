@@ -1,0 +1,134 @@
+export const normalizeMasterId = (value) => String(value || '').trim().toLowerCase();
+
+const MASTER_DISPLAY_NAMES = {
+    'mintear': 'Máster en Inteligencia Artificial',
+    'datalar-mba': 'Máster en Data Science',
+    'mtecmba': 'Máster en TECH MBA',
+};
+
+const MASTER_CARD_LABELS = {
+    'mintear': 'MINTEAR',
+    'datalar-mba': 'MDATASC',
+    'mtecmba': 'TECHMBA',
+};
+
+const MASTER_ACCENTS = {
+    'mtecmba': {
+        color: 'rgb(132, 193, 193)',
+        accentClass: 'text-[#84c1c1]',
+    },
+    'mintear': {
+        color: 'rgb(255, 107, 53)',
+        accentClass: 'text-orange-accent',
+    },
+    'datalar-mba': {
+        color: 'rgb(80, 165, 132)',
+        accentClass: 'text-[#50a584]',
+    },
+};
+
+export const getMasterVisual = (masterId) =>
+    MASTER_ACCENTS[normalizeMasterId(masterId)] || {
+        color: 'rgb(240, 90, 40)',
+        accentClass: 'text-orange-accent',
+    };
+
+const HARDCODED_MASTER_POSTERS = {
+    'mtecmba': 'https://storage.googleapis.com/assets_onboarding_us/MBAS/MTEC_MBA.png',
+    'mintear': 'https://storage.googleapis.com/assets_onboarding_us/MBAS/MINTEAR_MBA.png',
+    'datalar-mba': 'https://storage.googleapis.com/assets_onboarding_us/MBAS/MDATASC_MBA.png',
+};
+
+const MASTER_SELECTION_THEMES = {
+    'mintear': {
+        panelColor: '#59AE8F',
+        posterFrom: '#F6DB76',
+        posterVia: '#A7C68F',
+        posterTo: '#264B3D',
+        posterFallbackColor: '#95BC88',
+        posterImageUrl: HARDCODED_MASTER_POSTERS['mintear'],
+        posterObjectPosition: 'center 38%',
+        badge: 'IA e innovación',
+        headline: 'Diseña rutas de innovación con una visión aplicada al negocio.',
+        textureColor: 'rgba(255,255,255,0.22)',
+    },
+    'datalar-mba': {
+        panelColor: '#86C5CD',
+        posterFrom: '#D9EAA6',
+        posterVia: '#9FD5D8',
+        posterTo: '#567484',
+        posterFallbackColor: '#9FD5D8',
+        posterImageUrl: HARDCODED_MASTER_POSTERS['datalar-mba'],
+        posterObjectPosition: 'center 38%',
+        badge: 'Analítica ejecutiva',
+        headline: 'Convierte datos, criterio y estrategia en decisiones de alto impacto.',
+        textureColor: 'rgba(255,255,255,0.2)',
+    },
+    'mtecmba': {
+        panelColor: '#F45A22',
+        posterFrom: '#B9D9EE',
+        posterVia: '#8DB7D9',
+        posterTo: '#3B5776',
+        posterFallbackColor: '#8DB7D9',
+        posterImageUrl: HARDCODED_MASTER_POSTERS['mtecmba'],
+        posterObjectPosition: 'center 26%',
+        badge: 'Liderazgo tech',
+        headline: 'Integra tecnología, producto y dirección para liderar transformación.',
+        textureColor: 'rgba(255,255,255,0.18)',
+    },
+};
+
+export const getMasterDisplayName = (master) => {
+    if (!master) return '';
+    if (typeof master === 'string') {
+        return MASTER_DISPLAY_NAMES[normalizeMasterId(master)] || master;
+    }
+
+    return (
+        MASTER_DISPLAY_NAMES[normalizeMasterId(master.id)] ||
+        MASTER_DISPLAY_NAMES[normalizeMasterId(master.code)] ||
+        MASTER_DISPLAY_NAMES[normalizeMasterId(master.name)] ||
+        master.name ||
+        master.code ||
+        master.id ||
+        ''
+    );
+};
+
+export const getMasterCardLabel = (master) => {
+    if (!master) return '';
+    if (typeof master === 'string') {
+        return MASTER_CARD_LABELS[normalizeMasterId(master)] || master;
+    }
+
+    return (
+        MASTER_CARD_LABELS[normalizeMasterId(master.id)] ||
+        MASTER_CARD_LABELS[normalizeMasterId(master.code)] ||
+        master.code ||
+        master.name ||
+        master.id ||
+        ''
+    );
+};
+
+export const getMasterDescription = (master) => {
+    if (!master || typeof master === 'string') return '';
+    return master.description || '';
+};
+
+export const getMasterSelectionTheme = (masterId) =>
+    MASTER_SELECTION_THEMES[normalizeMasterId(masterId)] || {
+        panelColor: '#F05A28',
+        posterFrom: '#F5D0C5',
+        posterVia: '#EFA78B',
+        posterTo: '#7A3C2D',
+        posterFallbackColor: '#EFA78B',
+        posterImageUrl: '',
+        posterObjectPosition: 'center 20%',
+        badge: 'Ruta LÄR',
+        headline: 'Explora una experiencia ejecutiva construida para potenciar tu perfil.',
+        textureColor: 'rgba(255,255,255,0.2)',
+    };
+
+export const findMasterById = (masters = [], masterId) =>
+    masters.find((master) => normalizeMasterId(master.id) === normalizeMasterId(masterId)) || null;

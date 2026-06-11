@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
-import ConstellationBackground from '../components/ConstellationBackground';
+import { useAuth } from '../features/auth';
+import { useTheme } from '../features/theme';
+import AuthShell from '../shared/ui/AuthShell';
 
 const LoginPage = () => {
     const { login, googleLogin } = useAuth();
@@ -15,19 +15,22 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (event) => {
+        event.preventDefault();
         setLoading(true);
         setError('');
+
         try {
             const result = await login(email, password);
+
             if (result.success) {
                 navigate('/');
-            } else {
-                setError(result.message || 'Credenciales inválidas');
+                return;
             }
+
+            setError(result.message || 'Credenciales invalidas');
         } catch (err) {
-            setError(err.response?.data?.message || 'Error al iniciar sesión');
+            setError(err.response?.data?.message || 'Error al iniciar sesion');
         } finally {
             setLoading(false);
         }
@@ -36,13 +39,16 @@ const LoginPage = () => {
     const handleGoogleSuccess = async (credentialResponse) => {
         setLoading(true);
         setError('');
+
         try {
             const result = await googleLogin(credentialResponse.credential);
+
             if (result.success) {
                 navigate('/');
-            } else {
-                setError(result.message || 'Error al autenticar con Google');
+                return;
             }
+
+            setError(result.message || 'Error al autenticar con Google');
         } catch (err) {
             setError(err.response?.data?.message || 'Error al conectar con el servidor');
         } finally {
@@ -51,117 +57,112 @@ const LoginPage = () => {
     };
 
     const handleGoogleError = () => {
-        setError('Error al iniciar sesión con Google');
+        setError('Error al iniciar sesion con Google');
     };
 
     return (
-        <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden ${isDarkMode ? 'bg-[#12100E]' : 'bg-[#F8F9FA]'}`}>
-            <ConstellationBackground theme={isDarkMode ? 'dark' : 'light'} />
-
-            <div className="max-w-md w-full relative z-10">
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-orange-accent/10 mb-4">
-                        <svg viewBox="0 0 100 100" className="w-10 h-10">
-                            <polygon points="50,20 15,80 85,80" fill="none" stroke="#FF6B35" strokeWidth="10" />
-                            <rect x="42" y="4" width="7" height="7" fill="#FF6B35" />
-                            <rect x="52" y="4" width="7" height="7" fill="#FF6B35" />
-                        </svg>
-                    </div>
-                    <h1 className={`text-3xl font-black tracking-tighter ${isDarkMode ? 'text-white' : 'text-[#1A1A1A]'}`}>
-                        LÄR <span className="text-orange-accent">UNIVERSITY</span>
-                    </h1>
-                    <p className={`text-sm font-medium mt-2 ${isDarkMode ? 'text-stone-400' : 'text-slate-500'}`}>
-                        TU TERCERA VÍA HACIA LA ÉLITE PROFESIONAL
-                    </p>
+        <AuthShell
+            isDarkMode={isDarkMode}
+            cardTitle="Inicia sesión"
+            heroSubtitle="Accede a tu campus digital y sigue construyendo tu futuro profesional"
+            footer={
+                <p className={`text-[13px] ${isDarkMode ? 'text-slate-300/80' : 'text-slate-600'}`}>
+                    ¿No tienes una cuenta?{' '}
+                    <Link to="/register" className="font-black text-[#F45A22] underline-offset-4 transition-colors hover:text-[#d94d1a] hover:underline">
+                        REGISTRATE AQUI
+                    </Link>
+                </p>
+            }
+        >
+            <div className="mb-4 flex flex-col gap-3">
+                <div className="flex justify-center">
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        theme={isDarkMode ? 'filled_black' : 'outline'}
+                        shape="pill"
+                        text="continue_with"
+                    />
                 </div>
 
-                <div className={`card ${isDarkMode ? 'bg-[#1C1917]/80 border-[#2E2925]' : 'bg-white border-[#E2E8F0]'} backdrop-blur-xl shadow-2xl p-8 rounded-3xl`}>
-                    <h2 className={`text-xl font-bold mb-6 text-center ${isDarkMode ? 'text-white' : 'text-[#1A1A1A]'}`}>Bienvenido de nuevo</h2>
-
-                    <div className="flex flex-col gap-4 mb-6">
-                        <div className="flex justify-center">
-                            <GoogleLogin
-                                onSuccess={handleGoogleSuccess}
-                                onError={handleGoogleError}
-                                theme={isDarkMode ? "filled_black" : "outline"}
-                                shape="pill"
-                                text="continue_with"
-                            />
-                        </div>
-
-                        <div className="relative flex items-center py-2">
-                            <div className="flex-grow border-t border-stone-800"></div>
-                            <span className="flex-shrink mx-4 text-xs font-black uppercase tracking-widest text-stone-500">o correo</span>
-                            <div className="flex-grow border-t border-stone-800"></div>
-                        </div>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                            <label className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? 'text-stone-500' : 'text-slate-400'}`}>Correo Electrónico</label>
-                            <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-accent" size={18} />
-                                <input
-                                    type="email"
-                                    required
-                                    className="input-field pl-12"
-                                    placeholder="tu@email.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    autoComplete="email"
-                                    name="email"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className={`text-xs font-black uppercase tracking-widest ${isDarkMode ? 'text-stone-500' : 'text-slate-400'}`}>Contraseña</label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-accent" size={18} />
-                                <input
-                                    type="password"
-                                    required
-                                    className="input-field pl-12"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    autoComplete="current-password"
-                                    name="password"
-                                />
-                            </div>
-                        </div>
-
-                        {error && (
-                            <div className="text-red-500 text-sm text-center font-bold p-3 bg-red-500/5 border border-red-500/20 rounded-xl">
-                                {error}
-                            </div>
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="btn-primary w-full group flex items-center justify-center gap-2"
-                        >
-                            {loading ? <Loader2 className="animate-spin" size={20} /> : (
-                                <>
-                                    <span>INICIAR SESIÓN</span>
-                                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                                </>
-                            )}
-                        </button>
-                    </form>
-
-                    <div className="mt-8 pt-6 border-t border-dashed border-stone-800 text-center">
-                        <p className={`text-sm ${isDarkMode ? 'text-stone-400' : 'text-slate-500'}`}>
-                            ¿No tienes una cuenta?{' '}
-                            <Link to="/register" className="text-orange-accent font-black hover:underline underline-offset-4">
-                                REGÍSTRATE AQUÍ
-                            </Link>
-                        </p>
-                    </div>
+                <div className="relative flex items-center py-1">
+                    <div className={`flex-grow border-t ${isDarkMode ? 'border-[#F45A22]/20' : 'border-[#D7C9BE]'}`} />
+                    <span className={`mx-4 flex-shrink text-[11px] font-black uppercase tracking-[0.22em] ${isDarkMode ? 'text-stone-300/65' : 'text-stone-500'}`}>
+                        o correo
+                    </span>
+                    <div className={`flex-grow border-t ${isDarkMode ? 'border-[#F45A22]/20' : 'border-[#D7C9BE]'}`} />
                 </div>
             </div>
-        </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="space-y-1.5">
+                    <label className={`text-[11px] font-black uppercase tracking-[0.22em] ${isDarkMode ? 'text-slate-300/70' : 'text-slate-500'}`}>
+                        Correo electrónico
+                    </label>
+                    <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F45A22]" size={18} />
+                        <input
+                            type="email"
+                            required
+                            className={`w-full rounded-xl border px-4 py-3 pl-12 outline-none transition-all placeholder:text-slate-400/70 ${
+                                isDarkMode
+                                    ? 'border-[#F45A22]/20 bg-white/5 text-slate-100 focus:border-[#F45A22]/75 focus:ring-2 focus:ring-[#F45A22]/25'
+                                    : 'border-[#D8CBC1] bg-white/80 text-slate-900 focus:border-[#F45A22]/70 focus:ring-2 focus:ring-[#F45A22]/20'
+                            }`}
+                            placeholder="tu@email.com"
+                            value={email}
+                            onChange={(event) => setEmail(event.target.value)}
+                            autoComplete="email"
+                            name="email"
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-1.5">
+                    <label className={`text-[11px] font-black uppercase tracking-[0.22em] ${isDarkMode ? 'text-slate-300/70' : 'text-slate-500'}`}>
+                        Contraseña
+                    </label>
+                    <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F45A22]" size={18} />
+                        <input
+                            type="password"
+                            required
+                            className={`w-full rounded-xl border px-4 py-3 pl-12 outline-none transition-all placeholder:text-slate-400/70 ${
+                                isDarkMode
+                                    ? 'border-[#F45A22]/20 bg-white/5 text-slate-100 focus:border-[#F45A22]/75 focus:ring-2 focus:ring-[#F45A22]/25'
+                                    : 'border-[#D8CBC1] bg-white/80 text-slate-900 focus:border-[#F45A22]/70 focus:ring-2 focus:ring-[#F45A22]/20'
+                            }`}
+                            placeholder="********"
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
+                            autoComplete="current-password"
+                            name="password"
+                        />
+                    </div>
+                </div>
+
+                {error ? (
+                    <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-center text-sm font-bold text-red-500">
+                        {error}
+                    </div>
+                ) : null}
+
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="group flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#F45A22] via-[#F45A22] to-[#ff7a45] px-6 py-3 font-bold text-white shadow-[0_14px_35px_rgba(244,90,34,0.38)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(244,90,34,0.5)] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    {loading ? (
+                        <Loader2 className="animate-spin" size={20} />
+                    ) : (
+                        <>
+                            <span>INICIAR SESIÓN</span>
+                            <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+                        </>
+                    )}
+                </button>
+            </form>
+        </AuthShell>
     );
 };
 

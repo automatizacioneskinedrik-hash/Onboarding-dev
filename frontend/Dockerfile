@@ -6,6 +6,15 @@ WORKDIR /app
 ARG VITE_GOOGLE_CLIENT_ID
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 
+# Accept API URL at build time
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
+# Accept Auth Background URL at build time
+ARG VITE_AUTH_BACKGROUND_URL
+ENV VITE_AUTH_BACKGROUND_URL=$VITE_AUTH_BACKGROUND_URL
+
+
 COPY package*.json ./
 RUN npm ci
 COPY . .
@@ -15,7 +24,7 @@ FROM nginx:1.27-alpine
 
 # Set default env variables
 ENV PORT=8080
-ENV BACKEND_URL=https://backend-onboard-866351374703.europe-southwest1.run.app
+ENV BACKEND_URL=https://backend-dev-866351374703.europe-southwest1.run.app
 
 COPY --from=build /app/dist /usr/share/nginx/html
 

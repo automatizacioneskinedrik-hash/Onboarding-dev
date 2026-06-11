@@ -99,18 +99,233 @@
         pointer-events: none;
     }
 
-    .card-premium-left::before {
-        content: '';
-        @apply absolute inset-0 opacity-100;
-        background: radial-gradient(circle at 0% 100%, rgba(255, 107, 53, 0.06) 0%, transparent 50%);
-        pointer-events: none;
+.card-premium-left::before {
+    content: '';
+    @apply absolute inset-0 opacity-100;
+    background: radial-gradient(circle at 0% 100%, rgba(255, 107, 53, 0.06) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.profile-section-kicker {
+    color: #6B7280;
+    @apply text-[11px] font-semibold uppercase tracking-[0.24em];
+}
+
+.profile-hero-shell {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background:
+        radial-gradient(circle at top right, rgba(80, 165, 132, 0.18), transparent 30%),
+        radial-gradient(circle at left center, rgba(240, 90, 40, 0.18), transparent 32%),
+        linear-gradient(135deg, #16110F 0%, #25211F 45%, #0F3D43 100%);
+    box-shadow: 0 28px 60px rgba(0, 0, 0, 0.28);
+    @apply rounded-[32px] p-6 md:p-8;
+}
+
+.profile-hero-avatar {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+    @apply flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-[26px] text-2xl font-bold text-white;
+}
+
+.profile-hero-chip {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+    @apply rounded-full px-3 py-1.5 text-xs font-medium text-white/85;
+}
+
+.profile-score-card {
+    background: rgba(255, 255, 255, 0.06);
+    @apply flex flex-wrap items-center gap-4 rounded-[24px] px-4 py-4 backdrop-blur-sm;
+}
+
+.profile-score-ring {
+    --score: 0%;
+    background: conic-gradient(#50A584 0 var(--score), rgba(255,255,255,0.12) var(--score) 100%);
+    @apply flex h-[88px] w-[88px] items-center justify-center rounded-full;
+}
+
+.profile-score-ring-inner {
+    background: #1D1917;
+    @apply flex h-[68px] w-[68px] flex-col items-center justify-center rounded-full text-white;
+}
+
+.profile-score-ring-inner strong {
+    @apply text-lg font-bold leading-none;
+}
+
+.profile-score-ring-inner span {
+    @apply mt-1 text-[10px] uppercase tracking-[0.18em] text-white/55;
+}
+
+.profile-premium-card {
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8F5F2 100%);
+    border: 1px solid rgba(22, 17, 15, 0.06);
+    box-shadow: 0 18px 45px rgba(17, 12, 10, 0.08);
+    @apply rounded-[28px];
+}
+
+.profile-highlight-item {
+    background: rgba(12, 82, 88, 0.06);
+    border: 1px solid rgba(12, 82, 88, 0.08);
+    @apply flex items-start gap-3 rounded-[20px] px-4 py-4;
+}
+
+.profile-roadmap-item {
+    position: relative;
+    background: #FFFFFF;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    @apply flex items-start gap-4 rounded-[22px] px-4 py-4 md:items-center;
+}
+
+.profile-roadmap-step {
+    background: linear-gradient(135deg, #F45A22 0%, #FF8A5B 100%);
+    box-shadow: 0 12px 30px rgba(240, 90, 40, 0.22);
+    @apply flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white;
+}
+
+.profile-module-chip {
+    background: rgba(80, 165, 132, 0.12);
+    color: #2F7A60;
+    @apply rounded-full px-3 py-1 text-xs font-semibold;
+}
+
+.profile-neutral-chip {
+    background: #F3EFEA;
+    color: #5B5651;
+    @apply rounded-full px-3 py-1.5 text-xs font-medium;
+}
+
+.input-field {
+    background-color: rgb(var(--bg-rgb));
+    border: 1px solid rgb(var(--border-rgb));
+    color: rgb(var(--text-rgb));
+        @apply rounded-xl px-4 py-3 focus:border-orange-accent outline-none transition-all w-full placeholder:text-stone-500/50;
     }
 
-    .input-field {
-        background-color: rgb(var(--bg-rgb));
-        border: 1px solid rgb(var(--border-rgb));
-        color: rgb(var(--text-rgb));
-        @apply rounded-xl px-4 py-3 focus:border-orange-accent outline-none transition-all w-full placeholder:text-stone-500/50;
+    /* Layout refinements for chat and CV upload */
+    .chat-container {
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        min-height: 0;
+    }
+
+    .chat-bar-wrapper {
+        @apply flex flex-col items-start;
+    }
+
+    .chat-bar {
+        width: 100%;
+        max-width: 1080px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .chat-suggestions {
+        width: 100%;
+        max-width: 1080px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(240, 90, 40, 0.3) transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 3px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(240, 90, 40, 0.3);
+        border-radius: 10px;
+    }
+
+    .chat-markdown {
+        @apply space-y-3;
+    }
+
+    .chat-markdown p {
+        @apply m-0 text-inherit font-normal;
+    }
+
+    .chat-markdown h1,
+    .chat-markdown h2,
+    .chat-markdown h3 {
+        @apply m-0 font-semibold text-inherit;
+        letter-spacing: -0.01em;
+    }
+
+    .chat-markdown h1 {
+        @apply text-[1rem];
+    }
+
+    .chat-markdown h2,
+    .chat-markdown h3 {
+        @apply text-[0.95rem];
+    }
+
+    .chat-markdown ul,
+    .chat-markdown ol {
+        @apply m-0 pl-5 space-y-1.5;
+    }
+
+    .chat-markdown li {
+        @apply font-normal;
+    }
+
+    .chat-markdown-strong {
+        @apply font-semibold;
+    }
+
+    .chat-markdown-em {
+        font-style: italic;
+    }
+
+    .chat-markdown-code {
+        @apply rounded-md px-1.5 py-0.5 font-medium;
+        background-color: rgba(240, 90, 40, 0.12);
+    }
+
+    .chat-markdown-pre {
+        @apply overflow-x-auto rounded-xl p-3 text-[11px] leading-relaxed;
+        background-color: rgba(15, 23, 42, 0.35);
+    }
+
+    .chat-markdown-link {
+        @apply font-medium underline underline-offset-2;
+        color: rgb(var(--accent-rgb));
+    }
+
+    @media (max-width: 768px) {
+        .chat-bar-wrapper {
+            @apply px-3;
+        }
+
+        .chat-bar {
+            max-width: 100%;
+        }
+
+        .chat-suggestions {
+            max-width: 100%;
+        }
     }
 }
 
@@ -175,3 +390,91 @@
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     will-change: width, transform, opacity;
 }
+
+@keyframes onboarding-tooltip-in {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes onboarding-spotlight-pulse {
+    0%,
+    100% {
+        stroke-opacity: 0.9;
+        filter: drop-shadow(0 0 8px rgba(238, 85, 34, 0.38));
+    }
+
+    50% {
+        stroke-opacity: 1;
+        filter: drop-shadow(0 0 16px rgba(238, 85, 34, 0.58));
+    }
+}
+
+.onboarding-tour-tooltip {
+    width: min(292px, calc(100vw - 36px));
+    max-width: calc(100vw - 36px);
+    max-height: calc(100vh - 56px);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
+    background: #E4E5E2;
+    color: #2D2926;
+    padding: 14px;
+    box-shadow: 0 16px 40px rgba(45, 41, 38, 0.24);
+    animation: onboarding-tooltip-in 180ms ease-out both;
+    transform-origin: center;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+.onboarding-tour-tooltip-content {
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.react-joyride__floater {
+    max-width: calc(100vw - 36px);
+    max-height: calc(100vh - 56px);
+}
+
+.onboarding-spotlight-glow {
+    animation: onboarding-spotlight-pulse 1.8s ease-in-out infinite;
+    stroke-linejoin: round;
+}
+
+@keyframes pulseLab {
+    0% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 0 rgba(238, 85, 34, 0.18));
+    }
+
+    50% {
+        transform: scale(1.05);
+        filter: drop-shadow(0 0 12px rgba(238, 85, 34, 0.30));
+    }
+
+    100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 0 rgba(238, 85, 34, 0.18));
+    }
+}
+
+.lar-analysis-symbol-shell {
+    border-color: rgba(238, 85, 34, 0.18);
+    border-radius: 20px;
+    background: linear-gradient(135deg, #EBCBBB 0%, #E4E5E2 100%);
+    box-shadow: 0 10px 30px rgba(45, 41, 38, 0.08);
+}
+
+.lar-analysis-symbol {
+    animation: pulseLab 1.8s ease-in-out infinite;
+    transform-origin: center;
+}
+
