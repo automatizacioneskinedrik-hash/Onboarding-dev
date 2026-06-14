@@ -61,6 +61,16 @@ test('chat intent classifier allows ambiguous follow up when recent context is v
     assert.equal(result.intent, CHAT_SCOPE_INTENTS.LAR_FOLLOW_UP);
 });
 
+test('chat intent classifier treats a preference change as a master change request', () => {
+    const result = classifyChatIntent({
+        message: 'Me gusta mas finanzas, cambiamelo por favor',
+    });
+
+    assert.equal(result.decision, CHAT_SCOPE_DECISIONS.ALLOW);
+    assert.equal(result.intent, CHAT_SCOPE_INTENTS.LAR_MASTER_CHANGE);
+    assert.equal(result.requestedMasterId, 'mtecmba');
+});
+
 test('chat scope guard blocks repeated drift outside the domain', () => {
     // El guard endurece la politica si el usuario insiste varias veces fuera de alcance.
     const evaluation = evaluateChatScope({

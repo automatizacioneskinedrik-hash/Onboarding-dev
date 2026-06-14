@@ -2,9 +2,11 @@ const {
     CHAT_SCOPE_DECISIONS,
     CHAT_SCOPE_INTENTS,
     detectAllowedTopicMatches,
+    detectMasterChangeRequest,
     detectPromptInjection,
     isAmbiguousFollowUp,
     isGreetingMessage,
+    resolveRequestedMasterId,
 } = require('./chat-domain-policy');
 
 const hasRecentAllowedScope = (recentMessages = []) =>
@@ -42,6 +44,16 @@ const classifyChatIntent = ({ message, recentMessages = [] } = {}) => {
             intent: CHAT_SCOPE_INTENTS.GREETING,
             decision: CHAT_SCOPE_DECISIONS.ALLOW,
             reason: 'greeting',
+            topicMatches,
+        };
+    }
+
+    if (detectMasterChangeRequest(content)) {
+        return {
+            intent: CHAT_SCOPE_INTENTS.LAR_MASTER_CHANGE,
+            decision: CHAT_SCOPE_DECISIONS.ALLOW,
+            reason: 'master_change_request',
+            requestedMasterId: resolveRequestedMasterId(content),
             topicMatches,
         };
     }

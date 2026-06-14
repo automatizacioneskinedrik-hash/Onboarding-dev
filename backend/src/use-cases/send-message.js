@@ -3,8 +3,10 @@ const { resolveChatJourneyContext } = require('../ai/chat-journey-context');
 const {
     CHAT_SCOPE_DECISIONS,
     buildOutOfScopeResponse,
+    resolveRequestedMasterId,
 } = require('../ai/chat-domain-policy');
 const { buildUserJourneyUpdate } = require('../services/users/user-journey.service');
+const { normalizeRecommendation, serializeStoredRecommendation } = require('../services/serialization/recommendation-serializer');
 const { classifyChatIntent } = require('../ai/chat-intent-classifier');
 const {
     evaluateChatScope,
@@ -52,6 +54,7 @@ const createChatUseCases = ({
     chatRepo,
     analysisRepo,
     userRepo,
+    masterRepo,
     statsRepo,
     contextManager,
     aiOrchestrator,
@@ -131,6 +134,81 @@ const createChatUseCases = ({
         });
 
         return resolveChatContext({ chat, userId: user.id });
+    };
+
+    const applyMasterChange = async ({ chat, user, selectedMasterId, analysis, log }) => {
+        const targetMaster = masterRepo?.getById(selectedMasterId) || null;
+
+        if (!targetMaster) {
+            throw new AppError('No se pudo resolver el Master solicitado.', 400);
+        }
+
+        let updatedAnalysis = analysis || null;
+        let updatedRecommendation = analysis?.recommendation || null;
+
+        if (analysis?.status === 'completed' && analysis.extractedProfile) {
+            const generatedRecommendation = await aiOrchestrator.generateRecommendation({
+                profile: analysis.extractedProfile,
+                sourceType: analysis.sourceType || 'chat',
+                options: { masterId: targetMaster.id },
+                log,
+            });
+
+            updatedRecommendation = normalizeRecommendation(generatedRecommendation);
+            updatedAnalysis = await analysisRepo.update(analysis.id, {
+                masterId: targetMaster.id,
+                recommendation: serializeStoredRecommendation(updatedRecommendation),
+            });
+        }
+
+        const currentUser = await userRepo.findById(user.id);
+        const now = new Date().toISOString();
+        const activeAnalysisId = updatedAnalysis?.id || currentUser.cvAnalysisId || chat.cvAnalysisId || null;
+        const recommendedSpecialization =
+            updatedRecommendation?.specialization?.name ||
+            updatedRecommendation?.primarySpecialization ||
+            currentUser.recommendedSpecialization ||
+            null;
+
+        const updatedUser = await userRepo.update(
+            user.id,
+            buildUserJourneyUpdate({
+                user: currentUser,
+                userFields: {
+                    selectedMasterId: targetMaster.id,
+                    cvAnalysisId: activeAnalysisId,
+                    recommendedSpecialization,
+                },
+                journeyFields: {
+                    lastActivityAt: now,
+                },
+            })
+        );
+
+        const updatedChat = await chatRepo.update(chat.id, {
+            masterId: targetMaster.id,
+            cvAnalysisId: activeAnalysisId,
+        });
+
+        return {
+            targetMaster,
+            updatedAnalysis,
+            updatedRecommendation,
+            updatedUser,
+            updatedChat,
+        };
+    };
+
+    const buildMasterChangeResponse = ({ targetMaster, recommendation }) => {
+        const routeSubjects = (recommendation?.subjects || []).slice(0, 6);
+        const routeSummary = routeSubjects.length ? routeSubjects.join(', ') : 'la ruta sugerida';
+        const specializationName = recommendation?.primarySpecialization || targetMaster?.name || 'el nuevo Master';
+
+        return [
+            `He ajustado tu perfil al ${targetMaster?.name || 'nuevo Master'} y ya reorganicé tu ruta para que quede alineada con este enfoque.`,
+            `La especializacion principal ahora es ${specializationName} y los sprints prioritarios son: ${routeSummary}.`,
+            'Si quieres, puedo afinar todavía más la ruta para priorizar finanzas, analitica o liderazgo dentro de este nuevo contexto.',
+        ].join('\n\n');
     };
 
     const getUserChatById = async ({ chatId, userId }) => {
@@ -264,6 +342,80 @@ const createChatUseCases = ({
             guardReason: scopeEvaluation.reason,
             topicGroups: Object.keys(classification.topicMatches || {}),
         };
+
+        const masterChangeRequested = classification.intent === 'lar_master_change';
+        const requestedMasterId = classification.requestedMasterId || resolveRequestedMasterId(content, selectedMasterId);
+
+        if (masterChangeRequested && requestedMasterId) {
+            try {
+                const masterChangeResult = await applyMasterChange({
+                    chat,
+                    user,
+                    selectedMasterId: requestedMasterId,
+                    analysis: analysisId ? await analysisRepo.findById(analysisId) : null,
+                    log,
+                });
+
+                const aiContent = buildMasterChangeResponse({
+                    targetMaster: masterChangeResult.targetMaster,
+                    recommendation: masterChangeResult.updatedRecommendation,
+                });
+
+                onStart?.({ chatId, userMessage: null, retrieval: null });
+                onToken?.(aiContent);
+
+                const assistantMessage = await chatRepo.addMessage(chatId, {
+                    role: 'assistant',
+                    content: aiContent,
+                    metadata: {
+                        type: 'text',
+                        scope: {
+                            intent: classification.intent,
+                            decision: CHAT_SCOPE_DECISIONS.ALLOW,
+                            classifierReason: classification.reason,
+                            guardState: scopeEvaluation.state,
+                            policy: 'master_change_route_update',
+                        },
+                        chatAction: {
+                            type: 'master_change',
+                            masterId: masterChangeResult.targetMaster.id,
+                        },
+                        chatContext: {
+                            chatId,
+                            masterId: masterChangeResult.updatedChat.masterId,
+                            cvAnalysisId: masterChangeResult.updatedChat.cvAnalysisId || null,
+                            analysis: masterChangeResult.updatedAnalysis || null,
+                        },
+                    },
+                });
+
+                log?.info('Master actualizado desde chat', {
+                    userId: user.id,
+                    chatId,
+                    targetMasterId: masterChangeResult.targetMaster.id,
+                });
+
+                onDone?.({
+                    chatId,
+                    assistantMessage,
+                    retrieval: null,
+                    aiContent,
+                    chatContext: {
+                        chatId,
+                        masterId: masterChangeResult.updatedChat.masterId,
+                        cvAnalysisId: masterChangeResult.updatedChat.cvAnalysisId || null,
+                        analysis: masterChangeResult.updatedAnalysis || null,
+                    },
+                });
+                return;
+            } catch (error) {
+                log?.warn('No se pudo aplicar el cambio de Master desde chat', {
+                    userId: user.id,
+                    chatId,
+                    error: error.message,
+                });
+            }
+        }
 
         // El retrieval local enriquece la respuesta, pero si falla el chat sigue operando
         // con el contexto conversacional ya disponible.

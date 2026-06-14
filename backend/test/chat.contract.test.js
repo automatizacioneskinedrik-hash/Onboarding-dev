@@ -201,3 +201,45 @@ test('POST /api/chat/:chatId/message uses the selected master for a clean chat a
     assert.equal(updatedChatResponse.status, 200);
     assert.equal(updatedChatResponse.body.data.chat.masterId, 'mtecmba');
 });
+
+test('POST /api/chat/:chatId/message can switch the master to a finance-oriented option from chat', async () => {
+    const { request, store } = createTestApp();
+    const token = await loginDefaultUser(request);
+    const user = [...store.users._db.values()].find((item) => item.email === 'user123@gmail.com');
+    const analysis = seedCompletedAnalysis({ store, userId: user.id, masterId: 'mintear' });
+
+    store.users.update(user.id, {
+        selectedMasterId: 'mintear',
+        cvAnalysisId: analysis.id,
+        recommendedSpecialization: 'Inteligencia Artificial',
+    });
+
+    const createResponse = await request
+        .post('/api/chat')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ cvAnalysisId: analysis.id });
+
+    const messageResponse = await request
+        .post(`/api/chat/${createResponse.body.data.chat.id}/message`)
+        .set('Authorization', `Bearer ${token}`)
+        .set('Accept', 'text/event-stream')
+        .buffer(true)
+        .parse((res, callback) => {
+            let payload = '';
+            res.setEncoding('utf8');
+            res.on('data', (chunk) => {
+                payload += chunk;
+            });
+            res.on('end', () => callback(null, payload));
+        })
+        .send({ content: 'Me gusta mas finanzas, cambiamelo por favor' });
+
+    const updatedChatResponse = await request
+        .get(`/api/chat/${createResponse.body.data.chat.id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+    assert.equal(messageResponse.status, 200);
+    assert.match(messageResponse.body, /master/i);
+    assert.equal(updatedChatResponse.status, 200);
+    assert.equal(updatedChatResponse.body.data.chat.masterId, 'mtecmba');
+});

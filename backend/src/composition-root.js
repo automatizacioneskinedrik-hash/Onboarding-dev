@@ -97,6 +97,7 @@ const buildAppContainer = ({ useFirestore } = {}) => {
         chatRepo: domainRepositories.chatRepo,
         analysisRepo: domainRepositories.analysisRepo,
         userRepo: domainRepositories.userRepo,
+        masterRepo: domainRepositories.masterRepo,
         statsRepo: domainRepositories.statsRepo,
         contextManager,
         aiOrchestrator,

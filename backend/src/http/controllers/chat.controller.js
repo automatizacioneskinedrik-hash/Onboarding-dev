@@ -104,13 +104,14 @@ const sendMessage = async (req, res, next) => {
                 });
                 res.end();
             },
-            onDone: ({ chatId, assistantMessage, retrieval }) => {
+            onDone: ({ chatId, assistantMessage, retrieval, chatContext }) => {
                 ensureSse();
                 writeSseEvent(res, {
                     type: 'done',
                     chatId,
                     assistantMessage,
                     retrieval: serializeRetrieval(retrieval),
+                    chatContext: chatContext || null,
                 });
                 res.end();
             },

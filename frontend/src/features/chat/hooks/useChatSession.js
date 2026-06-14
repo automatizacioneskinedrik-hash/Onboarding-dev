@@ -120,6 +120,13 @@ export const useChatSession = ({ chatId, cvAnalysisId, chatEnabled = true, onEns
                                     : message
                             )
                         );
+
+                        if (event.chatContext) {
+                            setChatDetails((previousDetails) => ({
+                                ...(previousDetails || {}),
+                                ...event.chatContext,
+                            }));
+                        }
                     }
 
                     if (event.type === 'error') {
