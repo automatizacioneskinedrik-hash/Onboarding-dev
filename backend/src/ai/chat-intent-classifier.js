@@ -3,6 +3,7 @@ const {
     CHAT_SCOPE_INTENTS,
     detectAllowedTopicMatches,
     detectMasterChangeRequest,
+    detectRouteChangeRequest,
     detectPromptInjection,
     isAmbiguousFollowUp,
     isGreetingMessage,
@@ -45,6 +46,15 @@ const classifyChatIntent = ({ message, recentMessages = [] } = {}) => {
             decision: CHAT_SCOPE_DECISIONS.ALLOW,
             reason: 'greeting',
             topicMatches,
+        };
+    }
+
+    if (detectRouteChangeRequest(content)) {
+        return {
+            intent: CHAT_SCOPE_INTENTS.LAR_ROUTE_CHANGE,
+            decision: CHAT_SCOPE_DECISIONS.ALLOW,
+            reason: 'route_change_request',
+            topicMatches, 
         };
     }
 

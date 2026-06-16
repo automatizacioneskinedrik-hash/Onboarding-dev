@@ -136,8 +136,8 @@ const createChatUseCases = ({
         return resolveChatContext({ chat, userId: user.id });
     };
 
-    const applyMasterChange = async ({ chat, user, selectedMasterId, analysis, log }) => {
-        const targetMaster = masterRepo?.getById(selectedMasterId) || null;
+    const applyRecommendationUpdate = async ({ chat, user, targetMasterId, userPreference, analysis, log }) => {
+        const targetMaster = masterRepo?.getById(targetMasterId) || null;
 
         if (!targetMaster) {
             throw new AppError('No se pudo resolver el Master solicitado.', 400);
@@ -151,6 +151,7 @@ const createChatUseCases = ({
                 profile: analysis.extractedProfile,
                 sourceType: analysis.sourceType || 'chat',
                 options: { masterId: targetMaster.id },
+                userPreference,
                 log,
             });
 
@@ -344,21 +345,28 @@ const createChatUseCases = ({
         };
 
         const masterChangeRequested = classification.intent === 'lar_master_change';
-        const requestedMasterId = classification.requestedMasterId || resolveRequestedMasterId(content, selectedMasterId);
+        const routeChangeRequested = classification.intent === 'lar_route_change';
+        
 
-        if (masterChangeRequested && requestedMasterId) {
+        if (masterChangeRequested || routeChangeRequested) {
             try {
-                const masterChangeResult = await applyMasterChange({
+                
+                const requestedMasterId = masterChangeRequested 
+                    ? (classification.requestedMasterId || resolveRequestedMasterId(content, selectedMasterId))
+                    : selectedMasterId;
+
+                const updateResult = await applyRecommendationUpdate({
                     chat,
                     user,
-                    selectedMasterId: requestedMasterId,
+                    targetMasterId: requestedMasterId,
+                    userPreference: routeChangeRequested ? content : null, 
                     analysis: analysisId ? await analysisRepo.findById(analysisId) : null,
                     log,
                 });
 
                 const aiContent = buildMasterChangeResponse({
-                    targetMaster: masterChangeResult.targetMaster,
-                    recommendation: masterChangeResult.updatedRecommendation,
+                    targetMaster: updateResult.targetMaster,
+                    recommendation: updateResult.updatedRecommendation,
                 });
 
                 onStart?.({ chatId, userMessage: null, retrieval: null });

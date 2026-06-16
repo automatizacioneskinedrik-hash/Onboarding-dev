@@ -44,6 +44,7 @@ const buildRecommendationPrompt = ({
     profile,
     options,
     specializationsList,
+    userPreference = null,
 }) => `Eres un asesor academico experto de LÄR University, una institucion de educacion ejecutiva de elite.
 
 Tu tarea es analizar la hoja de vida de un candidato y construir una ruta academica personalizada.
@@ -58,6 +59,10 @@ PERFIL DEL CANDIDATO:
 - Habilidades: ${(profile.skills || []).join(', ') || 'No especificadas'}
 - Resumen: ${profile.summary || 'No disponible'}
 - Master seleccionado: ${options.masterId || 'Sin seleccionar'}
+
+${userPreference ? `PREFERENCIA EXPLICITA DEL USUARIO (PRIORIDAD ALTA):
+El usuario ha solicitado ajustar su ruta: "${userPreference}".
+Debes seleccionar una especializacion y sprints que se adapten a esta preferencia solicitada, ajustando el perfil del CV hacia este nuevo enfoque.` : ''}
 
 CATALOGO VALIDO PARA ESTE Master:
 ${specializationsList}

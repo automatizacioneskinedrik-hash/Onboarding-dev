@@ -9,6 +9,7 @@ const CHAT_SCOPE_INTENTS = {
     LAR_CATALOG: 'lar_catalog',
     LAR_RECOMMENDATION: 'lar_recommendation',
     LAR_MASTER_CHANGE: 'lar_master_change',
+    LAR_ROUTE_CHANGE: 'lar_route_change',
     LAR_FOLLOW_UP: 'lar_follow_up',
     OUT_OF_SCOPE: 'out_of_scope',
     PROMPT_INJECTION: 'prompt_injection',
@@ -95,9 +96,14 @@ const ALLOWED_TOPIC_GROUPS = {
 const MASTER_CHANGE_PATTERNS = [
     /cambiar(?:\s+de)?\s+(?:mi\s+)?master/i,
     /cambiar(?:\s+de)?\s+(?:mi\s+)?m[aá]ster/i,
-    /pasarme\s+a(?:l)?\s+(?:master|m[aá]ster)/i,
-    /quiero\s+(?:cambiar\s+al\s+)?(?:master|m[aá]ster)/i,
-    /ajusta(?:r|me)\s+(?:el\s+)?(?:master|m[aá]ster)/i,
+    /pasarme\s+a/i,
+];
+
+const ROUTE_CHANGE_PATTERNS = [
+    /m[eé]\s+gusta\s+m[aá]s/i,
+    /prefiero/i,
+    /quiero\s+(?:un\s+)?(?:ruta|sprints?|especializaci[oó]n)/i,
+    /ajusta(?:r|me)\s+(?:(?:el|la)\s+)?(?:ruta|sprints?|especializaci[oó]n)/i,
 ];
 
 const MASTER_CHANGE_KEYWORDS = {
@@ -151,6 +157,10 @@ const normalizeChatScopeText = (value = '') =>
 const detectPromptInjection = (text = '') =>
     PROMPT_INJECTION_PATTERNS.some((pattern) => pattern.test(String(text || '')));
 
+
+const detectRouteChangeRequest = (text = '') =>
+    ROUTE_CHANGE_PATTERNS.some((pattern) => pattern.test(String(text || '').trim()));
+
 const detectMasterChangeRequest = (text = '') =>
     MASTER_CHANGE_PATTERNS.some((pattern) => pattern.test(String(text || '').trim()));
 
@@ -159,11 +169,6 @@ const resolveRequestedMasterId = (text = '', currentMasterId = null) => {
 
     if (!normalized) {
         return currentMasterId || null;
-    }
-
-    const trackingMasterIntent = normalized.includes('master') || normalized.includes('maestria');
-    if (!trackingMasterIntent) {
-        return currentMasterId || null; 
     }
 
     if (MASTER_CHANGE_KEYWORDS['datalar-mba'].some((keyword) => normalized.includes(normalizeChatScopeText(keyword)))) {
