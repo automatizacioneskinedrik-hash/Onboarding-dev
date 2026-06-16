@@ -95,11 +95,9 @@ const ALLOWED_TOPIC_GROUPS = {
 const MASTER_CHANGE_PATTERNS = [
     /cambiar(?:\s+de)?\s+(?:mi\s+)?master/i,
     /cambiar(?:\s+de)?\s+(?:mi\s+)?m[aá]ster/i,
-    /pasarme\s+a/i,
-    /m[eé]\s+gusta\s+m[aá]s/i,
-    /prefiero/i,
-    /quiero\s+(?:un\s+)?(?:master|m[aá]ster|ruta|sprints?)/i,
-    /ajusta(?:r|me)\s+(?:el\s+)?(?:master|m[aá]ster|ruta|sprints?)/i,
+    /pasarme\s+a(?:l)?\s+(?:master|m[aá]ster)/i,
+    /quiero\s+(?:cambiar\s+al\s+)?(?:master|m[aá]ster)/i,
+    /ajusta(?:r|me)\s+(?:el\s+)?(?:master|m[aá]ster)/i,
 ];
 
 const MASTER_CHANGE_KEYWORDS = {
@@ -161,6 +159,11 @@ const resolveRequestedMasterId = (text = '', currentMasterId = null) => {
 
     if (!normalized) {
         return currentMasterId || null;
+    }
+
+    const trackingMasterIntent = normalized.includes('master') || normalized.includes('maestria');
+    if (!trackingMasterIntent) {
+        return currentMasterId || null; 
     }
 
     if (MASTER_CHANGE_KEYWORDS['datalar-mba'].some((keyword) => normalized.includes(normalizeChatScopeText(keyword)))) {
