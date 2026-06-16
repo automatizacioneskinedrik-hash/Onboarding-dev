@@ -69,8 +69,8 @@ ${specializationsList}
 
 INSTRUCCIONES:
 1. Construye una ruta personalizada de exactamente 6 sprints.
-2. Analiza el CV y selecciona una unica especializacion principal entre las opciones disponibles.
-3. Todos los sprints de la ruta deben pertenecer a esa especializacion principal.
+2. Analiza el CV y selecciona una unica especializacion principal entre las opciones disponibles. ${userPreference ? 'Si hay una preferencia del usuario, LA ESPECIALIZACION PRINCIPAL DEBE CAMBIAR OBLIGATORIAMENTE para alinearse completamente a esa solicitud.' : ''}
+3. Todos los sprints de la ruta DEBEN pertenecer a esa unica especializacion principal. ESTRICTAMENTE PROHIBIDO mezclar sprints de diferentes especializaciones.
 4. Selecciona los sprints que mejor complementen el perfil actual y cubran vacios relevantes dentro de esa especializacion.
 5. No inventes titulos: usa los nombres exactos del catalogo.
 6. Proporciona un score de compatibilidad del 0 al 100.

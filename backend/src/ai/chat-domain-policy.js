@@ -109,8 +109,10 @@ const MASTER_CHANGE_PATTERNS = [
 
 const ROUTE_CHANGE_PATTERNS = [
     /m[eé]\s+gusta\s+m[aá]s/i,
+    /me\s+interesa\s+m[aá]s/i,
     /prefiero/i,
     /quiero\s+(?:adaptar|cambiar|ajustar|modificar|enfocar)/i,
+    /quiero\s+(?:ir\s+por\s+)?(?:la\s+)?ruta/i,
     /ajusta(?:r|me)/i,
     /cambia(?:r|me)/i,
     /reemplaza(?:r|me)/i,

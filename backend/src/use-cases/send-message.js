@@ -137,7 +137,15 @@ const createChatUseCases = ({
     };
 
     const applyRecommendationUpdate = async ({ chat, user, targetMasterId, userPreference, analysis, log }) => {
-        const targetMaster = masterRepo?.getById(targetMasterId) || null;
+        let targetMaster = null;
+        if (masterRepo && typeof masterRepo.findById === 'function') {
+            targetMaster = await masterRepo.findById(targetMasterId);
+        } else if (masterRepo && typeof masterRepo.getById === 'function') {
+            targetMaster = await masterRepo.getById(targetMasterId);
+        } else {
+           
+            targetMaster = { id: targetMasterId, name: targetMasterId };
+        }
 
         if (!targetMaster) {
             throw new AppError('No se pudo resolver el Master solicitado.', 400);
@@ -411,6 +419,27 @@ const createChatUseCases = ({
                 
             } catch (error) {
                 log?.warn('No se pudo aplicar el cambio desde chat', { error: error.message });
+                
+                const errorContent = 'Ocurrió un error interno al intentar actualizar tu ruta en la plataforma. Por favor, intenta de nuevo en unos segundos.';
+                onToken?.(errorContent);
+                
+                const assistantMessage = await chatRepo.addMessage(chatId, {
+                    role: 'assistant',
+                    content: errorContent,
+                    metadata: {
+                        type: 'text',
+                        scope: { ...scopeMetadata, decision: CHAT_SCOPE_DECISIONS.ALLOW, policy: 'route_update_error' },
+                    },
+                });
+                
+                onDone?.({
+                    chatId,
+                    assistantMessage,
+                    retrieval: null,
+                    aiContent: errorContent,
+                });
+                
+                return;
             }
         }
 
