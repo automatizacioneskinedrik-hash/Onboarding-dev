@@ -344,14 +344,21 @@ const createChatUseCases = ({
             topicGroups: Object.keys(classification.topicMatches || {}),
         };
 
+        const userMessage = await chatRepo.addMessage(chatId, {
+            role: 'user',
+            content: content.trim(),
+            metadata: { type: 'text', scope: scopeMetadata },
+        });
+
+        onStart?.({ chatId, userMessage, retrieval: null });
+        
         const masterChangeRequested = classification.intent === 'lar_master_change';
         const routeChangeRequested = classification.intent === 'lar_route_change';
         
 
         if (masterChangeRequested || routeChangeRequested) {
             try {
-                
-                const requestedMasterId = masterChangeRequested 
+                const requestedMasterId = masterChangeRequested
                     ? (classification.requestedMasterId || resolveRequestedMasterId(content, selectedMasterId))
                     : selectedMasterId;
 
@@ -359,17 +366,18 @@ const createChatUseCases = ({
                     chat,
                     user,
                     targetMasterId: requestedMasterId,
-                    userPreference: routeChangeRequested ? content : null, 
+                    userPreference: routeChangeRequested ? content : null,
                     analysis: analysisId ? await analysisRepo.findById(analysisId) : null,
                     log,
                 });
 
-                const aiContent = buildMasterChangeResponse({
-                    targetMaster: updateResult.targetMaster,
-                    recommendation: updateResult.updatedRecommendation,
-                });
+                const aiContent = routeChangeRequested
+                    ? `¡Listo! He re-generado tu ruta para darle prioridad a tu petición: "${content}". La especialización principal ahora es ${updateResult.updatedRecommendation?.primarySpecialization || 'la nueva selección'} y los sprints se han actualizado para este enfoque.`
+                    : buildMasterChangeResponse({
+                        targetMaster: updateResult.targetMaster,
+                        recommendation: updateResult.updatedRecommendation,
+                    });
 
-                onStart?.({ chatId, userMessage: null, retrieval: null });
                 onToken?.(aiContent);
 
                 const assistantMessage = await chatRepo.addMessage(chatId, {
@@ -377,30 +385,18 @@ const createChatUseCases = ({
                     content: aiContent,
                     metadata: {
                         type: 'text',
-                        scope: {
-                            intent: classification.intent,
-                            decision: CHAT_SCOPE_DECISIONS.ALLOW,
-                            classifierReason: classification.reason,
-                            guardState: scopeEvaluation.state,
-                            policy: 'master_change_route_update',
-                        },
+                        scope: { ...scopeMetadata, decision: CHAT_SCOPE_DECISIONS.ALLOW, policy: 'route_update' },
                         chatAction: {
-                            type: 'master_change',
-                            masterId: masterChangeResult.targetMaster.id,
+                            type: routeChangeRequested ? 'route_change' : 'master_change',
+                            masterId: updateResult.targetMaster.id,
                         },
                         chatContext: {
                             chatId,
-                            masterId: masterChangeResult.updatedChat.masterId,
-                            cvAnalysisId: masterChangeResult.updatedChat.cvAnalysisId || null,
-                            analysis: masterChangeResult.updatedAnalysis || null,
+                            masterId: updateResult.updatedChat.masterId,
+                            cvAnalysisId: updateResult.updatedChat.cvAnalysisId || null,
+                            analysis: updateResult.updatedAnalysis || null,
                         },
                     },
-                });
-
-                log?.info('Master actualizado desde chat', {
-                    userId: user.id,
-                    chatId,
-                    targetMasterId: masterChangeResult.targetMaster.id,
                 });
 
                 onDone?.({
@@ -408,21 +404,57 @@ const createChatUseCases = ({
                     assistantMessage,
                     retrieval: null,
                     aiContent,
-                    chatContext: {
-                        chatId,
-                        masterId: masterChangeResult.updatedChat.masterId,
-                        cvAnalysisId: masterChangeResult.updatedChat.cvAnalysisId || null,
-                        analysis: masterChangeResult.updatedAnalysis || null,
-                    },
+                    chatContext: assistantMessage.metadata.chatContext, 
                 });
-                return;
+
+                return; 
+                
             } catch (error) {
-                log?.warn('No se pudo aplicar el cambio de Master desde chat', {
-                    userId: user.id,
-                    chatId,
-                    error: error.message,
-                });
+                log?.warn('No se pudo aplicar el cambio desde chat', { error: error.message });
             }
+        }
+
+        if (scopeMetadata.decision === CHAT_SCOPE_DECISIONS.REJECT) {
+            const rejectionReason =
+                scopeEvaluation.reason === 'prompt_injection'
+                    ? 'prompt_injection'
+                    : scopeEvaluation.reason || classification.intent;
+            
+            const aiContent = buildOutOfScopeResponse({
+                reason: rejectionReason,
+            });
+
+            onToken?.(aiContent);
+
+            const assistantMessage = await chatRepo.addMessage(chatId, {
+                role: 'assistant',
+                content: aiContent,
+                metadata: {
+                    type: 'text',
+                    scope: {
+                        intent: classification.intent,
+                        decision: CHAT_SCOPE_DECISIONS.REJECT,
+                        classifierReason: classification.reason,
+                        guardState: scopeEvaluation.state,
+                        guardReason: scopeEvaluation.reason,
+                        policy: 'lar_only',
+                    },
+                    retrieval: {
+                        status: 'skipped_scope_guard', 
+                    },
+                },
+            });
+
+            log?.info('Mensaje bloqueado por scope', {
+                userId: user.id,
+                chatId,
+                intent: classification.intent,
+                guardState: scopeEvaluation.state,
+            });
+
+            onDone?.({ chatId, assistantMessage, retrieval: null, aiContent });
+
+            return;
         }
 
         // El retrieval local enriquece la respuesta, pero si falla el chat sigue operando

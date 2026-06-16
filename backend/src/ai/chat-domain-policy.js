@@ -76,6 +76,14 @@ const ALLOWED_TOPIC_GROUPS = {
         'que bloque',
         'que sprint',
         'priorizar',
+        'adaptar',
+        'reemplaza',
+        'reemplazar', 
+        'sustituir', 
+        'cambiar', 
+        'ajustar', 
+        'analitica', 
+        'datos',
     ],
     finance: [
         'finanzas',
@@ -102,8 +110,11 @@ const MASTER_CHANGE_PATTERNS = [
 const ROUTE_CHANGE_PATTERNS = [
     /m[eé]\s+gusta\s+m[aá]s/i,
     /prefiero/i,
-    /quiero\s+(?:un\s+)?(?:ruta|sprints?|especializaci[oó]n)/i,
-    /ajusta(?:r|me)\s+(?:(?:el|la)\s+)?(?:ruta|sprints?|especializaci[oó]n)/i,
+    /quiero\s+(?:adaptar|cambiar|ajustar|modificar|enfocar)/i,
+    /ajusta(?:r|me)/i,
+    /cambia(?:r|me)/i,
+    /reemplaza(?:r|me)/i,
+    /sustitui(?:r|me)/i,
 ];
 
 const MASTER_CHANGE_KEYWORDS = {
@@ -144,6 +155,10 @@ const FOLLOW_UP_PATTERNS = [
     /^profundiza\b/i,
     /^que\s+mas\b/i,
     /^como\s+asi\b/i,
+    /^si\b/i, 
+    /^claro\b/i, 
+    /^vale\b/i, 
+    /^ok\b/i,
 ];
 
 const normalizeChatScopeText = (value = '') =>
