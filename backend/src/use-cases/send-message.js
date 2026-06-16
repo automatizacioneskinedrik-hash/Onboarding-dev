@@ -505,15 +505,6 @@ const createChatUseCases = ({
             }
         }
 
-        const userMessage = await chatRepo.addMessage(chatId, {
-            role: 'user',
-            content: content.trim(),
-            metadata: {
-                type: 'text',
-                scope: scopeMetadata,
-            },
-        });
-
         const freshChat = await chatRepo.findById(chatId);
 
         const userMessageCount = freshChat.messages.filter((message) => message.role === 'user').length;
