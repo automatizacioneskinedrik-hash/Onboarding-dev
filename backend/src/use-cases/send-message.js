@@ -366,9 +366,9 @@ const createChatUseCases = ({
 
         if (masterChangeRequested || routeChangeRequested) {
             try {
-                const requestedMasterId = masterChangeRequested
-                    ? (classification.requestedMasterId || resolveRequestedMasterId(content, selectedMasterId))
-                    : selectedMasterId;
+                const requestedMasterId = routeChangeRequested
+                    ? selectedMasterId
+                    : (classification.requestedMasterId || resolveRequestedMasterId(content, selectedMasterId));
 
                 const updateResult = await applyRecommendationUpdate({
                     chat,
@@ -380,7 +380,7 @@ const createChatUseCases = ({
                 });
 
                 const aiContent = routeChangeRequested
-                    ? `¡Listo! He re-generado tu ruta para darle prioridad a tu petición: "${content}". La especialización principal ahora es ${updateResult.updatedRecommendation?.primarySpecialization || 'la nueva selección'} y los sprints se han actualizado para este enfoque.`
+                    ? `¡Listo! He ajustado tu ruta para darle prioridad a tu petición: "${content}". La especialización principal ahora es ${updateResult.updatedRecommendation?.primarySpecialization || 'la nueva selección'} y los sprints se han actualizado para este enfoque.`
                     : buildMasterChangeResponse({
                         targetMaster: updateResult.targetMaster,
                         recommendation: updateResult.updatedRecommendation,
