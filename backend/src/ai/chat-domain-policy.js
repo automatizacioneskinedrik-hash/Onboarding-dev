@@ -237,6 +237,7 @@ module.exports = {
     normalizeChatScopeText,
     detectPromptInjection,
     detectMasterChangeRequest,
+    detectRouteChangeRequest,
     isGreetingMessage,
     isAmbiguousFollowUp,
     detectAllowedTopicMatches,
