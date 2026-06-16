@@ -60,16 +60,18 @@ PERFIL DEL CANDIDATO:
 - Resumen: ${profile.summary || 'No disponible'}
 - Master seleccionado: ${options.masterId || 'Sin seleccionar'}
 
-${userPreference ? `PREFERENCIA EXPLICITA DEL USUARIO (PRIORIDAD ALTA):
-El usuario ha solicitado ajustar su ruta: "${userPreference}".
-Debes seleccionar una especializacion y sprints que se adapten a esta preferencia solicitada, ajustando el perfil del CV hacia este nuevo enfoque.` : ''}
+${userPreference ? `=== INSTRUCCION CRITICA DE SOBREESCRITURA ===
+El usuario ha solicitado EXPLICITAMENTE cambiar su ruta con esta instruccion: "${userPreference}".
+REGLA ABSOLUTA: Selecciona la especializacion del CATALOGO VALIDO que mejor coincida con esta peticion y asignala OBLIGATORIAMENTE en los campos "primarySpecialization" y "primarySpecializationId".
+El CV pasa a ser secundario: usalo SOLO para redactar el razonamiento de por que esta NUEVA ruta elegida por el usuario le aportara valor, pero ESTA ESTRICTAMENTE PROHIBIDO mantener la especializacion anterior.
+================================================` : ''}
 
 CATALOGO VALIDO PARA ESTE Master:
 ${specializationsList}
 
 INSTRUCCIONES:
 1. Construye una ruta personalizada de exactamente 6 sprints.
-2. Analiza el CV y selecciona una unica especializacion principal entre las opciones disponibles. ${userPreference ? 'Si hay una preferencia del usuario, LA ESPECIALIZACION PRINCIPAL DEBE CAMBIAR OBLIGATORIAMENTE para alinearse completamente a esa solicitud.' : ''}
+2. Selecciona una unica especializacion principal. ${userPreference ? 'OBLIGATORIO: Debe ser la que el usuario solicito en la INSTRUCCION CRITICA.' : 'Basate en su perfil.'}
 3. Todos los sprints de la ruta DEBEN pertenecer a esa unica especializacion principal. ESTRICTAMENTE PROHIBIDO mezclar sprints de diferentes especializaciones.
 4. Selecciona los sprints que mejor complementen el perfil actual y cubran vacios relevantes dentro de esa especializacion.
 5. No inventes titulos: usa los nombres exactos del catalogo.

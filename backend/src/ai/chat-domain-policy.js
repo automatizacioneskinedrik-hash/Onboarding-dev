@@ -113,10 +113,12 @@ const ROUTE_CHANGE_PATTERNS = [
     /prefiero/i,
     /quiero\s+(?:adaptar|cambiar|ajustar|modificar|enfocar)/i,
     /quiero\s+(?:ir\s+por\s+)?(?:la\s+)?ruta/i,
-    /ajusta(?:r|me)/i,
-    /cambia(?:r|me)/i,
-    /reemplaza(?:r|me)/i,
-    /sustitui(?:r|me)/i,
+    /ajusta(?:r|me|lo)?/i,
+    /cambia(?:r|me|lo)?/i,
+    /reemplaza(?:r|me|lo)?/i,
+    /sustitui(?:r|me|lo)?/i,
+    /sustituye/i,
+    /enfoca(?:r|me)?/i,
 ];
 
 const MASTER_CHANGE_KEYWORDS = {
