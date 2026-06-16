@@ -107,8 +107,7 @@ export const useChatSession = ({ chatId, cvAnalysisId, chatEnabled = true, onEns
                     }
 
                     if (event.type === 'done') {
-                        // Al cerrar el stream, sustituimos el placeholder por el mensaje final
-                        // persistido para que la UI quede alineada con el historial remoto.
+                        // Al cerrar el stream, sustituimos el placeholder...
                         setMessages((previousMessages) =>
                             previousMessages.map((message) =>
                                 message.id === tempAssistantId
@@ -126,6 +125,14 @@ export const useChatSession = ({ chatId, cvAnalysisId, chatEnabled = true, onEns
                                 ...(previousDetails || {}),
                                 ...event.chatContext,
                             }));
+
+                            if (typeof window !== 'undefined') {
+                                window.dispatchEvent(
+                                    new CustomEvent('lar:recommendation-updated', {
+                                        detail: event.chatContext,
+                                    })
+                                );
+                            }
                         }
                     }
 

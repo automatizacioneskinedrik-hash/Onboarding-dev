@@ -155,11 +155,18 @@ const createChatUseCases = ({
         let updatedRecommendation = analysis?.recommendation || null;
 
         if (analysis?.status === 'completed' && analysis.extractedProfile) {
+            
+            const profileForLLM = { ...analysis.extractedProfile };
+            
+            if (userPreference) {
+                profileForLLM.summary = `\n\n=== INSTRUCCION CRITICA (PRIORIDAD ABSOLUTA) ===\nEl usuario ha ordenado cambiar su especializacion a: "${userPreference}".\nREGLA ESTRICTA: Ignora el CV para la seleccion. Asigna OBLIGATORIAMENTE la especializacion que coincida con esta peticion en "primarySpecialization".\n================================================\n\n` + (profileForLLM.summary || '');
+            }
+
             const generatedRecommendation = await aiOrchestrator.generateRecommendation({
-                profile: analysis.extractedProfile,
+                profile: profileForLLM,
                 sourceType: analysis.sourceType || 'chat',
                 options: { masterId: targetMaster.id },
-                userPreference,
+                userPreference, 
                 log,
             });
 
