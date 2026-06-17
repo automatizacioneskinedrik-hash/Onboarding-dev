@@ -68,6 +68,25 @@ const ALLOWED_TOPIC_GROUPS = {
         'liderazgo',        
         'management',
         'habilidades directivas',
+        'informacion',
+        'detalle',
+        'detalles',
+        'temario',
+        'contenido',
+        'comunicacion',
+        'negociacion',
+        'oratoria',
+        'estrategia',
+        'ciencia de Datos aplicada',
+        'operaciones y entorno',
+        'innovacion y emprendimiento',
+        'mercado y cliente',
+        'inteligencia artificial aplicada',
+        'inteligencia artificial y automatizacion',
+        'tecnologia',
+        'finanzas',
+        
+
     ],
     recommendation: [
         'recomendacion',
@@ -192,7 +211,14 @@ const FOLLOW_UP_PATTERNS = [
     /^de\s+acuerdo\b/i,
     /^excelente\b/i,
     /^dale\b/i,
-    /^por\s+supuesto\b/i
+    /^por\s+supuesto\b/i,
+    /^dame\s+m[aá]s\s+informaci[oó]n\b/i,
+    /^m[aá]s\s+informaci[oó]n\b/i,
+    /^m[aá]s\s+detalles?\b/i,
+    /^det[aá]llame\b/i,
+    /^h[aá]blame\s+(?:m[aá]s\s+)?sobre\b/i,
+    /^qu[eé]\s+es\b/i,
+    /^expl[ií]came\s+sobre\b/i,
 ];
 
 const normalizeChatScopeText = (value = '') =>
