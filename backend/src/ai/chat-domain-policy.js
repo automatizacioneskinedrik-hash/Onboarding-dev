@@ -62,10 +62,20 @@ const ALLOWED_TOPIC_GROUPS = {
         'sprints',
         'ruta academica',
         'contenido del mba',
+        'ruta academica',
+        'contenido del mba',
+        'talento',        
+        'liderazgo',        
+        'management',
+        'habilidades directivas',
     ],
     recommendation: [
         'recomendacion',
         'recomendaciones',
+        'recomendar',          
+        'recomiendes',        
+        'recomendaras',      
+        'recomiéndame',      
         'ruta',
         'match score',
         'compatibilidad',
@@ -84,6 +94,8 @@ const ALLOWED_TOPIC_GROUPS = {
         'ajustar', 
         'analitica', 
         'datos',
+        'explorar',       
+        'opciones',
     ],
     finance: [
         'finanzas',
@@ -108,17 +120,28 @@ const MASTER_CHANGE_PATTERNS = [
 ];
 
 const ROUTE_CHANGE_PATTERNS = [
-    /m[eé]\s+gusta\s+m[aá]s/i,
-    /me\s+interesa\s+m[aá]s/i,
+    /m[eé]\s+gusta(?:r[ií]a)?\s+(?:m[aá]s|otra|la|el)/i,
+    /me\s+interesa(?:r[ií]a)?\s+(?:m[aá]s|otra|la|el)/i,
     /prefiero/i,
-    /quiero\s+(?:adaptar|cambiar|ajustar|modificar|enfocar)/i,
+    /quiero\s+(?:que\s+(?:me\s+)?)?(?:adapt(?:ar|es)|cambi(?:ar|es)|ajust(?:ar|es)|modific(?:ar|ques)|enfoqu(?:ar|es))/i,
     /quiero\s+(?:ir\s+por\s+)?(?:la\s+)?ruta/i,
-    /ajusta(?:r|me|lo)?/i,
-    /cambia(?:r|me|lo)?/i,
-    /reemplaza(?:r|me|lo)?/i,
+    /aj[uú]sta(?:r|me|lo|s)?/i,
+    /c[aá]mbi(?:a|ar|ame|alo|es)/i,
+    /reempl[aá]za(?:r|me|lo|s)?/i,
     /sustitui(?:r|me|lo)?/i,
-    /sustituye/i,
-    /enfoca(?:r|me)?/i,
+    /sustit[uú]y(?:e|eme|es)/i,
+    /enf[oó]ca(?:r|me|s)?/i,
+    /p[oó]nme\s+(?:en|el|la)/i,
+    /as[ií]gna(?:me|r)?/i,
+    /me\s+voy\s+por/i,
+    /elijo/i,
+    /optar[ií]a\s+por/i,
+    /m[eé]\s+gusta(?:r[ií]a)?\s+(?:que\s+me\s+)?(?:recomiendes|recomendaras|muestres)/i,
+    /recomi[eé]nda(?:me)?\s+(?:otra|otras|un|una|nuevas?)/i,
+    /explorar\s+(?:otra|otras|nuevas?)/i,
+    /qu[eé]\s+(?:otra|otras)\s+opci[oó]n/i,
+    /qu[eé]\s+alternativa/i,
+    /mu[eé]strame\s+(?:otra|otras)/i
 ];
 
 const MASTER_CHANGE_KEYWORDS = {
@@ -158,11 +181,18 @@ const FOLLOW_UP_PATTERNS = [
     /^desarrolla\b/i,
     /^profundiza\b/i,
     /^que\s+mas\b/i,
+    /^que\b/i,
     /^como\s+asi\b/i,
     /^si\b/i, 
     /^claro\b/i, 
     /^vale\b/i, 
     /^ok\b/i,
+    /^perfecto\b/i,
+    /^me\s+parece\s+bien\b/i,
+    /^de\s+acuerdo\b/i,
+    /^excelente\b/i,
+    /^dale\b/i,
+    /^por\s+supuesto\b/i
 ];
 
 const normalizeChatScopeText = (value = '') =>
